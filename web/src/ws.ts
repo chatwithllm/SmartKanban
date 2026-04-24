@@ -1,0 +1,43 @@
+import type { Card } from './types.ts';
+
+export type BroadcastEvent =
+  | { type: 'hello'; user_id: string }
+  | { type: 'card.created'; card: Card }
+  | { type: 'card.updated'; card: Card }
+  | { type: 'card.deleted'; id: string };
+
+export function connectWS(
+  onEvent: (ev: BroadcastEvent) => void,
+  opts: { mirrorToken?: string } = {},
+): () => void {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const qs = opts.mirrorToken ? `?mirror=${encodeURIComponent(opts.mirrorToken)}` : '';
+  let alive = true;
+  let ws: WebSocket | null = null;
+  let retry = 500;
+
+  const open = () => {
+    if (!alive) return;
+    ws = new WebSocket(`${proto}//${location.host}/ws${qs}`);
+    ws.onmessage = (e) => {
+      try {
+        onEvent(JSON.parse(e.data));
+      } catch {}
+    };
+    ws.onopen = () => {
+      retry = 500;
+    };
+    ws.onclose = () => {
+      if (!alive) return;
+      setTimeout(open, retry);
+      retry = Math.min(retry * 2, 10_000);
+    };
+    ws.onerror = () => ws?.close();
+  };
+  open();
+
+  return () => {
+    alive = false;
+    ws?.close();
+  };
+}
