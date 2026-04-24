@@ -382,4 +382,4 @@ integration (requires user's HA setup).
 
 ## License
 
-No license yet — add one before making this public.
+MIT — see [LICENSE](LICENSE).
