@@ -13,6 +13,7 @@ import { reviewRoutes } from './routes/review.js';
 import { telegramRoutes } from './routes/telegram.js';
 import { attachmentRoutes } from './routes/attachments.js';
 import { templateRoutes } from './routes/templates.js';
+import { knowledgeRoutes } from './routes/knowledge.js';
 import { wsRoutes } from './ws.js';
 import { startTelegramBot } from './telegram/bot.js';
 
@@ -34,6 +35,7 @@ await app.register(cardRoutes);
 await app.register(mirrorRoutes);
 await app.register(reviewRoutes);
 await app.register(templateRoutes);
+await app.register(knowledgeRoutes);
 await app.register(telegramRoutes);
 await app.register(attachmentRoutes, { attachmentsDir });
 await app.register(wsRoutes);

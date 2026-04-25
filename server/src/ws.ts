@@ -3,6 +3,7 @@ import type { WebSocket } from '@fastify/websocket';
 import { SESSION_COOKIE, userFromMirrorToken, userFromSession } from './auth.js';
 import type { Card } from './cards.js';
 import type { Template, Visibility } from './templates.js';
+import type { KnowledgeItem, KnowledgeVisibility } from './knowledge.js';
 
 export type BroadcastEvent =
   | { type: 'card.created'; card: Card }
@@ -10,7 +11,12 @@ export type BroadcastEvent =
   | { type: 'card.deleted'; id: string }
   | { type: 'template.created'; template: Template }
   | { type: 'template.updated'; template: Template }
-  | { type: 'template.deleted'; id: string; owner_id: string; visibility: Visibility };
+  | { type: 'template.deleted'; id: string; owner_id: string; visibility: Visibility }
+  | { type: 'knowledge.created'; knowledge: KnowledgeItem }
+  | { type: 'knowledge.updated'; knowledge: KnowledgeItem }
+  | { type: 'knowledge.deleted'; id: string; owner_id: string; visibility: KnowledgeVisibility; shares: string[] }
+  | { type: 'knowledge.link.created'; knowledge_id: string; card_id: string }
+  | { type: 'knowledge.link.deleted'; knowledge_id: string; card_id: string };
 
 type Client = { socket: WebSocket; userId: string };
 const clients = new Set<Client>();
@@ -44,6 +50,25 @@ export function broadcast(ev: BroadcastEvent) {
     if (ev.type === 'template.deleted') {
       if (!templateVisibleTo(ev, c.userId)) continue;
     }
+    if (
+      ev.type === 'knowledge.created' ||
+      ev.type === 'knowledge.updated'
+    ) {
+      const k = ev.knowledge;
+      if (
+        k.owner_id !== c.userId &&
+        k.visibility !== 'inbox' &&
+        !(k.visibility === 'shared' && (k.shares ?? []).includes(c.userId))
+      ) continue;
+    }
+    if (ev.type === 'knowledge.deleted') {
+      if (
+        ev.owner_id !== c.userId &&
+        ev.visibility !== 'inbox' &&
+        !(ev.visibility === 'shared' && ev.shares.includes(c.userId))
+      ) continue;
+    }
+    // knowledge.link.* events: visibility was checked at the route layer; broadcast to all auth'd clients.
     c.socket.send(JSON.stringify(ev));
   }
 }
