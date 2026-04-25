@@ -423,7 +423,8 @@ async function handleText(
       return;
     }
     broadcast({ type: 'card.created', card });
-    await logActivity(createdBy, card.id, 'telegram.template.use', { template_name: tpl.name });
+    // instantiateTemplate already logs a 'create' activity with template_id/template_name.
+    // The source=telegram column on the card distinguishes this path; no extra log needed.
     await reactOk(ctx);
     await ctx.reply(`✓ Saved · ${STATUS_EMOJI[card.status]} ${STATUS_LABEL[card.status]} — ${escapeMd(card.title)}`, {
       parse_mode: 'Markdown',
