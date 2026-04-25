@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Card, User } from '../types.ts';
+import type { KnowledgeItem } from '../types.ts';
+import { api } from '../api.ts';
 import { ActivityTimeline } from './ActivityTimeline.tsx';
 
 type Props = {
@@ -16,6 +18,58 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
   const [assignees, setAssignees] = useState<string[]>(card.assignees);
   const [shares, setShares] = useState<string[]>(card.shares);
   const [dueDate, setDueDate] = useState(card.due_date ?? '');
+
+  const [linked, setLinked] = useState<KnowledgeItem[]>([]);
+  const [picking, setPicking] = useState(false);
+  const [pickerQ, setPickerQ] = useState('');
+  const [candidates, setCandidates] = useState<KnowledgeItem[]>([]);
+
+  useEffect(() => {
+    if (!card?.id) return;
+    api.listKnowledgeForCard(card.id).then(setLinked).catch(() => { /* ignore */ });
+  }, [card?.id]);
+
+  const cardUrl = useMemo(() => {
+    const m = (card?.description ?? '').match(/https?:\/\/[^\s)\]]+/);
+    return m?.[0] ?? null;
+  }, [card?.description]);
+
+  const alreadyHasUrlLink = useMemo(() => {
+    if (!cardUrl) return false;
+    return linked.some((k) => k.url === cardUrl);
+  }, [linked, cardUrl]);
+
+  async function saveAsKnowledge() {
+    if (!card?.id) return;
+    await api.createKnowledgeFromCard(card.id);
+    const items = await api.listKnowledgeForCard(card.id);
+    setLinked(items);
+  }
+
+  useEffect(() => {
+    if (!picking || !card?.id) return;
+    (async () => {
+      try {
+        const r = await api.listKnowledge({ scope: 'all', q: pickerQ || undefined });
+        const linkedIds = new Set(linked.map((k) => k.id));
+        setCandidates(r.items.filter((k) => !linkedIds.has(k.id)).slice(0, 12));
+      } catch { /* ignore */ }
+    })();
+  }, [picking, pickerQ, linked, card?.id]);
+
+  async function attach(id: string) {
+    if (!card?.id) return;
+    await api.linkKnowledge(id, card.id);
+    setLinked(await api.listKnowledgeForCard(card.id));
+    setPicking(false);
+    setPickerQ('');
+  }
+
+  async function detach(id: string) {
+    if (!card?.id) return;
+    await api.unlinkKnowledge(id, card.id);
+    setLinked((prev) => prev.filter((k) => k.id !== id));
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -72,6 +126,67 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
           className="mt-3 w-full rounded-lg bg-neutral-950 px-2 py-1.5 text-sm text-neutral-200 outline-none border border-neutral-800 focus:border-neutral-700"
           placeholder="tags, comma, separated"
         />
+
+        {card?.id && (
+          <section className="mt-3">
+            <div className="mb-1 text-xs font-medium text-neutral-300">Knowledge</div>
+            <ul className="text-xs">
+              {linked.map((k) => (
+                <li key={k.id} className="flex items-center justify-between border-b border-neutral-800 py-1">
+                  <span className="truncate text-neutral-200">
+                    {k.url ? '🔗 ' : ''}
+                    {k.title}
+                    <span className="ml-1 text-neutral-500">
+                      {k.visibility === 'private' ? '🔒' : k.visibility === 'inbox' ? '📥' : '👥'}
+                    </span>
+                  </span>
+                  <button onClick={() => detach(k.id)} className="text-red-400 hover:text-red-300">
+                    remove
+                  </button>
+                </li>
+              ))}
+              {linked.length === 0 && <li className="text-neutral-500">none</li>}
+            </ul>
+            <div className="mt-2 flex gap-2">
+              <button
+                onClick={() => setPicking((p) => !p)}
+                className="rounded border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+              >
+                + Attach
+              </button>
+              {cardUrl && !alreadyHasUrlLink && (
+                <button
+                  onClick={saveAsKnowledge}
+                  className="rounded border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+                >
+                  Save as knowledge
+                </button>
+              )}
+            </div>
+            {picking && (
+              <div className="mt-2 rounded border border-neutral-700 bg-neutral-800 p-2">
+                <input
+                  className="mb-1 w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-xs text-neutral-100"
+                  placeholder="search knowledge..."
+                  value={pickerQ}
+                  onChange={(e) => setPickerQ(e.target.value)}
+                />
+                <ul className="max-h-48 overflow-auto">
+                  {candidates.map((k) => (
+                    <li key={k.id}>
+                      <button
+                        onClick={() => attach(k.id)}
+                        className="block w-full px-2 py-1 text-left text-xs text-neutral-200 hover:bg-neutral-700"
+                      >
+                        {k.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </section>
+        )}
 
         <div className="mt-3 flex items-center gap-2">
           <label className="text-xs text-neutral-500 shrink-0">Due date</label>

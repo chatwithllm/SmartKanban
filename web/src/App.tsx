@@ -45,7 +45,22 @@ function Authed({ meId }: { meId: string }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [section, setSection] = useState<'board' | 'knowledge'>('board');
+  const [shareInitial, setShareInitial] = useState<{ title?: string; url?: string; body?: string } | null>(null);
   const { addToast } = useToast();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.location.pathname === '/knowledge/share') {
+      const p = new URLSearchParams(window.location.search);
+      setShareInitial({
+        title: p.get('title') ?? undefined,
+        url: p.get('url') ?? undefined,
+        body: p.get('text') ?? undefined,
+      });
+      setSection('knowledge');
+      window.history.replaceState({}, '', '/knowledge');
+    }
+  }, []);
 
   const handleCloseDialog = useCallback(() => {
     if (settingsOpen) setSettingsOpen(false);
@@ -188,7 +203,10 @@ function Authed({ meId }: { meId: string }) {
           onMove={handleMove}
         />
       ) : (
-        <KnowledgeView />
+        <KnowledgeView
+          shareInitial={shareInitial}
+          onShareConsumed={() => setShareInitial(null)}
+        />
       )}
       {editing && (
         <EditDialog
