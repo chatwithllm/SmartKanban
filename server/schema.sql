@@ -116,3 +116,24 @@ CREATE TABLE IF NOT EXISTS activity_log (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log(created_at DESC);
+
+-- ---------- card templates ----------
+CREATE TABLE IF NOT EXISTS card_templates (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name             TEXT NOT NULL,
+  visibility       TEXT NOT NULL CHECK (visibility IN ('private','shared')),
+  title            TEXT NOT NULL,
+  description      TEXT NOT NULL DEFAULT '',
+  tags             TEXT[] NOT NULL DEFAULT '{}',
+  status           card_status NOT NULL DEFAULT 'today',
+  due_offset_days  INTEGER,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS card_templates_owner_name_key
+  ON card_templates (owner_id, lower(name));
+
+CREATE INDEX IF NOT EXISTS card_templates_visibility_idx
+  ON card_templates (visibility);
