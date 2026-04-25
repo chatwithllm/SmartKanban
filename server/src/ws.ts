@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import type { WebSocket } from '@fastify/websocket';
 import { SESSION_COOKIE, userFromMirrorToken, userFromSession } from './auth.js';
 import type { Card } from './cards.js';
-import type { Template } from './templates.js';
+import type { Template, Visibility } from './templates.js';
 
 export type BroadcastEvent =
   | { type: 'card.created'; card: Card }
@@ -10,7 +10,7 @@ export type BroadcastEvent =
   | { type: 'card.deleted'; id: string }
   | { type: 'template.created'; template: Template }
   | { type: 'template.updated'; template: Template }
-  | { type: 'template.deleted'; id: string; owner_id: string; visibility: 'private' | 'shared' };
+  | { type: 'template.deleted'; id: string; owner_id: string; visibility: Visibility };
 
 type Client = { socket: WebSocket; userId: string };
 const clients = new Set<Client>();
@@ -26,7 +26,9 @@ function cardVisibleTo(card: Card, userId: string): boolean {
   );
 }
 
-function templateVisibleTo(t: Template | { owner_id: string; visibility: 'private' | 'shared' }, userId: string): boolean {
+// A template is visible to `userId` if they own it or it's shared with the family.
+// Mirrors `canUserSeeTemplate` in templates.ts.
+function templateVisibleTo(t: Template | { owner_id: string; visibility: Visibility }, userId: string): boolean {
   return t.owner_id === userId || t.visibility === 'shared';
 }
 
