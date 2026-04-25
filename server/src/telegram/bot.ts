@@ -397,7 +397,11 @@ async function handleText(
     return;
   }
 
-  // Templates: only meaningful in DM. Skip in group chats — silent.
+  // Templates: only meaningful in DM. Group invocations are silent (early return)
+  // to prevent the command body from being passed to the AI-propose flow as a card seed.
+  if ((command === 'use' || command === 't' || command === 'templates') && !isPrivate) {
+    return;
+  }
   if ((command === 'use' || command === 't') && isPrivate) {
     const name = rest.trim();
     if (!name) {
