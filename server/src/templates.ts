@@ -218,10 +218,17 @@ export async function instantiateTemplate(
   if (!canUserSeeTemplate(userId, t)) return null;
 
   const status: Status = opts.statusOverride ?? t.status;
-  const dueDate =
-    t.due_offset_days != null
-      ? new Date(Date.now() + t.due_offset_days * 86_400_000).toISOString().slice(0, 10)
-      : null;
+  // Anchor to start of UTC day so adding N * 24h cannot drift into the prior or next day
+  // because of when in the day Date.now() was sampled. Server-clock authoritative; matches
+  // the README's skew-correction guarantee.
+  const dueDate = (() => {
+    if (t.due_offset_days == null) return null;
+    const startOfUtcDay = new Date();
+    startOfUtcDay.setUTCHours(0, 0, 0, 0);
+    return new Date(startOfUtcDay.getTime() + t.due_offset_days * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+  })();
 
   const { rows } = await pool.query<{ id: string }>(
     `INSERT INTO cards
