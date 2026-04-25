@@ -34,6 +34,7 @@ const NAME_RE = /^\S(?:.{0,38}\S)?$/; // 1–40 chars, no leading/trailing white
 export class TemplateValidationError extends Error {
   constructor(public field: string, message: string) {
     super(message);
+    this.name = 'TemplateValidationError';
   }
 }
 
@@ -60,7 +61,7 @@ function validateInput(input: TemplateInput | TemplatePatch, partial: boolean): 
     throw new TemplateValidationError('title', 'title required');
   }
   if (input.tags !== undefined) {
-    if (!Array.isArray(input.tags) || input.tags.length > 5) {
+    if (!Array.isArray(input.tags)) {
       throw new TemplateValidationError('tags', 'tags must be array of <=5');
     }
   }
@@ -82,7 +83,11 @@ function normaliseTags(tags: string[] | undefined): string[] {
     const v = String(t).toLowerCase().trim();
     if (v) seen.add(v);
   }
-  return Array.from(seen).slice(0, 5);
+  const result = Array.from(seen);
+  if (result.length > 5) {
+    throw new TemplateValidationError('tags', 'tags must be array of <=5');
+  }
+  return result;
 }
 
 export async function createTemplate(ownerId: string, input: TemplateInput): Promise<Template> {
@@ -157,8 +162,15 @@ export async function updateTemplate(
 
   sets.push(`updated_at = NOW()`);
   values.push(id);
+  values.push(ownerId);
+  // Both id and owner_id are constrained so this UPDATE cannot write to a row the
+  // caller doesn't own even if a race invalidates the pre-load above. If the row
+  // was deleted between SELECT and UPDATE, rows[0] is undefined and we return null
+  // (treated as 404 by the route layer).
   const { rows } = await pool.query<Template>(
-    `UPDATE card_templates SET ${sets.join(', ')} WHERE id = $${values.length} RETURNING *`,
+    `UPDATE card_templates SET ${sets.join(', ')}
+     WHERE id = $${values.length - 1} AND owner_id = $${values.length}
+     RETURNING *`,
     values,
   );
   return rows[0] ?? null;
