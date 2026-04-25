@@ -75,7 +75,7 @@ export function TemplatesTab({ me }: Props) {
       }
       setForm(null);
     } catch (e) {
-      setErrMsg((e as Error).message);
+      setErrMsg(e instanceof Error ? e.message : 'failed');
     } finally {
       setBusy(false);
     }
@@ -85,8 +85,11 @@ export function TemplatesTab({ me }: Props) {
     if (t.owner_id !== me.id) return;
     if (!confirm(`Delete template "${t.name}"?`)) return;
     setBusy(true);
+    setErrMsg(null);
     try {
       await api.deleteTemplate(t.id);
+    } catch (e) {
+      setErrMsg(e instanceof Error ? e.message : 'failed to delete');
     } finally {
       setBusy(false);
     }
@@ -100,8 +103,9 @@ export function TemplatesTab({ me }: Props) {
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">Templates</h3>
         <button
+          disabled={!!form || busy}
           onClick={startNew}
-          className="rounded bg-neutral-700 px-2 py-1 text-xs hover:bg-neutral-600"
+          className="rounded bg-neutral-700 px-2 py-1 text-xs hover:bg-neutral-600 disabled:opacity-50"
         >
           + New template
         </button>
@@ -191,8 +195,9 @@ export function TemplatesTab({ me }: Props) {
               Save
             </button>
             <button
+              disabled={busy}
               onClick={() => setForm(null)}
-              className="rounded bg-neutral-700 px-3 py-1 text-xs hover:bg-neutral-600"
+              className="rounded bg-neutral-700 px-3 py-1 text-xs hover:bg-neutral-600 disabled:opacity-50"
             >
               Cancel
             </button>
