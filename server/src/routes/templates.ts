@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply } from 'fastify';
 import { requireUser } from '../auth.js';
 import { broadcast } from '../ws.js';
 import {
@@ -15,7 +15,7 @@ import {
 } from '../templates.js';
 import type { Status } from '../cards.js';
 
-function handleValidation(reply: any, err: unknown): boolean {
+function handleValidation(reply: FastifyReply, err: unknown): boolean {
   if (err instanceof TemplateValidationError) {
     if (err.field === 'owner') {
       reply.code(403).send({ error: 'forbidden' });
@@ -58,6 +58,7 @@ export async function templateRoutes(app: FastifyInstance) {
     async (req, reply) => {
       try {
         const t = await createTemplate(req.user!.id, req.body);
+        // TODO(task-6): drop `as any` once BroadcastEvent union widens to include template events.
         broadcast({ type: 'template.created', template: t } as any);
         return reply.code(201).send(t);
       } catch (err) {
