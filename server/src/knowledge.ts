@@ -1,4 +1,5 @@
 import { pool } from './db.js';
+import { canUserSeeCard } from './cards.js';
 
 export type KnowledgeVisibility = 'private' | 'inbox' | 'shared';
 export type KnowledgeFetchStatus = 'pending' | 'ok' | 'failed' | 'skipped';
@@ -354,4 +355,91 @@ export async function setFetchResult(
     [id],
   );
   return rows[0] ?? null;
+}
+
+export async function linkCard(
+  userId: string,
+  knowledgeId: string,
+  cardId: string,
+): Promise<void> {
+  const k = await loadKnowledge(knowledgeId);
+  if (!k) throw new KnowledgeValidationError('knowledge', 'not found');
+  if (!(await canUserSeeKnowledge(userId, k))) {
+    throw new KnowledgeValidationError('knowledge', 'forbidden');
+  }
+  if (!(await canUserSeeCard(userId, cardId))) {
+    throw new KnowledgeValidationError('card', 'forbidden');
+  }
+  // Validate card exists (canUserSeeCard returns false for missing cards as well as invisible).
+  // Surface the missing-card case explicitly:
+  const c = await pool.query(`SELECT 1 FROM cards WHERE id = $1`, [cardId]);
+  if ((c.rowCount ?? 0) === 0) {
+    throw new KnowledgeValidationError('card', 'not found');
+  }
+  await pool.query(
+    `INSERT INTO knowledge_card_links (knowledge_id, card_id, created_by)
+     VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
+    [knowledgeId, cardId, userId],
+  );
+}
+
+export async function unlinkCard(
+  userId: string,
+  knowledgeId: string,
+  cardId: string,
+): Promise<void> {
+  const k = await loadKnowledge(knowledgeId);
+  if (!k) return;
+  if (!(await canUserSeeKnowledge(userId, k))) return;
+  await pool.query(
+    `DELETE FROM knowledge_card_links WHERE knowledge_id = $1 AND card_id = $2`,
+    [knowledgeId, cardId],
+  );
+}
+
+export async function listKnowledgeForCard(
+  userId: string,
+  cardId: string,
+): Promise<KnowledgeItem[]> {
+  const { rows } = await pool.query<KnowledgeItem>(
+    `SELECT k.* FROM knowledge_items k
+     JOIN knowledge_card_links l ON l.knowledge_id = k.id
+     WHERE l.card_id = $1 AND NOT k.archived
+       AND (
+         k.owner_id = $2
+         OR k.visibility = 'inbox'
+         OR (k.visibility = 'shared'
+             AND EXISTS (SELECT 1 FROM knowledge_shares ks
+                         WHERE ks.knowledge_id = k.id AND ks.user_id = $2))
+       )
+     ORDER BY l.created_at DESC`,
+    [cardId, userId],
+  );
+  return rows;
+}
+
+export async function createFromCard(
+  userId: string,
+  cardId: string,
+): Promise<KnowledgeItem | null> {
+  const c = await pool.query<{ id: string; title: string; description: string }>(
+    `SELECT id, title, description FROM cards WHERE id = $1`,
+    [cardId],
+  );
+  const card = c.rows[0];
+  if (!card) return null;
+  if (!(await canUserSeeCard(userId, cardId))) return null;
+  const m = card.description.match(/https?:\/\/[^\s)\]]+/);
+  const url = m?.[0] ?? null;
+  const k = await createKnowledge(userId, {
+    title: card.title.slice(0, 200),
+    title_auto: !!url,
+    url,
+    body: url ? '' : card.description.slice(0, 200_000),
+    visibility: 'inbox',
+    source: 'from_card',
+    auto_fetch: !!url,
+  });
+  await linkCard(userId, k.id, cardId);
+  return k;
 }

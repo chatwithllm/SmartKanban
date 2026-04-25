@@ -4,10 +4,14 @@ import { broadcast } from '../ws.js';
 import {
   archiveKnowledge,
   canUserSeeKnowledge,
+  createFromCard,
   createKnowledge,
   KnowledgeValidationError,
+  linkCard,
   listKnowledge,
+  listKnowledgeForCard,
   loadKnowledge,
+  unlinkCard,
   updateKnowledge,
   type KnowledgeInput,
   type KnowledgePatch,
@@ -161,6 +165,63 @@ export async function knowledgeRoutes(app: FastifyInstance) {
       if (!existing.url) return reply.code(400).send({ error: 'item has no url' });
       triggerFetch(existing.id);
       return reply.send({ queued: true });
+    },
+  );
+
+  // POST /api/knowledge/:id/links { card_id }
+  app.post<{ Params: { id: string }; Body: { card_id: string } }>(
+    '/api/knowledge/:id/links',
+    { preHandler: requireUser },
+    async (req, reply) => {
+      try {
+        await linkCard(req.user!.id, req.params.id, req.body.card_id);
+        broadcast({
+          type: 'knowledge.link.created',
+          knowledge_id: req.params.id,
+          card_id: req.body.card_id,
+        });
+        return reply.code(204).send();
+      } catch (err) {
+        if (err instanceof KnowledgeValidationError) {
+          if (err.message === 'forbidden') return reply.code(403).send({ error: err.message });
+          if (err.message === 'not found') return reply.code(404).send({ error: err.message });
+          return reply.code(400).send({ error: err.message, field: err.field });
+        }
+        throw err;
+      }
+    },
+  );
+
+  // DELETE /api/knowledge/:id/links/:card_id
+  app.delete<{ Params: { id: string; card_id: string } }>(
+    '/api/knowledge/:id/links/:card_id',
+    { preHandler: requireUser },
+    async (req, reply) => {
+      await unlinkCard(req.user!.id, req.params.id, req.params.card_id);
+      broadcast({
+        type: 'knowledge.link.deleted',
+        knowledge_id: req.params.id,
+        card_id: req.params.card_id,
+      });
+      return reply.code(204).send();
+    },
+  );
+
+  // POST /api/knowledge/from-card/:card_id
+  app.post<{ Params: { card_id: string } }>(
+    '/api/knowledge/from-card/:card_id',
+    { preHandler: requireUser },
+    async (req, reply) => {
+      const k = await createFromCard(req.user!.id, req.params.card_id);
+      if (!k) return reply.code(404).send({ error: 'card not found or not visible' });
+      broadcast({ type: 'knowledge.created', knowledge: k });
+      broadcast({
+        type: 'knowledge.link.created',
+        knowledge_id: k.id,
+        card_id: req.params.card_id,
+      });
+      if (k.fetch_status === 'pending') triggerFetch(k.id);
+      return reply.send(k);
     },
   );
 }

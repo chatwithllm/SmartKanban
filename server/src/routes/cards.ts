@@ -14,6 +14,7 @@ import {
   logActivity,
 } from '../cards.js';
 import { broadcast } from '../ws.js';
+import { listKnowledgeForCard } from '../knowledge.js';
 
 export async function cardRoutes(app: FastifyInstance) {
   // GET /api/cards?scope=personal|inbox|all
@@ -204,6 +205,20 @@ export async function cardRoutes(app: FastifyInstance) {
         return reply.code(404).send({ error: 'not found' });
       }
       return getCardActivity(id);
+    },
+  );
+
+  // GET /api/cards/:id/knowledge
+  app.get<{ Params: { id: string } }>(
+    '/api/cards/:id/knowledge',
+    { preHandler: requireUser },
+    async (req, reply) => {
+      // Visibility check: user must be able to see the card itself.
+      if (!(await canUserSeeCard(req.user!.id, req.params.id))) {
+        return reply.code(404).send({ error: 'not found' });
+      }
+      const items = await listKnowledgeForCard(req.user!.id, req.params.id);
+      return reply.send({ items });
     },
   );
 
