@@ -30,7 +30,7 @@ A comprehensive inventory of every feature in the SmartKanban codebase, organize
 - Relative timestamps corrected for server-clock skew
 - Source indicators: Telegram, AI-summarized, voice attachment, needs review
 
-**Key files:** `web/src/components/Board.tsx`, `Column.tsx`, `CardView.tsx`, `EditDialog.tsx`, `server/src/routes/cards.ts`
+**Key files:** `web/src/components/Board.tsx`, `web/src/components/Column.tsx`, `web/src/components/CardView.tsx`, `web/src/components/EditDialog.tsx`, `server/src/routes/cards.ts`
 
 ---
 
@@ -106,7 +106,7 @@ A card is visible to a user if they:
 - Hybrid approach: optimistic UI for user actions + WebSocket sync for remote changes
 - Client-side scope filtering on incoming events
 
-**Key files:** `server/src/ws.ts`, `web/src/ws.ts`, `web/src/App.tsx`
+**Key files:** `server/src/ws.ts`, `web/src/ws.ts`, `web/src/App.tsx`, `web/src/api.ts`
 
 ---
 
@@ -262,12 +262,12 @@ A card is visible to a user if they:
 ## 11. Infrastructure
 
 ### Database
-- PostgreSQL with connection pool via `DATABASE_URL`
+- PostgreSQL with connection pool via `DATABASE_URL` (`server/src/db.ts`)
 - Idempotent schema in `server/schema.sql`
 - Tables: `users`, `cards`, `card_assignees`, `card_shares`, `card_attachments`, `telegram_identities`, `sessions`, `mirror_tokens`, `activity_log`
 
 ### Server
-- Fastify with TypeScript
+- Fastify with TypeScript (`server/src/index.ts`)
 - SPA fallback: catch-all route serves `index.html` (excludes `/api`, `/ws`, `/telegram`, `/attachments`)
 - Health check: `GET /health` returns `{ ok: true }`
 
