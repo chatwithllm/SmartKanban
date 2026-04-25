@@ -159,3 +159,63 @@ test('createTemplate: tags lowercased and deduped', async () => {
   });
   assert.deepEqual(t.tags.sort(), ['diy', 'home']);
 });
+
+test('instantiateTemplate: creates card with template fields, creator-as-assignee', async () => {
+  const t = await createTemplate(userA, {
+    name: 'g',
+    visibility: 'private',
+    title: 'Buy eggs',
+    description: 'dozen',
+    tags: ['groceries'],
+    status: 'today',
+  });
+  const card = await instantiateTemplate(userA, t.id, { source: 'manual' });
+  assert.ok(card);
+  assert.equal(card!.title, 'Buy eggs');
+  assert.equal(card!.description, 'dozen');
+  assert.equal(card!.status, 'today');
+  assert.deepEqual(card!.tags, ['groceries']);
+  assert.equal(card!.created_by, userA);
+  assert.deepEqual(card!.assignees, [userA]);
+  assert.equal(card!.due_date, null);
+});
+
+test('instantiateTemplate: due_offset_days computes due_date = today + N', async () => {
+  const t = await createTemplate(userA, {
+    name: 'd',
+    visibility: 'private',
+    title: 'x',
+    due_offset_days: 3,
+  });
+  const card = await instantiateTemplate(userA, t.id, { source: 'manual' });
+  const todayUtc = new Date();
+  todayUtc.setUTCDate(todayUtc.getUTCDate() + 3);
+  const expected = todayUtc.toISOString().slice(0, 10);
+  assert.equal(String(card!.due_date).slice(0, 10), expected);
+});
+
+test('instantiateTemplate: status_override wins over template status', async () => {
+  const t = await createTemplate(userA, {
+    name: 'col',
+    visibility: 'private',
+    title: 'x',
+    status: 'today',
+  });
+  const card = await instantiateTemplate(userA, t.id, {
+    source: 'manual',
+    statusOverride: 'in_progress',
+  });
+  assert.equal(card!.status, 'in_progress');
+});
+
+test('instantiateTemplate: not visible returns null', async () => {
+  const t = await createTemplate(userA, { name: 'p', visibility: 'private', title: 'x' });
+  const card = await instantiateTemplate(userB, t.id, { source: 'manual' });
+  assert.equal(card, null);
+});
+
+test('instantiateTemplate: source=telegram tagged correctly', async () => {
+  const t = await createTemplate(userA, { name: 's', visibility: 'private', title: 'x' });
+  const card = await instantiateTemplate(userA, t.id, { source: 'telegram' });
+  assert.equal(card!.source, 'telegram');
+});

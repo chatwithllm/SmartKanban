@@ -1,5 +1,5 @@
 import { pool } from './db.js';
-import { isStatus, type Status } from './cards.js';
+import { loadCard, logActivity, isStatus, type Card, type Source, type Status } from './cards.js';
 
 export type Visibility = 'private' | 'shared';
 
@@ -201,7 +201,55 @@ export async function findTemplateByName(
   return rows[0] ?? null;
 }
 
-// Instantiate is implemented in Task 4 — deliberately not yet exported here.
-export async function instantiateTemplate(): Promise<never> {
-  throw new Error('not implemented yet');
+export type InstantiateOpts = {
+  source: Source;
+  statusOverride?: Status;
+  telegramChatId?: number;
+  telegramMessageId?: number;
+};
+
+export async function instantiateTemplate(
+  userId: string,
+  templateId: string,
+  opts: InstantiateOpts,
+): Promise<Card | null> {
+  const t = await loadTemplate(templateId);
+  if (!t) return null;
+  if (!canUserSeeTemplate(userId, t)) return null;
+
+  const status: Status = opts.statusOverride ?? t.status;
+  const dueDate =
+    t.due_offset_days != null
+      ? new Date(Date.now() + t.due_offset_days * 86_400_000).toISOString().slice(0, 10)
+      : null;
+
+  const { rows } = await pool.query<{ id: string }>(
+    `INSERT INTO cards
+       (title, description, status, tags, due_date, source, created_by,
+        telegram_chat_id, telegram_message_id, position)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,
+       COALESCE((SELECT MIN(position) - 1 FROM cards WHERE status = $3 AND NOT archived), 0))
+     RETURNING id`,
+    [
+      t.title,
+      t.description,
+      status,
+      t.tags,
+      dueDate,
+      opts.source,
+      userId,
+      opts.telegramChatId ?? null,
+      opts.telegramMessageId ?? null,
+    ],
+  );
+  const cardId = rows[0]!.id;
+
+  // Default assignee = creator, mirroring the manual create path.
+  await pool.query(
+    `INSERT INTO card_assignees (card_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+    [cardId, userId],
+  );
+
+  await logActivity(userId, cardId, 'create', { template_id: t.id, template_name: t.name });
+  return await loadCard(cardId);
 }
