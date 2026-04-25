@@ -62,7 +62,7 @@ function validateInput(input: TemplateInput | TemplatePatch, partial: boolean): 
   }
   if (input.tags !== undefined) {
     if (!Array.isArray(input.tags)) {
-      throw new TemplateValidationError('tags', 'tags must be array of <=5');
+      throw new TemplateValidationError('tags', 'tags must be an array');
     }
   }
   if (input.status !== undefined && !isStatus(input.status)) {
@@ -85,7 +85,7 @@ function normaliseTags(tags: string[] | undefined): string[] {
   }
   const result = Array.from(seen);
   if (result.length > 5) {
-    throw new TemplateValidationError('tags', 'tags must be array of <=5');
+    throw new TemplateValidationError('tags', 'tags must have at most 5 unique values');
   }
   return result;
 }
