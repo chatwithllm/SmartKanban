@@ -15,6 +15,7 @@ import {
   getPending,
   updatePending,
 } from './proposals.js';
+import { findTemplateByName, instantiateTemplate, listTemplates } from '../templates.js';
 
 let botInstance: Bot | null = null;
 let pollingStarted = false;
@@ -24,6 +25,20 @@ export function getBot(): Bot | null {
 }
 
 const ATTACHMENTS_DIR = path.resolve(process.env.ATTACHMENTS_DIR ?? 'data/attachments');
+
+const STATUS_EMOJI: Record<Status, string> = {
+  backlog: '📥',
+  today: '📅',
+  in_progress: '⚡',
+  done: '✅',
+};
+
+const STATUS_LABEL: Record<Status, string> = {
+  backlog: 'Backlog',
+  today: 'Today',
+  in_progress: 'Doing',
+  done: 'Done',
+};
 
 function allowedGroupId(): number | null {
   const raw = process.env.TELEGRAM_GROUP_ID;
@@ -379,6 +394,54 @@ async function handleText(
     broadcast({ type: 'card.created', card });
     await reactOk(ctx);
     if (!isPrivate) await sendPrivacyPrompt(ctx, cardId);
+    return;
+  }
+
+  // Templates: only meaningful in DM. Skip in group chats — silent.
+  if ((command === 'use' || command === 't') && isPrivate) {
+    const name = rest.trim();
+    if (!name) {
+      await ctx.reply('Usage: `/use <template>` — see `/templates` for the list.', {
+        parse_mode: 'Markdown',
+      });
+      return;
+    }
+    const tpl = await findTemplateByName(createdBy, name);
+    if (!tpl) {
+      await ctx.reply(`No template \`${escapeMd(name)}\`. Try /templates.`, {
+        parse_mode: 'Markdown',
+      });
+      return;
+    }
+    const card = await instantiateTemplate(createdBy, tpl.id, {
+      source: 'telegram',
+      telegramChatId: chatId,
+      telegramMessageId: ctx.msg?.message_id,
+    });
+    if (!card) {
+      await ctx.reply('Template no longer exists.');
+      return;
+    }
+    broadcast({ type: 'card.created', card });
+    await logActivity(createdBy, card.id, 'telegram.template.use', { template_name: tpl.name });
+    await reactOk(ctx);
+    await ctx.reply(`✓ Saved · ${STATUS_EMOJI[card.status]} ${STATUS_LABEL[card.status]} — ${escapeMd(card.title)}`, {
+      parse_mode: 'Markdown',
+      reply_markup: postSaveKeyboard(card.id, card.status),
+    });
+    return;
+  }
+
+  if (command === 'templates' && isPrivate) {
+    const list = await listTemplates(createdBy);
+    if (list.length === 0) {
+      await ctx.reply('No templates yet. Add one in Settings → Templates.');
+      return;
+    }
+    const lines = list.map(
+      (t) => `${t.visibility === 'private' ? '🔒' : '👥'} \`${escapeMd(t.name)}\` — ${escapeMd(t.title)}`,
+    );
+    await ctx.reply(lines.join('\n'), { parse_mode: 'Markdown' });
     return;
   }
 
