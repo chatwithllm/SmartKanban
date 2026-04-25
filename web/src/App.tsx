@@ -102,15 +102,22 @@ function Authed({ meId }: { meId: string }) {
   }, [scope, meId]);
 
   const handleCreate = async (title: string, status: Status) => {
-    const created = await api.createCard({ title, status });
-    setCards((prev) => [...prev, created]);
+    try {
+      const created = await api.createCard({ title, status });
+      setCards((prev) => [...prev, created]);
+      addToast('Card created', 'success');
+    } catch (e) {
+      addToast(`Failed to create card: ${e}`, 'error');
+    }
   };
 
   const handleDelete = async (id: string) => {
     setCards((prev) => prev.filter((c) => c.id !== id));
     try {
       await api.deleteCard(id);
-    } catch {
+      addToast('Card archived', 'success');
+    } catch (e) {
+      addToast(`Failed to delete card: ${e}`, 'error');
       refresh();
     }
   };
@@ -119,7 +126,8 @@ function Authed({ meId }: { meId: string }) {
     setCards((prev) => prev.map((c) => (c.id === id ? { ...c, status, position } : c)));
     try {
       await api.moveCard(id, status, position);
-    } catch {
+    } catch (e) {
+      addToast(`Failed to move card: ${e}`, 'error');
       refresh();
     }
   };
@@ -130,7 +138,9 @@ function Authed({ meId }: { meId: string }) {
     setCards((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
     try {
       await api.updateCard(id, patch);
-    } catch {
+      addToast('Card saved', 'success');
+    } catch (e) {
+      addToast(`Failed to save card: ${e}`, 'error');
       refresh();
     }
   };
