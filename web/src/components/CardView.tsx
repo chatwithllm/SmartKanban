@@ -38,6 +38,19 @@ function absoluteTime(iso: string): string {
   return new Date(iso).toLocaleString();
 }
 
+function dueDateBadge(due: string): { label: string; cls: string } {
+  const nowMs = Date.now() + getServerClockSkewMs();
+  const today = new Date(nowMs);
+  today.setHours(0, 0, 0, 0);
+  const dueDate = new Date(due + 'T00:00:00');
+  const diffDays = Math.round((dueDate.getTime() - today.getTime()) / 86_400_000);
+  const label = dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  if (diffDays < 0) return { label, cls: 'bg-red-900/40 text-red-200' };
+  if (diffDays === 0) return { label: 'Today', cls: 'bg-amber-900/40 text-amber-200' };
+  if (diffDays <= 3) return { label, cls: 'bg-yellow-900/40 text-yellow-200' };
+  return { label, cls: 'bg-neutral-800 text-neutral-300' };
+}
+
 export function CardView({ card, users = [], onClick, onDelete, dragging, compact }: Props) {
   const sortable = useSortable({ id: card.id, data: { status: card.status } });
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = sortable;
@@ -114,6 +127,14 @@ export function CardView({ card, users = [], onClick, onDelete, dragging, compac
                 review
               </span>
             )}
+            {card.due_date && (() => {
+              const badge = dueDateBadge(card.due_date);
+              return (
+                <span className={`rounded px-1.5 py-0.5 text-[10px] ${badge.cls}`}>
+                  📅 {badge.label}
+                </span>
+              );
+            })()}
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
