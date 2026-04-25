@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Card, User } from '../types.ts';
+import { ActivityTimeline } from './ActivityTimeline.tsx';
 
 type Props = {
   card: Card;
@@ -147,6 +148,8 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
             </div>
           </div>
         </div>
+
+        <ActivityTimeline cardId={card.id} />
 
         <div className="mt-4 flex justify-end gap-2 text-sm">
           <button
