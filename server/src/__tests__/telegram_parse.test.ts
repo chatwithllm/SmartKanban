@@ -61,3 +61,33 @@ test('extractMentions: emails not captured', () => {
   // Accept whatever behavior we get, but ensure plain text without @ returns empty.
   assert.deepEqual(extractMentions('no mentions here'), []);
 });
+
+test('parseCommand: /use <name>', () => {
+  const r = parseCommand('/use grocery');
+  assert.equal(r.command, 'use');
+  assert.equal(r.rest, 'grocery');
+});
+
+test('parseCommand: /t alias', () => {
+  const r = parseCommand('/t grocery');
+  assert.equal(r.command, 't');
+  assert.equal(r.rest, 'grocery');
+});
+
+test('parseCommand: /templates list command', () => {
+  const r = parseCommand('/templates');
+  assert.equal(r.command, 'templates');
+  assert.equal(r.rest, '');
+});
+
+test('parseCommand: /use with @botname suffix', () => {
+  const r = parseCommand('/use@familybot grocery');
+  assert.equal(r.command, 'use');
+  assert.equal(r.rest, 'grocery');
+});
+
+test('parseCommand: /use no arg', () => {
+  const r = parseCommand('/use');
+  assert.equal(r.command, 'use');
+  assert.equal(r.rest, '');
+});
