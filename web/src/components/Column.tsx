@@ -4,6 +4,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { Card, Status, User } from '../types.ts';
 import { STATUS_LABELS } from '../types.ts';
 import { CardView } from './CardView.tsx';
+import { EmptyColumn } from './EmptyColumn.tsx';
 
 type Props = {
   status: Status;
@@ -79,6 +80,7 @@ export function Column({ status, cards, users, onCreate, onEdit, onDelete }: Pro
               onDelete={() => onDelete(card.id)}
             />
           ))}
+          {!adding && cards.length === 0 && <EmptyColumn status={status} />}
         </div>
       </SortableContext>
     </div>
