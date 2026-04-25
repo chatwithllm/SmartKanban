@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api.ts';
 import { useAuth } from '../auth.tsx';
 import type { MirrorToken } from '../types.ts';
+import { TemplatesTab } from './TemplatesTab.tsx';
 
 type Props = { onClose: () => void };
 
@@ -199,6 +200,10 @@ export function SettingsDialog({ onClose }: Props) {
               <li className="px-3 py-2 text-xs text-neutral-600">No links yet.</li>
             )}
           </ul>
+        </section>
+
+        <section className="mt-6 space-y-3">
+          <TemplatesTab me={user!} />
         </section>
       </div>
     </div>
