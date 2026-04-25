@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { api } from '../api.ts';
@@ -7,6 +7,7 @@ import { STATUS_LABELS } from '../types.ts';
 import { CardView } from './CardView.tsx';
 import { EmptyColumn } from './EmptyColumn.tsx';
 import { useTemplates } from '../hooks/useTemplates.ts';
+import { useToast } from '../hooks/useToast.ts';
 
 type Props = {
   status: Status;
@@ -23,7 +24,10 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
   const [showPicker, setShowPicker] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const { templates } = useTemplates();
+  const { addToast } = useToast();
+  const pickerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const onAddCard = (e: Event) => {
@@ -34,26 +38,52 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
     return () => window.removeEventListener('kanban:add-card', onAddCard);
   }, [status]);
 
+  useEffect(() => {
+    if (!showPicker) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [showPicker]);
+
   const submit = async () => {
+    if (submitting) return;
     const t = draft.trim();
+    setDraft('');
+    setAdding(false);
+    if (!t) return;
     if (t.startsWith('/') && !/\s/.test(t)) {
       const name = t.slice(1);
       const tpl = templates.find((tt) => tt.name.toLowerCase() === name.toLowerCase());
       if (tpl) {
-        await api.instantiateTemplate(tpl.id, { status_override: status });
-        setDraft('');
-        setAdding(false);
+        setSubmitting(true);
+        try {
+          await api.instantiateTemplate(tpl.id, { status_override: status });
+        } catch (e) {
+          addToast(`Failed to use template: ${e instanceof Error ? e.message : 'error'}`, 'error');
+        } finally {
+          setSubmitting(false);
+        }
         return;
       }
     }
-    if (t) onCreate(t);
-    setDraft('');
-    setAdding(false);
+    onCreate(t);
   };
 
   const useTemplate = async (id: string) => {
     setShowPicker(false);
-    await api.instantiateTemplate(id, { status_override: status });
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await api.instantiateTemplate(id, { status_override: status });
+    } catch (e) {
+      addToast(`Failed to use template: ${e instanceof Error ? e.message : 'error'}`, 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -70,11 +100,13 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
         </div>
         <div className="flex items-center gap-1">
           {templates.length > 0 && (
-            <div className="relative">
+            <div className="relative" ref={pickerRef}>
               <button
                 onClick={() => setShowPicker((v) => !v)}
                 className="text-neutral-500 hover:text-neutral-200 text-sm"
                 aria-label={`Use template in ${STATUS_LABELS[status]}`}
+                aria-haspopup="menu"
+                aria-expanded={showPicker}
                 title="Use template"
               >
                 📋
