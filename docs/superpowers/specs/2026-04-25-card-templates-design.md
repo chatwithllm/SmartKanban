@@ -42,8 +42,7 @@ CREATE TABLE IF NOT EXISTS card_templates (
   title            text NOT NULL,
   description      text NOT NULL DEFAULT '',
   tags             text[] NOT NULL DEFAULT '{}',
-  status           text NOT NULL DEFAULT 'today'
-                   CHECK (status IN ('backlog','today','doing','done')),
+  status           card_status NOT NULL DEFAULT 'today',
   due_offset_days  integer,
   created_at       timestamptz NOT NULL DEFAULT now(),
   updated_at       timestamptz NOT NULL DEFAULT now()
@@ -86,7 +85,7 @@ Request body (POST/PATCH):
   title: string,
   description?: string,
   tags?: string[],
-  status?: 'backlog' | 'today' | 'doing' | 'done',
+  status?: 'backlog' | 'today' | 'in_progress' | 'done',
   due_offset_days?: number | null,
 }
 ```
@@ -96,7 +95,7 @@ Validation rules:
 - `name`: 1–40 chars, no whitespace-only; unique per owner case-insensitive (DB enforces; route returns 409 on conflict)
 - `title`: 1–120 chars (matches existing card title hard cap)
 - `tags`: max 5, lowercased, deduplicated
-- `status`: enum check
+- `status`: enum check via `isStatus()` from `cards.ts`
 - `due_offset_days`: integer 0–365 or null
 
 ### Instantiate logic
