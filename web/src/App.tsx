@@ -14,6 +14,8 @@ import { ToastProvider, useToast, useToastState } from './hooks/useToast.ts';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.ts';
 import { connectWS } from './ws.ts';
 import { applyTemplateEvent } from './hooks/useTemplates.ts';
+import { KnowledgeView } from './KnowledgeView.tsx';
+import { applyKnowledgeEvent } from './hooks/useKnowledge.ts';
 
 export function App() {
   const { user, loading } = useAuth();
@@ -42,6 +44,7 @@ function Authed({ meId }: { meId: string }) {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [section, setSection] = useState<'board' | 'knowledge'>('board');
   const { addToast } = useToast();
 
   const handleCloseDialog = useCallback(() => {
@@ -78,6 +81,16 @@ function Authed({ meId }: { meId: string }) {
     const disconnect = connectWS((ev) => {
       if (ev.type === 'template.created' || ev.type === 'template.updated' || ev.type === 'template.deleted') {
         applyTemplateEvent(ev);
+        return;
+      }
+      if (
+        ev.type === 'knowledge.created' ||
+        ev.type === 'knowledge.updated' ||
+        ev.type === 'knowledge.deleted' ||
+        ev.type === 'knowledge.link.created' ||
+        ev.type === 'knowledge.link.deleted'
+      ) {
+        applyKnowledgeEvent(ev, meId);
         return;
       }
       if (ev.type === 'card.created' || ev.type === 'card.updated') {
@@ -161,16 +174,22 @@ function Authed({ meId }: { meId: string }) {
         onOpenReview={() => setReviewOpen(true)}
         onOpenArchive={() => setArchiveOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
+        section={section}
+        onSection={setSection}
       />
-      <Board
-        cards={cards}
-        searchQuery={searchQuery}
-        users={users}
-        onCreate={handleCreate}
-        onEdit={setEditing}
-        onDelete={handleDelete}
-        onMove={handleMove}
-      />
+      {section === 'board' ? (
+        <Board
+          cards={cards}
+          searchQuery={searchQuery}
+          users={users}
+          onCreate={handleCreate}
+          onEdit={setEditing}
+          onDelete={handleDelete}
+          onMove={handleMove}
+        />
+      ) : (
+        <KnowledgeView />
+      )}
       {editing && (
         <EditDialog
           card={editing}
