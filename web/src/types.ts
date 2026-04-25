@@ -50,3 +50,19 @@ export type ReviewData = {
   stuck: Array<{ id: string; title: string; status: Status; tags: string[]; updated_at: string }>;
   summary: string | null;
 };
+
+export type ActivityEntry = {
+  id: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  card_id: string | null;
+  action: string;
+  details: Record<string, unknown>;
+  created_at: string;
+};
+
+export type Toast = {
+  id: string;
+  type: 'success' | 'error' | 'info';
+  message: string;
+};

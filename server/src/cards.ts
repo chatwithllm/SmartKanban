@@ -112,6 +112,60 @@ export async function listCards(userId: string, scope: Scope): Promise<Card[]> {
   return rows;
 }
 
+export type ActivityEntry = {
+  id: string;
+  actor_id: string | null;
+  card_id: string | null;
+  action: string;
+  details: Record<string, unknown>;
+  created_at: string;
+  actor_name: string | null;
+};
+
+export async function listArchivedCards(userId: string): Promise<Card[]> {
+  const { rows } = await pool.query<Card>(
+    `
+    SELECT
+      c.*,
+      COALESCE((SELECT ARRAY_AGG(user_id::text) FROM card_assignees WHERE card_id = c.id), '{}') AS assignees,
+      COALESCE((SELECT ARRAY_AGG(user_id::text) FROM card_shares WHERE card_id = c.id), '{}') AS shares,
+      COALESCE((
+        SELECT JSON_AGG(json_build_object(
+          'id', a.id, 'kind', a.kind, 'storage_path', a.storage_path,
+          'original_filename', a.original_filename, 'created_at', a.created_at
+        ) ORDER BY a.created_at)
+        FROM card_attachments a WHERE a.card_id = c.id
+      ), '[]'::json) AS attachments
+    FROM cards c
+    WHERE c.archived AND (
+      c.created_by = $1
+      OR EXISTS (SELECT 1 FROM card_assignees WHERE card_id = c.id AND user_id = $1)
+      OR EXISTS (SELECT 1 FROM card_shares    WHERE card_id = c.id AND user_id = $1)
+      OR NOT EXISTS (SELECT 1 FROM card_assignees WHERE card_id = c.id)
+    )
+    ORDER BY c.updated_at DESC
+    `,
+    [userId],
+  );
+  return rows;
+}
+
+export async function getCardActivity(cardId: string): Promise<ActivityEntry[]> {
+  const { rows } = await pool.query<ActivityEntry>(
+    `
+    SELECT
+      al.id, al.actor_id, al.card_id, al.action, al.details, al.created_at,
+      u.name AS actor_name
+    FROM activity_log al
+    LEFT JOIN users u ON u.id = al.actor_id
+    WHERE al.card_id = $1
+    ORDER BY al.created_at DESC
+    `,
+    [cardId],
+  );
+  return rows;
+}
+
 export async function logActivity(
   actorId: string | null,
   cardId: string | null,
