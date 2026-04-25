@@ -8,6 +8,7 @@ import { LoginView } from './components/LoginView.tsx';
 import { BoardHeader } from './components/BoardHeader.tsx';
 import { WeeklyReview } from './components/WeeklyReview.tsx';
 import { SettingsDialog } from './components/SettingsDialog.tsx';
+import { ArchiveDialog } from './components/ArchiveDialog.tsx';
 import { ToastContainer } from './components/Toast.tsx';
 import { ToastProvider, useToast, useToastState } from './hooks/useToast.ts';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.ts';
@@ -39,13 +40,15 @@ function Authed({ meId }: { meId: string }) {
   const [editing, setEditing] = useState<Card | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const { addToast } = useToast();
 
   const handleCloseDialog = useCallback(() => {
     if (settingsOpen) setSettingsOpen(false);
+    else if (archiveOpen) setArchiveOpen(false);
     else if (reviewOpen) setReviewOpen(false);
     else if (editing) setEditing(null);
-  }, [editing, reviewOpen, settingsOpen]);
+  }, [editing, reviewOpen, archiveOpen, settingsOpen]);
 
   useKeyboardShortcuts({
     searchQuery,
@@ -141,6 +144,7 @@ function Authed({ meId }: { meId: string }) {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onOpenReview={() => setReviewOpen(true)}
+        onOpenArchive={() => setArchiveOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
       />
       <Board
@@ -161,6 +165,15 @@ function Authed({ meId }: { meId: string }) {
         />
       )}
       {reviewOpen && <WeeklyReview onClose={() => setReviewOpen(false)} />}
+      {archiveOpen && (
+        <ArchiveDialog
+          onClose={() => setArchiveOpen(false)}
+          onRestore={(card) => {
+            setCards((prev) => [...prev, card]);
+            addToast(`Restored "${card.title}"`);
+          }}
+        />
+      )}
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
     </div>
   );

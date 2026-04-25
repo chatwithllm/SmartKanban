@@ -9,6 +9,7 @@ type Props = {
   searchQuery: string;
   onSearchChange: (q: string) => void;
   onOpenReview: () => void;
+  onOpenArchive: () => void;
   onOpenSettings: () => void;
 };
 
@@ -18,7 +19,7 @@ const SCOPES: Array<{ id: Scope; label: string }> = [
   { id: 'all', label: 'Everything' },
 ];
 
-export function BoardHeader({ scope, onScope, cardCount, searchQuery, onSearchChange, onOpenReview, onOpenSettings }: Props) {
+export function BoardHeader({ scope, onScope, cardCount, searchQuery, onSearchChange, onOpenReview, onOpenArchive, onOpenSettings }: Props) {
   const { user, logout } = useAuth();
   return (
     <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -45,6 +46,9 @@ export function BoardHeader({ scope, onScope, cardCount, searchQuery, onSearchCh
       <div className="flex items-center gap-3 text-sm">
         <button onClick={onOpenReview} className="text-neutral-400 hover:text-neutral-100 text-xs">
           Weekly review
+        </button>
+        <button onClick={onOpenArchive} className="text-neutral-400 hover:text-neutral-100 text-xs">
+          Archive
         </button>
         <button
           onClick={onOpenSettings}
