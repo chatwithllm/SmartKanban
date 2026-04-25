@@ -1,4 +1,4 @@
-import type { ActivityEntry, Card, MirrorToken, ReviewData, Scope, Status, User } from './types.ts';
+import type { ActivityEntry, Card, MirrorToken, ReviewData, Scope, Status, Template, User } from './types.ts';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -77,4 +77,20 @@ export const api = {
 
   moveCard: (id: string, status: Status, position: number) =>
     api.updateCard(id, { status, position } as Partial<Card>),
+
+  listTemplates: () => req<Template[]>('/api/templates'),
+  createTemplate: (b: {
+    name: string;
+    visibility: 'private' | 'shared';
+    title: string;
+    description?: string;
+    tags?: string[];
+    status?: Status;
+    due_offset_days?: number | null;
+  }) => req<Template>('/api/templates', json(b)),
+  updateTemplate: (id: string, b: Partial<Template>) =>
+    req<Template>(`/api/templates/${id}`, { ...json(b), method: 'PATCH' }),
+  deleteTemplate: (id: string) => req<void>(`/api/templates/${id}`, { method: 'DELETE' }),
+  instantiateTemplate: (id: string, body?: { status_override?: Status }) =>
+    req<Card>(`/api/templates/${id}/instantiate`, json(body ?? {})),
 };

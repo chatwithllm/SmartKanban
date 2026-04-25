@@ -13,6 +13,7 @@ import { ToastContainer } from './components/Toast.tsx';
 import { ToastProvider, useToast, useToastState } from './hooks/useToast.ts';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.ts';
 import { connectWS } from './ws.ts';
+import { applyTemplateEvent } from './hooks/useTemplates.ts';
 
 export function App() {
   const { user, loading } = useAuth();
@@ -75,6 +76,10 @@ function Authed({ meId }: { meId: string }) {
 
   useEffect(() => {
     const disconnect = connectWS((ev) => {
+      if (ev.type === 'template.created' || ev.type === 'template.updated' || ev.type === 'template.deleted') {
+        applyTemplateEvent(ev);
+        return;
+      }
       if (ev.type === 'card.created' || ev.type === 'card.updated') {
         const incoming = ev.card;
         if (incoming.archived) {
