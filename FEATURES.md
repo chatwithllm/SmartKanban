@@ -135,6 +135,9 @@ A card is visible to a user if they:
 - Inline keyboard after save: Today / Doing / Done / Archive
 - Callback updates card status immediately with emoji reaction feedback
 
+### Tests
+- `server/src/__tests__/telegram_parse.test.ts` — Unit tests for hashtag extraction, command parsing, and mention handling
+
 ### Voice Notes
 - Auto-download Telegram voice/audio files
 - Transcribe via OpenAI Whisper (`whisper-1` model)
@@ -272,6 +275,8 @@ A card is visible to a user if they:
 - React 18 + TypeScript + Vite + Tailwind CSS
 - PWA: install-to-home-screen, service worker for offline support
 - Responsive design with mobile-first Tailwind classes
+- Entry point: `web/src/main.tsx` — renders App into DOM root
+- Shared type definitions: `web/src/types.ts` — Card, User, and other TypeScript interfaces
 
 ### Backups
 - `scripts/backup.sh`: pg_dump + tar.gz of attachments
