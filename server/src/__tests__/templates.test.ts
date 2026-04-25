@@ -62,16 +62,24 @@ test('listTemplates: shared templates visible to all', async () => {
 
 test('createTemplate: duplicate name (case-insensitive) per owner rejects', async () => {
   await createTemplate(userA, { name: 'Grocery', visibility: 'private', title: 't' });
+  // PG unique-violation surfaces as code 23505. Match on raw message to confirm
+  // the constraint we expect (`card_templates_owner_name_key`) is the one that fires.
   await assert.rejects(
     createTemplate(userA, { name: 'grocery', visibility: 'private', title: 't' }),
-    /duplicate key/,
+    (err: unknown) => {
+      const e = err as { code?: string; message?: string };
+      return e.code === '23505' && /card_templates_owner_name_key/.test(e.message ?? '');
+    },
   );
 });
 
 test('createTemplate: same name allowed across owners', async () => {
   await createTemplate(userA, { name: 'shared', visibility: 'private', title: 'A' });
   await createTemplate(userB, { name: 'shared', visibility: 'private', title: 'B' });
+  const aList = await listTemplates(userA);
   const bList = await listTemplates(userB);
+  assert.equal(aList.length, 1);
+  assert.equal(aList[0]!.title, 'A');
   assert.equal(bList.length, 1);
   assert.equal(bList[0]!.title, 'B');
 });
@@ -105,12 +113,27 @@ test('updateTemplate: non-owner is rejected', async () => {
   );
 });
 
+test('updateTemplate: owner can update', async () => {
+  const t = await createTemplate(userA, { name: 'u', visibility: 'private', title: 'a' });
+  const updated = await updateTemplate(userA, t.id, { title: 'b' });
+  assert.ok(updated);
+  assert.equal(updated!.title, 'b');
+});
+
 test('deleteTemplate: non-owner cannot delete', async () => {
   const t = await createTemplate(userA, { name: 't', visibility: 'private', title: 'a' });
   const ok = await deleteTemplate(userB, t.id);
   assert.equal(ok, false);
   const still = await loadTemplate(t.id);
   assert.ok(still);
+});
+
+test('deleteTemplate: owner deletes successfully', async () => {
+  const t = await createTemplate(userA, { name: 'd', visibility: 'private', title: 'a' });
+  const ok = await deleteTemplate(userA, t.id);
+  assert.equal(ok, true);
+  const gone = await loadTemplate(t.id);
+  assert.equal(gone, null);
 });
 
 test('createTemplate: validation rejects empty title', async () => {
