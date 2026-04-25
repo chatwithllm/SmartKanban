@@ -16,13 +16,16 @@
     "@fastify/multipart": "^8.3.0",
     "@fastify/static": "^7.0.4",
     "@fastify/websocket": "^10.0.1",
+    "@mozilla/readability": "^0.6.0",
     "argon2": "^0.41.1",
     "fastify": "^4.28.1",
     "grammy": "^1.30.0",
+    "jsdom": "^29.0.2",
     "openai": "^4.67.3",
     "pg": "^8.13.0"
   },
   "devDependencies": {
+    "@types/jsdom": "^28.0.1",
     "@types/node": "^22.7.5",
     "@types/pg": "^8.11.10",
     "tsx": "^4.19.1",
