@@ -8,6 +8,8 @@ import { LoginView } from './components/LoginView.tsx';
 import { BoardHeader } from './components/BoardHeader.tsx';
 import { WeeklyReview } from './components/WeeklyReview.tsx';
 import { SettingsDialog } from './components/SettingsDialog.tsx';
+import { ToastContainer } from './components/Toast.tsx';
+import { ToastProvider, useToast, useToastState } from './hooks/useToast.ts';
 import { connectWS } from './ws.ts';
 
 export function App() {
@@ -15,7 +17,17 @@ export function App() {
 
   if (loading) return <div className="p-8 text-sm text-neutral-500">Loading…</div>;
   if (!user) return <LoginView />;
-  return <Authed meId={user.id} />;
+  return <AuthedWithToast meId={user.id} />;
+}
+
+function AuthedWithToast({ meId }: { meId: string }) {
+  const toast = useToastState();
+  return (
+    <ToastProvider value={toast}>
+      <Authed meId={meId} />
+      <ToastContainer toasts={toast.toasts} onDismiss={toast.removeToast} />
+    </ToastProvider>
+  );
 }
 
 function Authed({ meId }: { meId: string }) {
@@ -25,13 +37,13 @@ function Authed({ meId }: { meId: string }) {
   const [editing, setEditing] = useState<Card | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   const refresh = () =>
     api
       .listCards(scope)
       .then(setCards)
-      .catch((e) => setError(String(e)));
+      .catch((e) => addToast(String(e)));
 
   useEffect(() => {
     refresh();
@@ -112,11 +124,6 @@ function Authed({ meId }: { meId: string }) {
         onOpenReview={() => setReviewOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
       />
-      {error && (
-        <div className="mb-3 rounded-lg border border-red-900 bg-red-950/50 p-2 text-xs text-red-200">
-          {error}
-        </div>
-      )}
       <Board
         cards={cards}
         users={users}
