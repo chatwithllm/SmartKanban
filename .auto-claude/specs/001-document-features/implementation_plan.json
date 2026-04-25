@@ -1,0 +1,61 @@
+{
+  "feature": "001-document-features",
+  "spec_name": "001-document-features",
+  "workflow_type": "simple",
+  "total_phases": 1,
+  "recommended_workers": 1,
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Feature Audit",
+      "description": "Read all source files, catalog every feature, and produce FEATURES.md",
+      "depends_on": [],
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Audit server-side features: read every file in server/src/ (routes, ai, telegram, auth, cards, ws, db) and catalog all implemented features with their locations and status",
+          "service": "server",
+          "status": "completed",
+          "files_to_create": [],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "run": "Confirm all server source files are accounted for in the audit notes"
+          }
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Audit web-side features and produce FEATURES.md: read every file in web/src/ (components, api, auth, ws, App, MirrorView), then combine server + web audit into a structured FEATURES.md at the project root. Cross-reference against README.md to ensure nothing is missed.",
+          "service": "web",
+          "status": "pending",
+          "files_to_create": [
+            "FEATURES.md"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "run": "cat FEATURES.md and verify all source files and README features are covered"
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "created_at": "2026-04-25T00:00:00Z",
+    "complexity": "simple",
+    "estimated_sessions": 1
+  },
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "xstateState": "coding",
+  "executionPhase": "coding",
+  "updated_at": "2026-04-25T09:16:51.285Z",
+  "lastEvent": {
+    "eventId": "a50e5424-30c8-4cd0-9960-d3a4a51d19da",
+    "sequence": 0,
+    "type": "PLANNING_COMPLETE",
+    "timestamp": "2026-04-25T09:07:16.472359+00:00"
+  }
+}
