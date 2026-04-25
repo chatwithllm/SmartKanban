@@ -10,12 +10,13 @@ type Props = {
   status: Status;
   cards: Card[];
   users: User[];
+  searchActive?: boolean;
   onCreate: (title: string) => void;
   onEdit: (card: Card) => void;
   onDelete: (id: string) => void;
 };
 
-export function Column({ status, cards, users, onCreate, onEdit, onDelete }: Props) {
+export function Column({ status, cards, users, searchActive, onCreate, onEdit, onDelete }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: `column:${status}`, data: { status } });
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
@@ -80,7 +81,13 @@ export function Column({ status, cards, users, onCreate, onEdit, onDelete }: Pro
               onDelete={() => onDelete(card.id)}
             />
           ))}
-          {!adding && cards.length === 0 && <EmptyColumn status={status} />}
+          {!adding && cards.length === 0 && (
+            searchActive ? (
+              <p className="py-8 text-center text-xs text-neutral-500">No cards match your search</p>
+            ) : (
+              <EmptyColumn status={status} />
+            )
+          )}
         </div>
       </SortableContext>
     </div>

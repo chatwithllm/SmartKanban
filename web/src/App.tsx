@@ -34,6 +34,7 @@ function Authed({ meId }: { meId: string }) {
   const [cards, setCards] = useState<Card[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [scope, setScope] = useState<Scope>('personal');
+  const [searchQuery, setSearchQuery] = useState('');
   const [editing, setEditing] = useState<Card | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -119,13 +120,16 @@ function Authed({ meId }: { meId: string }) {
     <div className="min-h-full p-4">
       <BoardHeader
         scope={scope}
-        onScope={setScope}
+        onScope={(s) => { setScope(s); setSearchQuery(''); }}
         cardCount={cards.length}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         onOpenReview={() => setReviewOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
       />
       <Board
         cards={cards}
+        searchQuery={searchQuery}
         users={users}
         onCreate={handleCreate}
         onEdit={setEditing}

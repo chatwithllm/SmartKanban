@@ -1,10 +1,13 @@
 import type { Scope } from '../types.ts';
 import { useAuth } from '../auth.tsx';
+import { SearchBar } from './SearchBar.tsx';
 
 type Props = {
   scope: Scope;
   onScope: (s: Scope) => void;
   cardCount: number;
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
   onOpenReview: () => void;
   onOpenSettings: () => void;
 };
@@ -15,7 +18,7 @@ const SCOPES: Array<{ id: Scope; label: string }> = [
   { id: 'all', label: 'Everything' },
 ];
 
-export function BoardHeader({ scope, onScope, cardCount, onOpenReview, onOpenSettings }: Props) {
+export function BoardHeader({ scope, onScope, cardCount, searchQuery, onSearchChange, onOpenReview, onOpenSettings }: Props) {
   const { user, logout } = useAuth();
   return (
     <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -37,6 +40,7 @@ export function BoardHeader({ scope, onScope, cardCount, onOpenReview, onOpenSet
           ))}
         </div>
         <span className="text-xs text-neutral-500">{cardCount} cards</span>
+        <SearchBar value={searchQuery} onChange={onSearchChange} />
       </div>
       <div className="flex items-center gap-3 text-sm">
         <button onClick={onOpenReview} className="text-neutral-400 hover:text-neutral-100 text-xs">
