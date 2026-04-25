@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from './api.ts';
 import { useAuth } from './auth.tsx';
 import type { Card, Scope, Status, User } from './types.ts';
@@ -8,6 +8,10 @@ import { LoginView } from './components/LoginView.tsx';
 import { BoardHeader } from './components/BoardHeader.tsx';
 import { WeeklyReview } from './components/WeeklyReview.tsx';
 import { SettingsDialog } from './components/SettingsDialog.tsx';
+import { ArchiveDialog } from './components/ArchiveDialog.tsx';
+import { ToastContainer } from './components/Toast.tsx';
+import { ToastProvider, useToast, useToastState } from './hooks/useToast.ts';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.ts';
 import { connectWS } from './ws.ts';
 
 export function App() {
@@ -15,23 +19,51 @@ export function App() {
 
   if (loading) return <div className="p-8 text-sm text-neutral-500">Loading…</div>;
   if (!user) return <LoginView />;
-  return <Authed meId={user.id} />;
+  return <AuthedWithToast meId={user.id} />;
+}
+
+function AuthedWithToast({ meId }: { meId: string }) {
+  const toast = useToastState();
+  return (
+    <ToastProvider value={toast}>
+      <Authed meId={meId} />
+      <ToastContainer toasts={toast.toasts} onDismiss={toast.removeToast} />
+    </ToastProvider>
+  );
 }
 
 function Authed({ meId }: { meId: string }) {
   const [cards, setCards] = useState<Card[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [scope, setScope] = useState<Scope>('personal');
+  const [searchQuery, setSearchQuery] = useState('');
   const [editing, setEditing] = useState<Card | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const { addToast } = useToast();
+
+  const handleCloseDialog = useCallback(() => {
+    if (settingsOpen) setSettingsOpen(false);
+    else if (archiveOpen) setArchiveOpen(false);
+    else if (reviewOpen) setReviewOpen(false);
+    else if (editing) setEditing(null);
+  }, [editing, reviewOpen, archiveOpen, settingsOpen]);
+
+  useKeyboardShortcuts({
+    searchQuery,
+    onSearchChange: setSearchQuery,
+    editing: !!editing,
+    reviewOpen,
+    settingsOpen,
+    onCloseDialog: handleCloseDialog,
+  });
 
   const refresh = () =>
     api
       .listCards(scope)
       .then(setCards)
-      .catch((e) => setError(String(e)));
+      .catch((e) => addToast(String(e)));
 
   useEffect(() => {
     refresh();
@@ -70,15 +102,22 @@ function Authed({ meId }: { meId: string }) {
   }, [scope, meId]);
 
   const handleCreate = async (title: string, status: Status) => {
-    const created = await api.createCard({ title, status });
-    setCards((prev) => [...prev, created]);
+    try {
+      const created = await api.createCard({ title, status });
+      setCards((prev) => [...prev, created]);
+      addToast('Card created', 'success');
+    } catch (e) {
+      addToast(`Failed to create card: ${e}`, 'error');
+    }
   };
 
   const handleDelete = async (id: string) => {
     setCards((prev) => prev.filter((c) => c.id !== id));
     try {
       await api.deleteCard(id);
-    } catch {
+      addToast('Card archived', 'success');
+    } catch (e) {
+      addToast(`Failed to delete card: ${e}`, 'error');
       refresh();
     }
   };
@@ -87,7 +126,8 @@ function Authed({ meId }: { meId: string }) {
     setCards((prev) => prev.map((c) => (c.id === id ? { ...c, status, position } : c)));
     try {
       await api.moveCard(id, status, position);
-    } catch {
+    } catch (e) {
+      addToast(`Failed to move card: ${e}`, 'error');
       refresh();
     }
   };
@@ -98,7 +138,9 @@ function Authed({ meId }: { meId: string }) {
     setCards((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
     try {
       await api.updateCard(id, patch);
-    } catch {
+      addToast('Card saved', 'success');
+    } catch (e) {
+      addToast(`Failed to save card: ${e}`, 'error');
       refresh();
     }
   };
@@ -107,18 +149,17 @@ function Authed({ meId }: { meId: string }) {
     <div className="min-h-full p-4">
       <BoardHeader
         scope={scope}
-        onScope={setScope}
+        onScope={(s) => { setScope(s); setSearchQuery(''); }}
         cardCount={cards.length}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         onOpenReview={() => setReviewOpen(true)}
+        onOpenArchive={() => setArchiveOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
       />
-      {error && (
-        <div className="mb-3 rounded-lg border border-red-900 bg-red-950/50 p-2 text-xs text-red-200">
-          {error}
-        </div>
-      )}
       <Board
         cards={cards}
+        searchQuery={searchQuery}
         users={users}
         onCreate={handleCreate}
         onEdit={setEditing}
@@ -134,6 +175,15 @@ function Authed({ meId }: { meId: string }) {
         />
       )}
       {reviewOpen && <WeeklyReview onClose={() => setReviewOpen(false)} />}
+      {archiveOpen && (
+        <ArchiveDialog
+          onClose={() => setArchiveOpen(false)}
+          onRestore={(card) => {
+            setCards((prev) => [...prev, card]);
+            addToast(`Restored "${card.title}"`);
+          }}
+        />
+      )}
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
     </div>
   );

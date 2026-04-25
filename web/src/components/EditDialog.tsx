@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Card, User } from '../types.ts';
+import { ActivityTimeline } from './ActivityTimeline.tsx';
 
 type Props = {
   card: Card;
@@ -14,6 +15,7 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
   const [tags, setTags] = useState(card.tags.join(', '));
   const [assignees, setAssignees] = useState<string[]>(card.assignees);
   const [shares, setShares] = useState<string[]>(card.shares);
+  const [dueDate, setDueDate] = useState(card.due_date ?? '');
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -37,6 +39,7 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
         .filter(Boolean),
       assignees,
       shares,
+      due_date: dueDate || null,
       needs_review: false,
     } as Partial<Card>);
     onClose();
@@ -69,6 +72,24 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
           className="mt-3 w-full rounded-lg bg-neutral-950 px-2 py-1.5 text-sm text-neutral-200 outline-none border border-neutral-800 focus:border-neutral-700"
           placeholder="tags, comma, separated"
         />
+
+        <div className="mt-3 flex items-center gap-2">
+          <label className="text-xs text-neutral-500 shrink-0">Due date</label>
+          <input
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            className="flex-1 rounded-lg bg-neutral-950 px-2 py-1.5 text-sm text-neutral-200 outline-none border border-neutral-800 focus:border-neutral-700"
+          />
+          {dueDate && (
+            <button
+              onClick={() => setDueDate('')}
+              className="text-xs text-neutral-500 hover:text-neutral-200"
+            >
+              ✕
+            </button>
+          )}
+        </div>
 
         {card.attachments.length > 0 && (
           <div className="mt-4">
@@ -127,6 +148,8 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
             </div>
           </div>
         </div>
+
+        <ActivityTimeline cardId={card.id} />
 
         <div className="mt-4 flex justify-end gap-2 text-sm">
           <button

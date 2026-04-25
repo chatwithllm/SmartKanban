@@ -17,22 +17,35 @@ import { CardView } from './CardView.tsx';
 type Props = {
   cards: Card[];
   users: User[];
+  searchQuery: string;
   onCreate: (title: string, status: Status) => void;
   onEdit: (card: Card) => void;
   onDelete: (id: string) => void;
   onMove: (id: string, status: Status, position: number) => void;
 };
 
-export function Board({ cards, users, onCreate, onEdit, onDelete, onMove }: Props) {
+export function Board({ cards, users, searchQuery, onCreate, onEdit, onDelete, onMove }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
+  const searchActive = searchQuery.trim().length > 0;
+
+  const filteredCards = useMemo(() => {
+    if (!searchActive) return cards;
+    const q = searchQuery.trim().toLowerCase();
+    return cards.filter(
+      (c) =>
+        c.title.toLowerCase().includes(q) ||
+        (c.description ?? '').toLowerCase().includes(q),
+    );
+  }, [cards, searchQuery, searchActive]);
+
   const byStatus = useMemo(() => {
     const map: Record<Status, Card[]> = { backlog: [], today: [], in_progress: [], done: [] };
-    for (const c of cards) map[c.status].push(c);
+    for (const c of filteredCards) map[c.status].push(c);
     for (const s of STATUSES) map[s].sort((a, b) => a.position - b.position);
     return map;
-  }, [cards]);
+  }, [filteredCards]);
 
   const activeCard = activeId ? cards.find((c) => c.id === activeId) ?? null : null;
 
@@ -91,6 +104,7 @@ export function Board({ cards, users, onCreate, onEdit, onDelete, onMove }: Prop
             status={status}
             cards={byStatus[status]}
             users={users}
+            searchActive={searchActive}
             onCreate={(title) => onCreate(title, status)}
             onEdit={onEdit}
             onDelete={onDelete}

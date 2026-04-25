@@ -6,7 +6,9 @@ import {
   type Scope,
   type Status,
   canUserSeeCard,
+  getCardActivity,
   isStatus,
+  listArchivedCards,
   listCards,
   loadCard,
   logActivity,
@@ -21,6 +23,15 @@ export async function cardRoutes(app: FastifyInstance) {
     async (req) => {
       const scope: Scope = req.query.scope ?? 'personal';
       return listCards(req.user!.id, scope);
+    },
+  );
+
+  // GET /api/cards/archived
+  app.get(
+    '/api/cards/archived',
+    { preHandler: requireUser },
+    async (req) => {
+      return listArchivedCards(req.user!.id);
     },
   );
 
@@ -159,6 +170,42 @@ export async function cardRoutes(app: FastifyInstance) {
     broadcast({ type: 'card.updated', card: updated });
     return updated;
   });
+
+  // PATCH /api/cards/:id/restore
+  app.patch<{ Params: { id: string } }>(
+    '/api/cards/:id/restore',
+    { preHandler: requireUser },
+    async (req, reply) => {
+      const { id } = req.params;
+      if (!(await canUserSeeCard(req.user!.id, id))) {
+        return reply.code(404).send({ error: 'not found' });
+      }
+      const { rowCount } = await pool.query(
+        `UPDATE cards SET archived = FALSE, updated_at = NOW() WHERE id = $1 AND archived`,
+        [id],
+      );
+      if (rowCount === 0) return reply.code(404).send({ error: 'not found' });
+      await logActivity(req.user!.id, id, 'restore');
+      const card = (await loadCard(id))!;
+      broadcast({ type: 'card.updated', card });
+      return card;
+    },
+  );
+
+  // GET /api/cards/:id/activity
+  app.get<{ Params: { id: string } }>(
+    '/api/cards/:id/activity',
+    { preHandler: requireUser },
+    async (req, reply) => {
+      const { id } = req.params;
+      const card = await loadCard(id);
+      if (!card) return reply.code(404).send({ error: 'not found' });
+      if (!(await canUserSeeCard(req.user!.id, id))) {
+        return reply.code(404).send({ error: 'not found' });
+      }
+      return getCardActivity(id);
+    },
+  );
 
   app.delete<{ Params: { id: string } }>(
     '/api/cards/:id',

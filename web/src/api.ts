@@ -1,4 +1,4 @@
-import type { Card, MirrorToken, ReviewData, Scope, Status, User } from './types.ts';
+import type { ActivityEntry, Card, MirrorToken, ReviewData, Scope, Status, User } from './types.ts';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -69,6 +69,11 @@ export const api = {
     req<void>(`/api/telegram/identities/${id}`, { method: 'DELETE' }),
 
   attachmentUrl: (path: string) => `/attachments/${path}`,
+
+  listArchived: () => req<Card[]>('/api/cards/archived'),
+  restoreCard: (id: string) =>
+    req<Card>(`/api/cards/${id}/restore`, { method: 'PATCH' }),
+  cardActivity: (id: string) => req<ActivityEntry[]>(`/api/cards/${id}/activity`),
 
   moveCard: (id: string, status: Status, position: number) =>
     api.updateCard(id, { status, position } as Partial<Card>),
