@@ -66,3 +66,19 @@ export type Toast = {
   type: 'success' | 'error' | 'info';
   message: string;
 };
+
+export type TemplateVisibility = 'private' | 'shared';
+
+export type Template = {
+  id: string;
+  owner_id: string;
+  name: string;
+  visibility: TemplateVisibility;
+  title: string;
+  description: string;
+  tags: string[];
+  status: Status;
+  due_offset_days: number | null;
+  created_at: string;
+  updated_at: string;
+};

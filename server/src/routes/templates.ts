@@ -58,8 +58,7 @@ export async function templateRoutes(app: FastifyInstance) {
     async (req, reply) => {
       try {
         const t = await createTemplate(req.user!.id, req.body);
-        // TODO(task-6): drop `as any` once BroadcastEvent union widens to include template events.
-        broadcast({ type: 'template.created', template: t } as any);
+        broadcast({ type: 'template.created', template: t });
         return reply.code(201).send(t);
       } catch (err) {
         if (handleValidation(reply, err)) return;
@@ -80,7 +79,7 @@ export async function templateRoutes(app: FastifyInstance) {
         }
         const t = await updateTemplate(req.user!.id, req.params.id, req.body);
         if (!t) return reply.code(404).send({ error: 'not found' });
-        broadcast({ type: 'template.updated', template: t } as any);
+        broadcast({ type: 'template.updated', template: t });
         return t;
       } catch (err) {
         if (handleValidation(reply, err)) return;
@@ -100,7 +99,7 @@ export async function templateRoutes(app: FastifyInstance) {
       }
       const ok = await deleteTemplate(req.user!.id, req.params.id);
       if (!ok) return reply.code(403).send({ error: 'forbidden' });
-      broadcast({ type: 'template.deleted', id: req.params.id, owner_id: existing.owner_id, visibility: existing.visibility } as any);
+      broadcast({ type: 'template.deleted', id: req.params.id, owner_id: existing.owner_id, visibility: existing.visibility });
       return reply.code(204).send();
     },
   );

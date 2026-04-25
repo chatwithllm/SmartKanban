@@ -1,10 +1,14 @@
 import type { Card } from './types.ts';
+import type { Template } from './types.ts';
 
 export type BroadcastEvent =
   | { type: 'hello'; user_id: string }
   | { type: 'card.created'; card: Card }
   | { type: 'card.updated'; card: Card }
-  | { type: 'card.deleted'; id: string };
+  | { type: 'card.deleted'; id: string }
+  | { type: 'template.created'; template: Template }
+  | { type: 'template.updated'; template: Template }
+  | { type: 'template.deleted'; id: string; owner_id: string; visibility: 'private' | 'shared' };
 
 export function connectWS(
   onEvent: (ev: BroadcastEvent) => void,

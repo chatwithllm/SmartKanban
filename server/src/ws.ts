@@ -2,11 +2,15 @@ import type { FastifyInstance } from 'fastify';
 import type { WebSocket } from '@fastify/websocket';
 import { SESSION_COOKIE, userFromMirrorToken, userFromSession } from './auth.js';
 import type { Card } from './cards.js';
+import type { Template } from './templates.js';
 
 export type BroadcastEvent =
   | { type: 'card.created'; card: Card }
   | { type: 'card.updated'; card: Card }
-  | { type: 'card.deleted'; id: string };
+  | { type: 'card.deleted'; id: string }
+  | { type: 'template.created'; template: Template }
+  | { type: 'template.updated'; template: Template }
+  | { type: 'template.deleted'; id: string; owner_id: string; visibility: 'private' | 'shared' };
 
 type Client = { socket: WebSocket; userId: string };
 const clients = new Set<Client>();
@@ -22,11 +26,21 @@ function cardVisibleTo(card: Card, userId: string): boolean {
   );
 }
 
+function templateVisibleTo(t: Template | { owner_id: string; visibility: 'private' | 'shared' }, userId: string): boolean {
+  return t.owner_id === userId || t.visibility === 'shared';
+}
+
 export function broadcast(ev: BroadcastEvent) {
   for (const c of clients) {
     if (c.socket.readyState !== 1 /* OPEN */) continue;
     if (ev.type === 'card.created' || ev.type === 'card.updated') {
       if (!cardVisibleTo(ev.card, c.userId)) continue;
+    }
+    if (ev.type === 'template.created' || ev.type === 'template.updated') {
+      if (!templateVisibleTo(ev.template, c.userId)) continue;
+    }
+    if (ev.type === 'template.deleted') {
+      if (!templateVisibleTo(ev, c.userId)) continue;
     }
     c.socket.send(JSON.stringify(ev));
   }
