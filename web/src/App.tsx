@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from './api.ts';
 import { useAuth } from './auth.tsx';
 import type { Card, Scope, Status, User } from './types.ts';
@@ -10,6 +10,7 @@ import { WeeklyReview } from './components/WeeklyReview.tsx';
 import { SettingsDialog } from './components/SettingsDialog.tsx';
 import { ToastContainer } from './components/Toast.tsx';
 import { ToastProvider, useToast, useToastState } from './hooks/useToast.ts';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.ts';
 import { connectWS } from './ws.ts';
 
 export function App() {
@@ -39,6 +40,21 @@ function Authed({ meId }: { meId: string }) {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { addToast } = useToast();
+
+  const handleCloseDialog = useCallback(() => {
+    if (settingsOpen) setSettingsOpen(false);
+    else if (reviewOpen) setReviewOpen(false);
+    else if (editing) setEditing(null);
+  }, [editing, reviewOpen, settingsOpen]);
+
+  useKeyboardShortcuts({
+    searchQuery,
+    onSearchChange: setSearchQuery,
+    editing: !!editing,
+    reviewOpen,
+    settingsOpen,
+    onCloseDialog: handleCloseDialog,
+  });
 
   const refresh = () =>
     api

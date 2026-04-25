@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { Card, Status, User } from '../types.ts';
@@ -21,6 +21,15 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
 
+  useEffect(() => {
+    const onAddCard = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.status === status) setAdding(true);
+    };
+    window.addEventListener('kanban:add-card', onAddCard);
+    return () => window.removeEventListener('kanban:add-card', onAddCard);
+  }, [status]);
+
   const submit = () => {
     const t = draft.trim();
     if (t) onCreate(t);
@@ -31,6 +40,7 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
   return (
     <div
       ref={setNodeRef}
+      data-column-status={status}
       className={`flex flex-col rounded-xl bg-neutral-900/40 p-3 min-h-[60vh] transition-colors
         ${isOver ? 'bg-neutral-800/60' : ''}`}
     >
