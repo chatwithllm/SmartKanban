@@ -91,3 +91,36 @@ test('parseCommand: /use no arg', () => {
   assert.equal(r.command, 'use');
   assert.equal(r.rest, '');
 });
+
+import { parseKnowledgeCommand } from '../telegram/bot.js';
+
+test('parseKnowledgeCommand /save url only', () => {
+  assert.deepEqual(
+    parseKnowledgeCommand('/save https://example.com'),
+    { cmd: 'save', url: 'https://example.com', title: undefined },
+  );
+});
+test('parseKnowledgeCommand /save url | title', () => {
+  assert.deepEqual(
+    parseKnowledgeCommand('/save https://example.com | My Title'),
+    { cmd: 'save', url: 'https://example.com', title: 'My Title' },
+  );
+});
+test('parseKnowledgeCommand /note multi-line', () => {
+  assert.deepEqual(
+    parseKnowledgeCommand('/note buy eggs\nremember organic'),
+    { cmd: 'note', title: 'buy eggs', body: 'remember organic' },
+  );
+});
+test('parseKnowledgeCommand /k query', () => {
+  assert.deepEqual(parseKnowledgeCommand('/k some query'), { cmd: 'k', q: 'some query' });
+});
+test('parseKnowledgeCommand /klist', () => {
+  assert.deepEqual(parseKnowledgeCommand('/klist'), { cmd: 'klist' });
+});
+test('parseKnowledgeCommand empty /save', () => {
+  assert.deepEqual(parseKnowledgeCommand('/save'), { cmd: 'save', error: 'no url' });
+});
+test('parseKnowledgeCommand non-knowledge command returns null', () => {
+  assert.equal(parseKnowledgeCommand('/use grocery'), null);
+});
