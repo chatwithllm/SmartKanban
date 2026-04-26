@@ -137,7 +137,11 @@ function Authed({ meId }: { meId: string }) {
   const handleCreate = async (title: string, status: Status) => {
     try {
       const created = await api.createCard({ title, status });
-      setCards((prev) => [...prev, created]);
+      // Dedup: the WS card.created broadcast may arrive before this resolves.
+      // Without this guard the same id ends up in state twice until refresh.
+      setCards((prev) =>
+        prev.some((c) => c.id === created.id) ? prev : [...prev, created],
+      );
       addToast('Card created', 'success');
     } catch (e) {
       addToast(`Failed to create card: ${e}`, 'error');
@@ -221,7 +225,9 @@ function Authed({ meId }: { meId: string }) {
         <ArchiveDialog
           onClose={() => setArchiveOpen(false)}
           onRestore={(card) => {
-            setCards((prev) => [...prev, card]);
+            setCards((prev) =>
+              prev.some((c) => c.id === card.id) ? prev : [...prev, card],
+            );
             addToast(`Restored "${card.title}"`);
           }}
         />
