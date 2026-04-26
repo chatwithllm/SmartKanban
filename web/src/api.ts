@@ -73,6 +73,9 @@ export const api = {
   listArchived: () => req<Card[]>('/api/cards/archived'),
   restoreCard: (id: string) =>
     req<Card>(`/api/cards/${id}/restore`, { method: 'PATCH' }),
+  permanentDeleteCard: (id: string) =>
+    req<void>(`/api/cards/${id}/permanent`, { method: 'DELETE' }),
+  purgeArchived: () => req<{ deleted: number }>('/api/cards/archived/purge', json({})),
   cardActivity: (id: string) => req<ActivityEntry[]>(`/api/cards/${id}/activity`),
 
   moveCard: (id: string, status: Status, position: number) =>
