@@ -1,0 +1,208 @@
+/* Self-hosted primary typeface */
+@font-face {
+  font-family: 'Nunito Sans';
+  src: url('/fonts/nunito-sans-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Nunito Sans';
+  src: url('/fonts/nunito-sans-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Nunito Sans';
+  src: url('/fonts/nunito-sans-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Surfaces — light theme */
+  --canvas: 242 240 235;          /* #f2f0eb Neutral Warm */
+  --ceramic: 237 235 233;         /* #edebe9 */
+  --card: 255 255 255;            /* #ffffff */
+  --neutral-cool: 249 249 249;    /* #f9f9f9 */
+  --gold-lightest: 250 246 238;   /* #faf6ee */
+
+  /* Brand greens (theme-invariant) */
+  --green-starbucks: 0 98 65;     /* #006241 */
+  --green-accent: 0 117 74;       /* #00754A */
+  --green-house: 30 57 50;        /* #1E3932 */
+  --green-uplift: 43 81 72;       /* #2b5148 */
+  --green-light: 212 233 226;     /* #d4e9e2 */
+
+  /* Gold (ceremony only) */
+  --gold: 203 162 88;             /* #cba258 */
+
+  /* Semantic */
+  --red: 200 32 20;               /* #c82014 */
+  --yellow: 251 188 5;            /* #fbbc05 */
+
+  /* Text — light theme */
+  --ink: 0 0 0;                   /* used at 0.87 alpha */
+  --ink-soft: 0 0 0;              /* used at 0.58 alpha */
+  --ink-rev: 255 255 255;
+  --ink-rev-soft: 255 255 255;    /* used at 0.70 alpha */
+  --ink-rewards: 51 67 61;        /* #33433d */
+
+  /* Geometry */
+  --radius-card: 12px;
+  --radius-pill: 50px;
+
+  /* Shadows */
+  --shadow-card: 0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24);
+  --shadow-card-hover: 0 0 0.5px rgba(0,0,0,0.14), 0 4px 8px rgba(0,0,0,0.14);
+  --shadow-card-drag: 0 12px 24px rgba(0,0,0,0.18);
+  --shadow-app-bar: 0 1px 3px rgba(0,0,0,0.1), 0 2px 2px rgba(0,0,0,0.06), 0 0 2px rgba(0,0,0,0.07);
+  --shadow-fab-base: 0 0 6px rgba(0,0,0,0.24);
+  --shadow-fab-ambient: 0 8px 12px rgba(0,0,0,0.14);
+  --shadow-toast: 0 0 0.5px rgba(0,0,0,0.14), 0 8px 12px rgba(0,0,0,0.14);
+  --shadow-modal: 0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24), 0 16px 32px rgba(0,0,0,0.18);
+
+  /* Frap touch offset (for FAB) */
+  --frap-touch-offset: -0.8rem;
+}
+
+:root[data-theme="dark"] {
+  --canvas: 10 10 10;             /* #0a0a0a */
+  --ceramic: 23 23 23;             /* #171717 */
+  --card: 26 26 26;                /* #1a1a1a */
+  --neutral-cool: 31 31 31;        /* #1f1f1f */
+  --gold-lightest: 38 33 26;       /* #26211a */
+
+  --ink: 255 255 255;              /* used at 0.92 alpha in dark */
+  --ink-soft: 255 255 255;         /* used at 0.65 alpha in dark */
+  --ink-rewards: 163 181 173;
+
+  --shadow-card: 0 0 0.5px rgba(0,0,0,0.30), 0 1px 1px rgba(0,0,0,0.50);
+  --shadow-card-hover: 0 0 0.5px rgba(0,0,0,0.30), 0 4px 8px rgba(0,0,0,0.30);
+  --shadow-card-drag: 0 12px 24px rgba(0,0,0,0.40);
+  --shadow-app-bar: 0 1px 3px rgba(0,0,0,0.30), 0 2px 2px rgba(0,0,0,0.18);
+  --shadow-fab-base: 0 0 6px rgba(0,0,0,0.50);
+  --shadow-fab-ambient: 0 8px 12px rgba(0,0,0,0.30);
+  --shadow-toast: 0 0 0.5px rgba(0,0,0,0.30), 0 8px 12px rgba(0,0,0,0.30);
+  --shadow-modal: 0 0 0.5px rgba(0,0,0,0.30), 0 1px 1px rgba(0,0,0,0.40), 0 16px 32px rgba(0,0,0,0.40);
+}
+
+/* Anchor 1rem = 10px so design-doc rem values map directly */
+html { font-size: 62.5%; }
+body { font-size: 1.6rem; }
+
+/* Pill button utilities */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius-pill);
+  padding: 7px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  cursor: pointer;
+  user-select: none;
+}
+.btn-pill:active { transform: scale(0.95); }
+.btn-pill:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-pill-filled-green   { background: rgb(var(--green-accent)); color: #fff; border-color: rgb(var(--green-accent)); }
+.btn-pill-outlined-green { background: transparent;              color: rgb(var(--green-accent)); border-color: rgb(var(--green-accent)); }
+.btn-pill-filled-black   { background: #000;                     color: #fff; border-color: #000; }
+.btn-pill-outlined-dark  { background: transparent;              color: rgb(var(--ink) / 0.87); border-color: rgb(var(--ink) / 0.87); }
+.btn-pill-on-dark-filled { background: #fff;                     color: rgb(var(--green-accent)); border-color: #fff; }
+.btn-pill-on-dark-outlined { background: transparent;            color: #fff; border-color: #fff; }
+.btn-pill-destructive    { background: rgb(var(--red));          color: #fff; border-color: rgb(var(--red)); }
+
+/* Card surface */
+.card-surface {
+  background: rgb(var(--card));
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease;
+}
+.card-surface:hover { box-shadow: var(--shadow-card-hover); }
+.card-surface[data-dragging="true"] { box-shadow: var(--shadow-card-drag); transform: scale(1.02); }
+
+/* App bar */
+.app-bar {
+  background: rgb(var(--card));
+  box-shadow: var(--shadow-app-bar);
+}
+
+/* FAB */
+.fab {
+  position: fixed;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgb(var(--green-accent));
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-fab-base), var(--shadow-fab-ambient);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.fab:active { transform: scale(0.95); box-shadow: var(--shadow-fab-base); }
+
+/* Modal */
+.modal-surface {
+  background: rgb(var(--card));
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+}
+.modal-header-strip {
+  background: rgb(var(--green-house));
+  color: #fff;
+  height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Pill input (search bar etc.) */
+.input-pill {
+  height: 40px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  background: rgb(var(--neutral-cool));
+  border: 1px solid rgb(var(--ink) / 0.06);
+  color: rgb(var(--ink) / 0.87);
+  font: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+}
+.input-pill:focus {
+  background: rgb(var(--card));
+  border-color: rgb(var(--green-accent));
+}
+
+/* Tag pill */
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  background: rgb(var(--ceramic));
+  color: rgb(var(--ink) / 0.58);
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Bot-attribution script (Telegram source line) */
+.font-script { font-family: 'Kalam', cursive; }
+
+/* Serif (Weekly Review only) */
+.font-serif-rewards { font-family: 'Iowan Old Style', 'Source Serif Pro', Georgia, serif; }
