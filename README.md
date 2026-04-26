@@ -268,6 +268,11 @@ cd server && PORT=8010 node --env-file=.env dist/index.js
 Fastify serves the built web SPA, with SPA fallback so `/my-day?token=…`
 resolves correctly.
 
+**Production (full deploy on a VPS, with HTTPS + backups + Telegram
+webhook):** see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — a step-by-step
+guide from a fresh Debian/Ubuntu host to a working install behind Caddy
+or nginx.
+
 ### 5. First user & Telegram linking
 
 1. Register the first account in the app (becomes the owner; any
