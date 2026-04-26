@@ -1,3 +1,5 @@
+@import './theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,6 +9,10 @@ html, body, #root {
 }
 
 body {
-  @apply bg-neutral-950 text-neutral-100;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  @apply bg-canvas text-ink/90 font-sans;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* Kalam loaded lazily by CardView when a Telegram-sourced card mounts. */
