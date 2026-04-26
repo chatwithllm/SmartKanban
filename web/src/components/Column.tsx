@@ -24,10 +24,13 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
   const [showPicker, setShowPicker] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const { templates } = useTemplates();
   const { addToast } = useToast();
   const pickerRef = useRef<HTMLDivElement | null>(null);
+  // Synchronous re-entry guard for submit(). State-based guards don't work here
+  // because Enter→submit triggers setAdding(false) which unmounts the textarea
+  // and fires onBlur={submit} in the same tick before state has flushed.
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     const onAddCard = (e: Event) => {
@@ -50,39 +53,43 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
   }, [showPicker]);
 
   const submit = async () => {
-    if (submitting) return;
-    const t = draft.trim();
-    setDraft('');
-    setAdding(false);
-    if (!t) return;
-    if (t.startsWith('/') && !/\s/.test(t)) {
-      const name = t.slice(1);
-      const tpl = templates.find((tt) => tt.name.toLowerCase() === name.toLowerCase());
-      if (tpl) {
-        setSubmitting(true);
-        try {
-          await api.instantiateTemplate(tpl.id, { status_override: status });
-        } catch (e) {
-          addToast(`Failed to use template: ${e instanceof Error ? e.message : 'error'}`, 'error');
-        } finally {
-          setSubmitting(false);
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    try {
+      const t = draft.trim();
+      setDraft('');
+      setAdding(false);
+      if (!t) return;
+      if (t.startsWith('/') && !/\s/.test(t)) {
+        const name = t.slice(1);
+        const tpl = templates.find((tt) => tt.name.toLowerCase() === name.toLowerCase());
+        if (tpl) {
+          try {
+            await api.instantiateTemplate(tpl.id, { status_override: status });
+          } catch (e) {
+            addToast(`Failed to use template: ${e instanceof Error ? e.message : 'error'}`, 'error');
+          }
+          return;
         }
-        return;
       }
+      onCreate(t);
+    } finally {
+      // Release the guard on the next tick so the blur-after-unmount that
+      // fires in the same tick as Enter cannot re-trigger submit().
+      setTimeout(() => { submittingRef.current = false; }, 0);
     }
-    onCreate(t);
   };
 
   const useTemplate = async (id: string) => {
     setShowPicker(false);
-    if (submitting) return;
-    setSubmitting(true);
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     try {
       await api.instantiateTemplate(id, { status_override: status });
     } catch (e) {
       addToast(`Failed to use template: ${e instanceof Error ? e.message : 'error'}`, 'error');
     } finally {
-      setSubmitting(false);
+      setTimeout(() => { submittingRef.current = false; }, 0);
     }
   };
 
