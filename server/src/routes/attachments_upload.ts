@@ -139,5 +139,72 @@ export async function attachmentUploadRoutes(app: FastifyInstance) {
   );
 
   // POST /api/cards/from-image — create a new card from a pasted image.
-  // (Implementation arrives in Task 2.)
+  app.post(
+    '/api/cards/from-image',
+    { preHandler: requireUser },
+    async (req, reply) => {
+      try {
+        const { buffer, mime, ext, status: statusRaw } = await readImagePart(req);
+        const status: Status = isStatus(statusRaw) ? statusRaw : 'today';
+
+        // Insert a placeholder card first to get an id, then save the file under it.
+        const userId = req.user!.id;
+        const tsTitle = `Screenshot ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`;
+        const insertCard = await pool.query<{ id: string }>(
+          `INSERT INTO cards (title, description, status, source, created_by, position, needs_review)
+           VALUES ($1, '', $2, 'manual', $3,
+             COALESCE((SELECT MIN(position) - 1 FROM cards WHERE status = $2 AND NOT archived), 0),
+             TRUE)
+           RETURNING id`,
+          [tsTitle, status, userId],
+        );
+        const cardId = insertCard.rows[0]!.id;
+
+        // Default assignees = creator (mirrors manual create path).
+        await pool.query(
+          `INSERT INTO card_assignees (card_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          [cardId, userId],
+        );
+
+        // Persist the image so vision can read it (vision helper takes a path).
+        const relPath = await persistImage(cardId, ext, buffer);
+        const absPath = path.join(getAttachmentsDir(), relPath);
+        await pool.query(
+          `INSERT INTO card_attachments (card_id, kind, storage_path, original_filename)
+           VALUES ($1, 'image', $2, NULL)`,
+          [cardId, relPath],
+        );
+
+        // Try AI vision title; on success, swap title/description and clear needs_review.
+        let aiSummarized = false;
+        if (AI_ENABLED()) {
+          const v = await summarizeImage(absPath);
+          if (v) {
+            await pool.query(
+              `UPDATE cards
+               SET title = $1, description = $2,
+                   ai_summarized = TRUE, needs_review = FALSE,
+                   updated_at = NOW()
+               WHERE id = $3`,
+              [v.title.slice(0, 500), v.description, cardId],
+            );
+            aiSummarized = true;
+          }
+        }
+
+        await logActivity(userId, cardId, 'create', {
+          from: 'paste-image',
+          mime,
+          ai_summarized: aiSummarized,
+        });
+        const card = await loadCard(cardId);
+        if (!card) return reply.code(500).send({ error: 'card load failed' });
+        broadcast({ type: 'card.created', card });
+        return reply.code(201).send(card);
+      } catch (err) {
+        if (handleHttpError(reply, err)) return;
+        throw err;
+      }
+    },
+  );
 }

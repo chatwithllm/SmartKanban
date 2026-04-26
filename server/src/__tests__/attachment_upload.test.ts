@@ -169,3 +169,104 @@ test('POST /api/cards/:id/attachments: 400 when file field missing', async () =>
   });
   assert.equal(res.statusCode, 400);
 });
+
+test('POST /api/cards/from-image: 201 creates card with timestamped title when AI disabled', async () => {
+  const prevORK = process.env.OPENROUTER_API_KEY;
+  const prevOAI = process.env.OPENAI_API_KEY;
+  delete process.env.OPENROUTER_API_KEY;
+  delete process.env.OPENAI_API_KEY;
+  try {
+    const { body, headers } = multipartBody('file', 'paste.png', 'image/png', TINY_PNG);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/cards/from-image',
+      headers: { ...headers, cookie: cookieA },
+      payload: body,
+    });
+    assert.equal(res.statusCode, 201);
+    const card = res.json() as {
+      title: string;
+      status: string;
+      created_by: string;
+      assignees: string[];
+      attachments: Array<{ kind: string; storage_path: string }>;
+      ai_summarized: boolean;
+      needs_review: boolean;
+    };
+    assert.match(card.title, /^Screenshot \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
+    assert.equal(card.status, 'today');
+    assert.equal(card.created_by, userAId);
+    assert.deepEqual(card.assignees, [userAId]);
+    assert.equal(card.attachments.length, 1);
+    assert.equal(card.attachments[0]!.kind, 'image');
+    assert.equal(card.ai_summarized, false);
+    assert.equal(card.needs_review, true);
+  } finally {
+    if (prevORK) process.env.OPENROUTER_API_KEY = prevORK;
+    if (prevOAI) process.env.OPENAI_API_KEY = prevOAI;
+  }
+});
+
+test('POST /api/cards/from-image: honors status field', async () => {
+  const prev = process.env.OPENROUTER_API_KEY;
+  delete process.env.OPENROUTER_API_KEY;
+  delete process.env.OPENAI_API_KEY;
+  try {
+    const boundary = '----test' + Math.random().toString(36).slice(2);
+    const head1 =
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="status"\r\n\r\n` +
+      `backlog\r\n`;
+    const head2 =
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="file"; filename="paste.png"\r\n` +
+      `Content-Type: image/png\r\n\r\n`;
+    const tail = `\r\n--${boundary}--\r\n`;
+    const body = Buffer.concat([
+      Buffer.from(head1, 'utf8'),
+      Buffer.from(head2, 'utf8'),
+      TINY_PNG,
+      Buffer.from(tail, 'utf8'),
+    ]);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/cards/from-image',
+      headers: {
+        'content-type': `multipart/form-data; boundary=${boundary}`,
+        cookie: cookieA,
+      },
+      payload: body,
+    });
+    assert.equal(res.statusCode, 201);
+    const card = res.json() as { status: string };
+    assert.equal(card.status, 'backlog');
+  } finally {
+    if (prev) process.env.OPENROUTER_API_KEY = prev;
+  }
+});
+
+test('POST /api/cards/from-image: 415 on bad MIME', async () => {
+  const { body, headers } = multipartBody('file', 'note.txt', 'text/plain', Buffer.from('hello'));
+  const res = await app.inject({
+    method: 'POST',
+    url: '/api/cards/from-image',
+    headers: { ...headers, cookie: cookieA },
+    payload: body,
+  });
+  assert.equal(res.statusCode, 415);
+});
+
+test('POST /api/cards/from-image: 400 when file missing', async () => {
+  const boundary = '----test' + Math.random().toString(36).slice(2);
+  const empty = `--${boundary}--\r\n`;
+  const res = await app.inject({
+    method: 'POST',
+    url: '/api/cards/from-image',
+    headers: {
+      'content-type': `multipart/form-data; boundary=${boundary}`,
+      cookie: cookieA,
+    },
+    payload: Buffer.from(empty),
+  });
+  assert.equal(res.statusCode, 400);
+});
