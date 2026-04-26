@@ -16,13 +16,32 @@ import { connectWS } from './ws.ts';
 import { applyTemplateEvent } from './hooks/useTemplates.ts';
 import { KnowledgeView } from './KnowledgeView.tsx';
 import { applyKnowledgeEvent } from './hooks/useKnowledge.ts';
+import { MobileCardView } from './MobileCardView.tsx';
 
 export function App() {
   const { user, loading } = useAuth();
+  const path = location.pathname;
 
   if (loading) return <div className="p-8 text-sm text-neutral-500">Loading…</div>;
-  if (!user) return <LoginView />;
-  return <AuthedWithToast meId={user.id} />;
+
+  const mobileCardMatch = path.match(/^\/m\/card\/([0-9a-f-]+)$/);
+  if (mobileCardMatch) {
+    const cardId = mobileCardMatch[1]!;
+    if (!user) return <LoginView redirectTo={path} />;
+    return <MobileCardWithToast cardId={cardId} />;
+  }
+
+  return user ? <AuthedWithToast meId={user.id} /> : <LoginView />;
+}
+
+function MobileCardWithToast({ cardId }: { cardId: string }) {
+  const toast = useToastState();
+  return (
+    <ToastProvider value={toast}>
+      <MobileCardView cardId={cardId} />
+      <ToastContainer toasts={toast.toasts} onDismiss={toast.removeToast} />
+    </ToastProvider>
+  );
 }
 
 function AuthedWithToast({ meId }: { meId: string }) {
