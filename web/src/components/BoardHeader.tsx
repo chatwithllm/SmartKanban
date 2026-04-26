@@ -91,6 +91,8 @@ export function BoardHeader({ scope, onScope, cardCount, searchQuery, onSearchCh
           onClick={() => setShowShortcuts((v) => !v)}
           className="rounded-pill border border-ink/20 px-2 py-0.5 text-1 text-ink hover:bg-ink/5 tracking-tight2"
           title="Keyboard shortcuts"
+          aria-label="Keyboard shortcuts"
+          aria-expanded={showShortcuts}
         >
           ?
         </button>

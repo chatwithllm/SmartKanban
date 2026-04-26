@@ -180,11 +180,7 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
             />
           ))}
           {!adding && cards.length === 0 && (
-            searchActive ? (
-              <p className="py-8 text-center text-2 text-ink-soft tracking-tight2">No cards match your search</p>
-            ) : (
-              <EmptyColumn status={status} />
-            )
+            <EmptyColumn status={status} searchActive={searchActive} />
           )}
         </div>
       </SortableContext>
