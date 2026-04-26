@@ -20,3 +20,6 @@ backups/
 .worktrees/
 .security-key
 logs/security/
+
+# Superpowers brainstorm session artifacts
+.superpowers/
