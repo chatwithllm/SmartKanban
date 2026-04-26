@@ -48,68 +48,71 @@ export function LoginView({ redirectTo }: Props) {
   };
 
   return (
-    <div className="mx-auto mt-24 w-full max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900 p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">
-          {mode === 'login' ? 'Sign in' : 'Create account'}
-        </h1>
+    <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
+      <div className="card-surface w-full max-w-[500px] p-8">
+        <h1 className="text-9 font-semibold text-green-starbucks tracking-tight2 mb-6">SmartKanban</h1>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-3 font-semibold text-ink tracking-tight2">
+            {mode === 'login' ? 'Sign in' : 'Create account'}
+          </h2>
+        </div>
+        <form onSubmit={submit} className="space-y-3">
+          {mode === 'register' && (
+            <>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+                required
+                className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full mb-3"
+              />
+              <input
+                value={shortName}
+                onChange={(e) => setShortName(e.target.value.slice(0, 16))}
+                placeholder="Short name shown on cards (e.g. Jay)"
+                required
+                minLength={1}
+                maxLength={16}
+                className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full mb-3"
+              />
+            </>
+          )}
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            required
+            className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full mb-3"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            required
+            minLength={6}
+            className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full mb-3"
+          />
+          {error && <div className="text-2 text-red tracking-tight2 mt-2">{error}</div>}
+          <button
+            type="submit"
+            disabled={busy}
+            className="btn-pill btn-pill-filled-black w-full mt-2"
+          >
+            {busy ? '…' : mode === 'login' ? 'Sign in' : 'Create account'}
+          </button>
+        </form>
         <button
           onClick={() => {
             setMode(mode === 'login' ? 'register' : 'login');
             setError(null);
           }}
-          className="text-xs text-neutral-400 hover:text-neutral-200"
+          className="mt-4 text-2 text-ink-soft hover:text-ink tracking-tight2"
         >
-          {mode === 'login' ? 'Need an account?' : 'Have an account?'}
+          {mode === 'login' ? 'Need an account? Register' : 'Have an account? Sign in'}
         </button>
       </div>
-      <form onSubmit={submit} className="space-y-3">
-        {mode === 'register' && (
-          <>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-              required
-              className="w-full rounded-lg bg-neutral-950 px-3 py-2 text-sm outline-none border border-neutral-800 focus:border-neutral-600"
-            />
-            <input
-              value={shortName}
-              onChange={(e) => setShortName(e.target.value.slice(0, 16))}
-              placeholder="Short name shown on cards (e.g. Jay)"
-              required
-              minLength={1}
-              maxLength={16}
-              className="w-full rounded-lg bg-neutral-950 px-3 py-2 text-sm outline-none border border-neutral-800 focus:border-neutral-600"
-            />
-          </>
-        )}
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          required
-          className="w-full rounded-lg bg-neutral-950 px-3 py-2 text-sm outline-none border border-neutral-800 focus:border-neutral-600"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          required
-          minLength={6}
-          className="w-full rounded-lg bg-neutral-950 px-3 py-2 text-sm outline-none border border-neutral-800 focus:border-neutral-600"
-        />
-        {error && <div className="text-xs text-red-300">{error}</div>}
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-900 hover:bg-white disabled:opacity-50"
-        >
-          {busy ? '…' : mode === 'login' ? 'Sign in' : 'Create account'}
-        </button>
-      </form>
     </div>
   );
 }

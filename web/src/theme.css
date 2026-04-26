@@ -206,3 +206,8 @@ body { font-size: 1.6rem; }
 
 /* Serif (Weekly Review only) */
 .font-serif-rewards { font-family: 'Iowan Old Style', 'Source Serif Pro', Georgia, serif; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
