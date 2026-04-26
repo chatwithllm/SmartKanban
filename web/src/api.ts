@@ -70,6 +70,9 @@ export const api = {
 
   attachmentUrl: (path: string) => `/attachments/${path}`,
 
+  getCard: (id: string) => req<Card>(`/api/cards/${id}`),
+  cardQrUrl: (id: string) => `/api/cards/${id}/qr.svg`,
+
   uploadAttachment: async (cardId: string, file: File): Promise<Card> => {
     const fd = new FormData();
     fd.append('file', file);
