@@ -7,7 +7,7 @@ This guide assumes:
 
 - A Linux VPS you control (Debian 12 / Ubuntu 22.04+ tested)
 - A domain or subdomain pointing at the VPS (e.g. `kanban.example.com`)
-- Root or sudo access
+- Sudo access (the installer will prompt for your sudo password)
 - Familiarity with the terminal
 
 The reference stack is **Docker Compose** (Postgres + the app) behind
@@ -15,6 +15,31 @@ The reference stack is **Docker Compose** (Postgres + the app) behind
 at the end.
 
 ---
+
+## Quick install (one-click)
+
+If you just want it running, run this on a fresh Debian/Ubuntu VPS as a
+sudo-capable user:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/chatwithllm/SmartKanban/main/scripts/install.sh | bash
+```
+
+The script handles everything: installs Docker, clones the repo,
+generates secrets, prompts for your domain + Telegram + AI keys,
+brings up the database, applies the schema, builds + starts the
+server, optionally configures Caddy for HTTPS, and sets up daily
+backups. It is **idempotent** — safe to re-run.
+
+After it finishes, open the URL it prints and register the first
+user.
+
+If you'd rather run the steps by hand, follow the manual walkthrough
+below.
+
+---
+
+## Manual walkthrough
 
 ## Step 1 — Prepare the VPS
 
@@ -66,12 +91,28 @@ docker compose version
 
 ## Step 2 — Clone the repository
 
+`/opt` is root-owned by default — you must either use sudo to bootstrap
+it OR clone into your home directory. The installer chooses your home
+directory automatically; for the manual path, pick one:
+
+**Option A — into `/opt/smartkanban` (system-wide convention):**
+
 ```bash
 sudo mkdir -p /opt/smartkanban
-sudo chown $USER:$USER /opt/smartkanban
+sudo chown "$USER:$USER" /opt/smartkanban
+git clone https://github.com/chatwithllm/SmartKanban.git /opt/smartkanban
 cd /opt/smartkanban
-git clone https://github.com/chatwithllm/SmartKanban.git .
 ```
+
+**Option B — into your home directory (no sudo for clone):**
+
+```bash
+git clone https://github.com/chatwithllm/SmartKanban.git ~/smartkanban
+cd ~/smartkanban
+```
+
+Both paths work identically. Examples below use `/opt/smartkanban`;
+substitute your path if you picked B.
 
 ---
 
