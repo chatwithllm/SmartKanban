@@ -14,10 +14,8 @@ export function MobileCardView({ cardId }: Props) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const { addToast } = useToast();
-  // Debounce timers per field name
   const debounceRefs = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
 
-  // Initial load + WS subscription
   useEffect(() => {
     let mounted = true;
     api
@@ -37,21 +35,21 @@ export function MobileCardView({ cardId }: Props) {
   }, [cardId]);
 
   if (loading) {
-    return <div className="p-6 text-center text-sm text-neutral-400">Loading…</div>;
+    return <div className="p-6 text-center text-2 text-ink-soft tracking-tight2">Loading…</div>;
   }
   if (err) {
     return (
-      <div className="p-6 text-center">
-        <p className="text-sm text-red-400">{err}</p>
-        <a href="/" className="mt-3 inline-block text-xs text-neutral-400 underline">Back to board</a>
+      <div className="p-6 text-center bg-canvas min-h-screen">
+        <p className="text-2 text-red tracking-tight2">{err}</p>
+        <a href="/" className="mt-3 inline-block text-1 text-ink-soft hover:text-ink underline tracking-tight2">Back to board</a>
       </div>
     );
   }
   if (!card) {
     return (
-      <div className="p-6 text-center">
-        <p className="text-sm text-neutral-300">This card was archived or deleted.</p>
-        <a href="/" className="mt-3 inline-block text-xs text-neutral-400 underline">Back to board</a>
+      <div className="p-6 text-center bg-canvas min-h-screen">
+        <p className="text-2 text-ink tracking-tight2">This card was archived or deleted.</p>
+        <a href="/" className="mt-3 inline-block text-1 text-ink-soft hover:text-ink underline tracking-tight2">Back to board</a>
       </div>
     );
   }
@@ -68,7 +66,6 @@ export function MobileCardView({ cardId }: Props) {
     }
   };
 
-  // Debounced patch — used for free-text fields where the user types continuously
   const debouncedPatch = (field: keyof Card, body: Partial<Card>, delay = 500) => {
     if (debounceRefs.current[field as string]) {
       clearTimeout(debounceRefs.current[field as string]!);
@@ -97,7 +94,7 @@ export function MobileCardView({ cardId }: Props) {
 
   const onCameraInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    e.target.value = ''; // reset so picking the same file again still fires
+    e.target.value = '';
     if (!file) return;
     setBusy(true);
     try {
@@ -123,15 +120,18 @@ export function MobileCardView({ cardId }: Props) {
     }
   };
 
+  const fieldInputCls = 'mt-1 w-full rounded-card bg-card border border-ink/10 px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none';
+  const labelCls = 'mb-3 block text-1 text-ink-soft tracking-tight2';
+
   return (
-    <div className="mx-auto max-w-md p-3 pb-24 text-neutral-100">
-      <header className="sticky top-0 z-10 -mx-3 mb-3 flex items-center gap-3 bg-neutral-900 px-3 py-2 shadow">
-        <a href="/" className="text-neutral-400 hover:text-neutral-100">←</a>
-        <h1 className="flex-1 truncate text-base font-medium">{card.title || 'Untitled'}</h1>
-        {busy && <span className="text-xs text-neutral-500">saving…</span>}
+    <div className="mx-auto max-w-md p-3 pb-24 text-ink bg-canvas min-h-screen">
+      <header className="sticky top-0 z-10 -mx-3 mb-3 flex items-center gap-3 bg-card px-3 py-2 shadow-app-bar">
+        <a href="/" className="text-ink-soft hover:text-ink text-xl">←</a>
+        <h1 className="flex-1 truncate text-3 font-semibold text-ink tracking-tight2">{card.title || 'Untitled'}</h1>
+        {busy && <span className="text-1 text-ink-soft tracking-tight2">saving…</span>}
       </header>
 
-      <label className="mb-3 block text-xs text-neutral-400">
+      <label className={labelCls}>
         Title
         <input
           defaultValue={card.title}
@@ -140,19 +140,19 @@ export function MobileCardView({ cardId }: Props) {
             if (v && v !== card.title) patch({ title: v });
           }}
           onChange={(e) => debouncedPatch('title', { title: e.target.value })}
-          className="mt-1 w-full rounded bg-neutral-800 px-3 py-2 text-base"
+          className={fieldInputCls}
         />
       </label>
 
       <div className="mb-3">
-        <p className="mb-1 text-xs text-neutral-400">Status</p>
+        <p className="mb-1 text-1 text-ink-soft tracking-tight2">Status</p>
         <div className="grid grid-cols-2 gap-2">
           {STATUSES.map((s) => (
             <button
               key={s}
               onClick={() => setStatus(s)}
-              className={`rounded px-3 py-3 text-sm ${
-                card.status === s ? 'bg-blue-600 text-white' : 'bg-neutral-800 text-neutral-300'
+              className={`rounded-pill px-3 py-3 text-2 tracking-tight2 transition-colors ${
+                card.status === s ? 'bg-green-accent text-white font-semibold' : 'bg-ceramic text-ink-soft'
               }`}
             >
               {STATUS_LABELS[s]}
@@ -161,7 +161,7 @@ export function MobileCardView({ cardId }: Props) {
         </div>
       </div>
 
-      <label className="mb-3 block text-xs text-neutral-400">
+      <label className={labelCls}>
         Description
         <textarea
           defaultValue={card.description}
@@ -169,11 +169,11 @@ export function MobileCardView({ cardId }: Props) {
             if (e.target.value !== card.description) patch({ description: e.target.value });
           }}
           onChange={(e) => debouncedPatch('description', { description: e.target.value }, 800)}
-          className="mt-1 min-h-[120px] w-full rounded bg-neutral-800 px-3 py-2 text-sm"
+          className={`${fieldInputCls} min-h-[120px]`}
         />
       </label>
 
-      <label className="mb-3 block text-xs text-neutral-400">
+      <label className={labelCls}>
         Tags (space-separated)
         <input
           defaultValue={card.tags.join(' ')}
@@ -181,22 +181,22 @@ export function MobileCardView({ cardId }: Props) {
             const next = e.target.value.split(/\s+/).map((t) => t.replace(/^#/, '')).filter(Boolean);
             patch({ tags: next });
           }}
-          className="mt-1 w-full rounded bg-neutral-800 px-3 py-2 text-sm"
+          className={fieldInputCls}
         />
       </label>
 
-      <label className="mb-3 block text-xs text-neutral-400">
+      <label className={labelCls}>
         Due date
         <input
           type="date"
           value={card.due_date ?? ''}
           onChange={(e) => patch({ due_date: e.target.value || null })}
-          className="mt-1 w-full rounded bg-neutral-800 px-3 py-2 text-sm"
+          className={fieldInputCls}
         />
       </label>
 
       <div className="mb-3">
-        <p className="mb-1 text-xs text-neutral-400">Assignees</p>
+        <p className="mb-1 text-1 text-ink-soft tracking-tight2">Assignees</p>
         <div className="flex flex-wrap gap-2">
           {users.map((u) => {
             const on = card.assignees.includes(u.id);
@@ -204,8 +204,8 @@ export function MobileCardView({ cardId }: Props) {
               <button
                 key={u.id}
                 onClick={() => toggleAssignee(u.id)}
-                className={`rounded-full px-3 py-2 text-xs ${
-                  on ? 'bg-blue-600 text-white' : 'bg-neutral-800 text-neutral-300'
+                className={`rounded-pill px-3 py-2 text-1 tracking-tight2 transition-colors ${
+                  on ? 'bg-green-accent text-white font-semibold' : 'bg-ceramic text-ink-soft'
                 }`}
               >
                 {u.short_name || u.name}
@@ -216,7 +216,7 @@ export function MobileCardView({ cardId }: Props) {
       </div>
 
       <div className="mb-3">
-        <p className="mb-1 text-xs text-neutral-400">Shared with</p>
+        <p className="mb-1 text-1 text-ink-soft tracking-tight2">Shared with</p>
         <div className="flex flex-wrap gap-2">
           {users.map((u) => {
             const on = card.shares.includes(u.id);
@@ -224,8 +224,8 @@ export function MobileCardView({ cardId }: Props) {
               <button
                 key={u.id}
                 onClick={() => toggleShare(u.id)}
-                className={`rounded-full px-3 py-2 text-xs ${
-                  on ? 'bg-blue-600 text-white' : 'bg-neutral-800 text-neutral-300'
+                className={`rounded-pill px-3 py-2 text-1 tracking-tight2 transition-colors ${
+                  on ? 'bg-green-uplift text-white font-semibold' : 'bg-ceramic text-ink-soft'
                 }`}
               >
                 {u.short_name || u.name}
@@ -236,7 +236,7 @@ export function MobileCardView({ cardId }: Props) {
       </div>
 
       <div className="mb-3">
-        <p className="mb-1 text-xs text-neutral-400">Attachments</p>
+        <p className="mb-1 text-1 text-ink-soft tracking-tight2">Attachments</p>
         <div className="grid grid-cols-3 gap-2">
           {card.attachments.map((a) =>
             a.kind === 'image' ? (
@@ -244,19 +244,20 @@ export function MobileCardView({ cardId }: Props) {
                 key={a.id}
                 src={api.attachmentUrl(a.storage_path)}
                 alt=""
-                className="aspect-square rounded object-cover"
+                className="aspect-square rounded-card object-cover"
+                style={{ transition: 'opacity 0.3s ease-in' }}
               />
             ) : (
               <a
                 key={a.id}
                 href={api.attachmentUrl(a.storage_path)}
-                className="flex aspect-square items-center justify-center rounded bg-neutral-800 text-xs text-neutral-300"
+                className="flex aspect-square items-center justify-center rounded-card bg-ceramic text-1 text-ink-soft tracking-tight2"
               >
                 {a.kind}
               </a>
             ),
           )}
-          <label className="flex aspect-square cursor-pointer items-center justify-center rounded border-2 border-dashed border-neutral-700 text-xs text-neutral-400">
+          <label className="flex aspect-square cursor-pointer items-center justify-center rounded-card border-2 border-dashed border-ink/20 text-1 text-ink-soft tracking-tight2 hover:border-green-accent transition-colors">
             + Camera
             <input
               type="file"
@@ -272,7 +273,7 @@ export function MobileCardView({ cardId }: Props) {
       <button
         onClick={archive}
         disabled={busy}
-        className="mt-6 w-full rounded bg-red-900/40 px-4 py-3 text-sm text-red-200 hover:bg-red-900/60 disabled:opacity-50"
+        className="btn-pill btn-pill-destructive w-full mt-6 disabled:opacity-50"
       >
         Archive card
       </button>
