@@ -22,6 +22,18 @@ import { pool } from './db.js';
 
 const app = Fastify({ logger: true });
 
+// Translate Postgres invalid_text_representation (22P02 — e.g. malformed UUID
+// passed to a uuid column) into 404 instead of letting Fastify return 500.
+// Routes that read :id directly into queries can rely on this rather than
+// each one validating the param shape.
+app.setErrorHandler((err, _req, reply) => {
+  const code = (err as { code?: string }).code;
+  if (code === '22P02') {
+    return reply.code(404).send({ error: 'not found' });
+  }
+  reply.send(err);
+});
+
 await app.register(cors, {
   origin: true,
   credentials: true,

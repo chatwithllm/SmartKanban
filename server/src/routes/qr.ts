@@ -34,6 +34,7 @@ export async function qrRoutes(app: FastifyInstance) {
       reply
         .header('content-type', 'image/svg+xml')
         .header('cache-control', 'private, max-age=300')
+        .header('vary', 'cookie')
         .send(svg);
     },
   );

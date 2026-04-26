@@ -24,7 +24,11 @@ export function App() {
 
   if (loading) return <div className="p-8 text-sm text-neutral-500">Loading…</div>;
 
-  const mobileCardMatch = path.match(/^\/m\/card\/([0-9a-f-]+)$/);
+  // Strict UUID shape — looser regex would let typoed URLs reach the
+  // server where Postgres throws 22P02 on the cards.id cast and returns 500.
+  const mobileCardMatch = path.match(
+    /^\/m\/card\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/,
+  );
   if (mobileCardMatch) {
     const cardId = mobileCardMatch[1]!;
     if (!user) return <LoginView redirectTo={path} />;
