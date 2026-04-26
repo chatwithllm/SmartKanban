@@ -70,6 +70,39 @@ export const api = {
 
   attachmentUrl: (path: string) => `/attachments/${path}`,
 
+  uploadAttachment: async (cardId: string, file: File): Promise<Card> => {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch(`/api/cards/${cardId}/attachments`, {
+      method: 'POST',
+      credentials: 'include',
+      body: fd,
+    });
+    if (!res.ok) {
+      let msg = `${res.status} ${res.statusText}`;
+      try { const b = await res.json(); if (b?.error) msg = b.error; } catch {}
+      throw new ApiError(res.status, msg);
+    }
+    return res.json();
+  },
+
+  createCardFromImage: async (file: File, status?: Status): Promise<Card> => {
+    const fd = new FormData();
+    fd.append('file', file);
+    if (status) fd.append('status', status);
+    const res = await fetch('/api/cards/from-image', {
+      method: 'POST',
+      credentials: 'include',
+      body: fd,
+    });
+    if (!res.ok) {
+      let msg = `${res.status} ${res.statusText}`;
+      try { const b = await res.json(); if (b?.error) msg = b.error; } catch {}
+      throw new ApiError(res.status, msg);
+    }
+    return res.json();
+  },
+
   listArchived: () => req<Card[]>('/api/cards/archived'),
   restoreCard: (id: string) =>
     req<Card>(`/api/cards/${id}/restore`, { method: 'PATCH' }),

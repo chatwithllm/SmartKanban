@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api.ts';
 import { useAuth } from './auth.tsx';
 import type { Card, Scope, Status, User } from './types.ts';
@@ -133,6 +133,61 @@ function Authed({ meId }: { meId: string }) {
     });
     return disconnect;
   }, [scope, meId]);
+
+  // Document-level paste-to-attach. Reads `editing` via a ref so the handler
+  // doesn't re-register on every state change.
+  const editingRef = useRef(editing);
+  useEffect(() => { editingRef.current = editing; }, [editing]);
+
+  useEffect(() => {
+    const onPaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const images: File[] = [];
+      for (const item of items) {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          const f = item.getAsFile();
+          if (f) images.push(f);
+        }
+      }
+      if (images.length === 0) return; // let text paste behave normally
+      e.preventDefault();
+      for (const file of images) {
+        try {
+          if (editingRef.current) {
+            const updated = await api.uploadAttachment(editingRef.current.id, file);
+            // Update local state so the dialog reflects the new attachment immediately.
+            setCards((prev) =>
+              prev.map((c) => (c.id === updated.id ? updated : c)),
+            );
+            setEditing(updated);
+            addToast('Image attached', 'success');
+          } else {
+            const created = await api.createCardFromImage(file);
+            setCards((prev) =>
+              prev.some((c) => c.id === created.id) ? prev : [...prev, created],
+            );
+            addToast(
+              `Card created from screenshot${created.ai_summarized ? ' (AI titled)' : ''}`,
+              'success',
+            );
+          }
+        } catch (err) {
+          addToast(
+            `Paste failed: ${err instanceof Error ? err.message : 'error'}`,
+            'error',
+          );
+        }
+      }
+    };
+    document.addEventListener('paste', onPaste);
+    return () => document.removeEventListener('paste', onPaste);
+    // Listener registers once. setCards/setEditing are stable React setters
+    // and addToast comes from a stable context value; the closure captures
+    // them safely. Mutable `editing` is read via editingRef so it doesn't
+    // need to be in the dep array.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCreate = async (title: string, status: Status) => {
     try {
