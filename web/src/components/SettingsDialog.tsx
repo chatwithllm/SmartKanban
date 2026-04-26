@@ -3,11 +3,13 @@ import { api } from '../api.ts';
 import { useAuth } from '../auth.tsx';
 import type { MirrorToken } from '../types.ts';
 import { TemplatesTab } from './TemplatesTab.tsx';
+import { useTheme } from '../hooks/useTheme.ts';
 
 type Props = { onClose: () => void };
 
 export function SettingsDialog({ onClose }: Props) {
   const { user, updateMe } = useAuth();
+  const { mode, set: setTheme } = useTheme();
   const [shortName, setShortName] = useState(user?.short_name ?? '');
   const [shortErr, setShortErr] = useState<string | null>(null);
   const [shortOk, setShortOk] = useState(false);
@@ -63,148 +65,169 @@ export function SettingsDialog({ onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl rounded-xl border border-neutral-800 bg-neutral-900 p-5 max-h-[90vh] overflow-y-auto"
+        className="modal-surface w-full max-w-[560px] max-h-[90vh] overflow-y-auto flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Settings</h2>
-          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-100">
+        {/* Header strip */}
+        <div className="modal-header-strip flex items-center justify-between px-5 py-3 shrink-0">
+          <span className="text-3 font-semibold tracking-tight2 text-white">Settings</span>
+          <button onClick={onClose} aria-label="Close" className="text-2 text-white/80 hover:text-white">
             ✕
           </button>
         </div>
 
-        <section className="space-y-3 mb-6">
-          <h3 className="text-sm font-medium text-neutral-300">Your display name</h3>
-          <p className="text-xs text-neutral-500">
-            Shown on cards you create or are assigned to. 1–16 characters.
-          </p>
-          <div className="flex gap-2">
-            <input
-              value={shortName}
-              onChange={(e) => setShortName(e.target.value.slice(0, 16))}
-              placeholder="Short name"
-              className="flex-1 rounded-lg bg-neutral-950 px-2 py-1.5 text-sm border border-neutral-800 focus:border-neutral-700 outline-none"
-            />
-            <button
-              onClick={saveShort}
-              className="rounded-lg bg-neutral-100 px-3 py-1.5 text-sm text-neutral-900 hover:bg-white"
-            >
-              Save
-            </button>
-          </div>
-          {shortErr && <div className="text-xs text-red-300">{shortErr}</div>}
-          {shortOk && <div className="text-xs text-emerald-300">Saved.</div>}
-        </section>
-
-        <section className="space-y-3">
-          <h3 className="text-sm font-medium text-neutral-300">Mirror tokens</h3>
-          <p className="text-xs text-neutral-500">
-            Long-lived tokens for the wall-mounted mirror. Paste the URL into the kiosk browser.
-          </p>
-          <div className="flex gap-2">
-            <input
-              value={newLabel}
-              onChange={(e) => setNewLabel(e.target.value)}
-              placeholder="Label (e.g. hallway mirror)"
-              className="flex-1 rounded-lg bg-neutral-950 px-2 py-1.5 text-sm border border-neutral-800 focus:border-neutral-700 outline-none"
-            />
-            <button
-              onClick={createToken}
-              className="rounded-lg bg-neutral-100 px-3 py-1.5 text-sm text-neutral-900 hover:bg-white"
-            >
-              Create
-            </button>
-          </div>
-          {newToken && (
-            <div className="rounded-lg border border-emerald-900 bg-emerald-950/40 p-2 text-xs text-emerald-100 break-all">
-              <div>New mirror URL:</div>
-              <a href={newToken.url} className="underline">
-                {location.origin}
-                {newToken.url}
-              </a>
+        {/* Body */}
+        <div className="p-6 flex flex-col gap-6">
+          {/* Theme toggle row */}
+          <section className="flex items-center justify-between gap-4 py-3 border-b border-ink/10">
+            <div>
+              <div className="text-3 font-semibold text-ink tracking-tight2">Theme</div>
+              <div className="text-1 text-ink-soft tracking-tight2">Light, dark, or follow your system</div>
             </div>
-          )}
-          <ul className="divide-y divide-neutral-800 rounded-lg border border-neutral-800">
-            {tokens.map((t) => (
-              <li
-                key={t.token}
-                className="flex items-center justify-between px-3 py-2 text-xs text-neutral-300"
-              >
-                <span>
-                  {t.label} · <span className="text-neutral-500">{t.token.slice(0, 8)}…</span>
-                </span>
+            <div className="flex rounded-pill bg-ceramic p-0.5">
+              {(['light', 'dark', 'system'] as const).map((m) => (
                 <button
-                  onClick={() => deleteToken(t.token)}
-                  className="text-neutral-500 hover:text-neutral-200"
+                  key={m}
+                  type="button"
+                  onClick={() => setTheme(m)}
+                  className={`rounded-pill px-3 py-1 text-2 font-medium tracking-tight2 transition-colors ${
+                    mode === m ? 'bg-card text-green-starbucks' : 'text-ink-soft hover:text-ink'
+                  }`}
                 >
-                  Revoke
+                  {m === 'light' ? 'Light' : m === 'dark' ? 'Dark' : 'System'}
                 </button>
-              </li>
-            ))}
-            {tokens.length === 0 && (
-              <li className="px-3 py-2 text-xs text-neutral-600">No tokens yet.</li>
-            )}
-          </ul>
-        </section>
+              ))}
+            </div>
+          </section>
 
-        <section className="mt-6 space-y-3">
-          <h3 className="text-sm font-medium text-neutral-300">Telegram identities</h3>
-          <p className="text-xs text-neutral-500">
-            Link Telegram user IDs to family members so the bot knows who's captured what. Get your
-            ID from <code>@userinfobot</code>.
-          </p>
-          <div className="flex gap-2">
-            <input
-              value={tgId}
-              onChange={(e) => setTgId(e.target.value)}
-              placeholder="Telegram user ID"
-              className="flex-1 rounded-lg bg-neutral-950 px-2 py-1.5 text-sm border border-neutral-800 focus:border-neutral-700 outline-none"
-            />
-            <input
-              value={tgUser}
-              onChange={(e) => setTgUser(e.target.value)}
-              placeholder="@username (optional)"
-              className="flex-1 rounded-lg bg-neutral-950 px-2 py-1.5 text-sm border border-neutral-800 focus:border-neutral-700 outline-none"
-            />
-            <button
-              onClick={linkTg}
-              className="rounded-lg bg-neutral-100 px-3 py-1.5 text-sm text-neutral-900 hover:bg-white"
-            >
-              Link to me
-            </button>
-          </div>
-          <ul className="divide-y divide-neutral-800 rounded-lg border border-neutral-800">
-            {identities.map((i) => (
-              <li
-                key={i.telegram_user_id}
-                className="flex items-center justify-between px-3 py-2 text-xs text-neutral-300"
-              >
-                <span>
-                  {i.telegram_user_id}
-                  {i.telegram_username ? ` (@${i.telegram_username})` : ''} →{' '}
-                  <span className="text-neutral-500">{i.app_user_id.slice(0, 8)}…</span>
-                </span>
-                <button
-                  onClick={() => unlinkTg(i.telegram_user_id)}
-                  className="text-neutral-500 hover:text-neutral-200"
+          {/* Display name */}
+          <section className="flex flex-col gap-3">
+            <h3 className="text-3 font-semibold text-ink tracking-tight2">Your display name</h3>
+            <p className="text-1 tracking-tight2 text-ink-soft">
+              Shown on cards you create or are assigned to. 1–16 characters.
+            </p>
+            <div className="flex gap-2">
+              <input
+                value={shortName}
+                onChange={(e) => setShortName(e.target.value.slice(0, 16))}
+                placeholder="Short name"
+                className="flex-1 bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none"
+              />
+              <button onClick={saveShort} className="btn-pill btn-pill-filled-green">
+                Save
+              </button>
+            </div>
+            {shortErr && <div className="text-1 tracking-tight2 text-red">{shortErr}</div>}
+            {shortOk && <div className="text-1 tracking-tight2 text-green-starbucks">Saved.</div>}
+          </section>
+
+          {/* Mirror tokens */}
+          <section className="flex flex-col gap-3">
+            <h3 className="text-3 font-semibold text-ink tracking-tight2">Mirror tokens</h3>
+            <p className="text-1 tracking-tight2 text-ink-soft">
+              Long-lived tokens for the wall-mounted mirror. Paste the URL into the kiosk browser.
+            </p>
+            <div className="flex gap-2">
+              <input
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                placeholder="Label (e.g. hallway mirror)"
+                className="flex-1 bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none"
+              />
+              <button onClick={createToken} className="btn-pill btn-pill-filled-green">
+                Create
+              </button>
+            </div>
+            {newToken && (
+              <div className="rounded-card border border-green-accent/30 bg-green-light/20 p-3 text-1 tracking-tight2 text-ink break-all">
+                <div className="font-semibold text-green-starbucks mb-1">New mirror URL:</div>
+                <a href={newToken.url} className="underline text-green-starbucks">
+                  {location.origin}
+                  {newToken.url}
+                </a>
+              </div>
+            )}
+            <ul className="divide-y divide-ink/10 rounded-card border border-ink/10">
+              {tokens.map((t) => (
+                <li
+                  key={t.token}
+                  className="flex items-center justify-between px-3 py-2 text-2 tracking-tight2 text-ink"
                 >
-                  Unlink
-                </button>
-              </li>
-            ))}
-            {identities.length === 0 && (
-              <li className="px-3 py-2 text-xs text-neutral-600">No links yet.</li>
-            )}
-          </ul>
-        </section>
+                  <span>
+                    {t.label} · <span className="text-ink-soft">{t.token.slice(0, 8)}…</span>
+                  </span>
+                  <button
+                    onClick={() => deleteToken(t.token)}
+                    className="text-ink-soft hover:text-ink text-2 tracking-tight2"
+                  >
+                    Revoke
+                  </button>
+                </li>
+              ))}
+              {tokens.length === 0 && (
+                <li className="px-3 py-2 text-1 tracking-tight2 text-ink-soft">No tokens yet.</li>
+              )}
+            </ul>
+          </section>
 
-        <section className="mt-6 space-y-3">
-          <TemplatesTab me={user!} />
-        </section>
+          {/* Telegram identities */}
+          <section className="flex flex-col gap-3">
+            <h3 className="text-3 font-semibold text-ink tracking-tight2">Telegram identities</h3>
+            <p className="text-1 tracking-tight2 text-ink-soft">
+              Link Telegram user IDs to family members so the bot knows who's captured what. Get your
+              ID from <code>@userinfobot</code>.
+            </p>
+            <div className="flex gap-2">
+              <input
+                value={tgId}
+                onChange={(e) => setTgId(e.target.value)}
+                placeholder="Telegram user ID"
+                className="flex-1 bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none"
+              />
+              <input
+                value={tgUser}
+                onChange={(e) => setTgUser(e.target.value)}
+                placeholder="@username (optional)"
+                className="flex-1 bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none"
+              />
+              <button onClick={linkTg} className="btn-pill btn-pill-filled-green">
+                Link to me
+              </button>
+            </div>
+            <ul className="divide-y divide-ink/10 rounded-card border border-ink/10">
+              {identities.map((i) => (
+                <li
+                  key={i.telegram_user_id}
+                  className="flex items-center justify-between px-3 py-2 text-2 tracking-tight2 text-ink"
+                >
+                  <span>
+                    {i.telegram_user_id}
+                    {i.telegram_username ? ` (@${i.telegram_username})` : ''} →{' '}
+                    <span className="text-ink-soft">{i.app_user_id.slice(0, 8)}…</span>
+                  </span>
+                  <button
+                    onClick={() => unlinkTg(i.telegram_user_id)}
+                    className="text-ink-soft hover:text-ink text-2 tracking-tight2"
+                  >
+                    Unlink
+                  </button>
+                </li>
+              ))}
+              {identities.length === 0 && (
+                <li className="px-3 py-2 text-1 tracking-tight2 text-ink-soft">No links yet.</li>
+              )}
+            </ul>
+          </section>
+
+          {/* Templates */}
+          <section>
+            <TemplatesTab me={user!} />
+          </section>
+        </div>
       </div>
     </div>
   );

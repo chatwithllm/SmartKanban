@@ -62,68 +62,79 @@ export function ArchiveDialog({ onClose, onRestore }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl rounded-xl border border-neutral-800 bg-neutral-900 p-5 max-h-[90vh] overflow-y-auto"
+        className="modal-surface w-full max-w-[560px] max-h-[90vh] overflow-y-auto flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Archived cards</h2>
-          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-100">
+        {/* Header strip */}
+        <div className="modal-header-strip flex items-center justify-between px-5 py-3 shrink-0">
+          <span className="text-3 font-semibold tracking-tight2 text-white">Archived cards</span>
+          <button onClick={onClose} aria-label="Close" className="text-2 text-white/80 hover:text-white">
             ✕
           </button>
         </div>
+
+        {/* Body */}
+        <div className="p-6 flex flex-col gap-4 flex-1">
+          {err && <div className="text-1 tracking-tight2 text-red">{err}</div>}
+          {!cards.length && !err && (
+            <div className="text-3 tracking-tight2 text-ink-soft">No archived cards.</div>
+          )}
+          {cards.length > 0 && (
+            <ul className="divide-y divide-ink/10 rounded-card border border-ink/10">
+              {cards.map((c) => (
+                <li
+                  key={c.id}
+                  className="flex items-center justify-between px-3 py-2 text-3 text-ink"
+                >
+                  <div>
+                    <span className="tracking-tight2">{c.title}</span>
+                    {c.updated_at && (
+                      <span className="ml-2 text-1 tracking-tight2 text-ink-soft">
+                        {new Date(c.updated_at).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-3 items-center">
+                    <button
+                      onClick={() => handleRestore(c.id)}
+                      disabled={restoring === c.id || deleting === c.id || purging}
+                      className="btn-pill btn-pill-outlined-green text-2 tracking-tight2 disabled:opacity-50"
+                    >
+                      {restoring === c.id ? 'Restoring…' : 'Restore'}
+                    </button>
+                    <button
+                      onClick={() => handlePermanentDelete(c.id, c.title)}
+                      disabled={restoring === c.id || deleting === c.id || purging}
+                      className="text-2 text-red hover:underline tracking-tight2 disabled:opacity-50"
+                    >
+                      {deleting === c.id ? 'Deleting…' : 'Delete forever'}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Destructive footer band */}
         {cards.length > 0 && (
-          <div className="mb-3 flex justify-end">
+          <div className="px-6 py-4 bg-red/5 border-t border-red/20 flex justify-end gap-3 shrink-0">
+            <button type="button" onClick={onClose} className="btn-pill btn-pill-outlined-dark">
+              Cancel
+            </button>
             <button
+              type="button"
               onClick={handlePurgeAll}
               disabled={purging}
-              className="rounded bg-red-900/40 px-3 py-1 text-xs text-red-200 hover:bg-red-900/60 disabled:opacity-50"
+              className="btn-pill btn-pill-destructive disabled:opacity-50"
             >
               {purging ? 'Purging…' : `Delete all (${cards.length})`}
             </button>
           </div>
-        )}
-        {err && <div className="text-xs text-red-300">{err}</div>}
-        {!cards.length && !err && (
-          <div className="text-sm text-neutral-500">No archived cards.</div>
-        )}
-        {cards.length > 0 && (
-          <ul className="divide-y divide-neutral-800 rounded-lg border border-neutral-800">
-            {cards.map((c) => (
-              <li
-                key={c.id}
-                className="flex items-center justify-between px-3 py-2 text-sm text-neutral-300"
-              >
-                <div>
-                  <span>{c.title}</span>
-                  {c.updated_at && (
-                    <span className="ml-2 text-xs text-neutral-500">
-                      {new Date(c.updated_at).toLocaleDateString()}
-                    </span>
-                  )}
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleRestore(c.id)}
-                    disabled={restoring === c.id || deleting === c.id || purging}
-                    className="text-xs text-neutral-400 hover:text-neutral-100 disabled:opacity-50"
-                  >
-                    {restoring === c.id ? 'Restoring…' : 'Restore'}
-                  </button>
-                  <button
-                    onClick={() => handlePermanentDelete(c.id, c.title)}
-                    disabled={restoring === c.id || deleting === c.id || purging}
-                    className="text-xs text-red-400 hover:text-red-300 disabled:opacity-50"
-                  >
-                    {deleting === c.id ? 'Deleting…' : 'Delete forever'}
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
         )}
       </div>
     </div>
