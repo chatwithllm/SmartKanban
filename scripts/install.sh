@@ -299,17 +299,22 @@ for i in {1..30}; do
   if $DOCKER compose ps db --format json 2>/dev/null | grep -q '"Health":"healthy"'; then
     ok "Postgres healthy"; break
   fi
+  # Fallback: also check via pg_isready inside the container in case the
+  # healthcheck JSON shape differs across compose versions.
+  if $DOCKER compose exec -T db pg_isready -U kanban >/dev/null 2>&1; then
+    ok "Postgres ready (pg_isready)"; break
+  fi
   sleep 2
   if [[ $i -eq 30 ]]; then die "Postgres did not become healthy in 60s"; fi
 done
 
 info "applying schema (idempotent)…"
-$DOCKER exec -i kanbanclaude-db-1 psql -U kanban -d kanban < server/schema.sql >/dev/null
+$DOCKER compose exec -T db psql -U kanban -d kanban < server/schema.sql >/dev/null
 ok "schema applied"
 
 if [[ -f "$ENV_FILE" ]] && grep -q '^KNOWLEDGE_EMBEDDINGS=true' "$ENV_FILE"; then
   info "enabling pgvector extension…"
-  $DOCKER exec -i kanbanclaude-db-1 psql -U kanban -d kanban -c "CREATE EXTENSION IF NOT EXISTS vector;" >/dev/null || warn "pgvector failed to install — install manually with: docker exec -i kanbanclaude-db-1 psql -U kanban -d kanban -c 'CREATE EXTENSION IF NOT EXISTS vector;'"
+  $DOCKER compose exec -T db psql -U kanban -d kanban -c "CREATE EXTENSION IF NOT EXISTS vector;" >/dev/null || warn "pgvector failed to install — install manually with: docker compose exec -T db psql -U kanban -d kanban -c 'CREATE EXTENSION IF NOT EXISTS vector;'"
   ok "pgvector enabled"
 fi
 
