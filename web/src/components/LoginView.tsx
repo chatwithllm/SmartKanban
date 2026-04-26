@@ -1,7 +1,20 @@
 import { useState } from 'react';
 import { useAuth } from '../auth.tsx';
 
-export function LoginView() {
+type Props = {
+  redirectTo?: string;
+};
+
+function isSafeRelativePath(p: string | undefined): boolean {
+  if (!p) return false;
+  if (!p.startsWith('/')) return false;
+  if (p.startsWith('//')) return false;     // protocol-relative
+  if (p.includes('://')) return false;      // absolute URL
+  if (p.length > 200) return false;
+  return true;
+}
+
+export function LoginView({ redirectTo }: Props) {
   const { login, register } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [name, setName] = useState('');
@@ -16,8 +29,17 @@ export function LoginView() {
     setError(null);
     setBusy(true);
     try {
-      if (mode === 'login') await login(email, password);
-      else await register(name, shortName, email, password);
+      if (mode === 'login') {
+        await login(email, password);
+        if (isSafeRelativePath(redirectTo)) {
+          location.assign(redirectTo!);
+        }
+      } else {
+        await register(name, shortName, email, password);
+        if (isSafeRelativePath(redirectTo)) {
+          location.assign(redirectTo!);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'failed');
     } finally {
