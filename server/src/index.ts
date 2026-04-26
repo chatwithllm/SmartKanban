@@ -12,6 +12,7 @@ import { mirrorRoutes } from './routes/mirror.js';
 import { reviewRoutes } from './routes/review.js';
 import { telegramRoutes } from './routes/telegram.js';
 import { attachmentRoutes } from './routes/attachments.js';
+import { attachmentUploadRoutes } from './routes/attachments_upload.js';
 import { templateRoutes } from './routes/templates.js';
 import { knowledgeRoutes } from './routes/knowledge.js';
 import { wsRoutes } from './ws.js';
@@ -39,6 +40,7 @@ await app.register(templateRoutes);
 await app.register(knowledgeRoutes);
 await app.register(telegramRoutes);
 await app.register(attachmentRoutes, { attachmentsDir });
+await app.register(attachmentUploadRoutes);
 await app.register(wsRoutes);
 
 // Serve frontend build if present (production mode). SPA fallback for /my-day etc.
