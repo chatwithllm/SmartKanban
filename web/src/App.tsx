@@ -17,6 +17,8 @@ import { applyTemplateEvent } from './hooks/useTemplates.ts';
 import { KnowledgeView } from './KnowledgeView.tsx';
 import { applyKnowledgeEvent } from './hooks/useKnowledge.ts';
 import { MobileCardView } from './MobileCardView.tsx';
+import { MobileShell } from './MobileShell.tsx';
+import { useIsMobile } from './hooks/useIsMobile.ts';
 
 export function App() {
   const { user, loading } = useAuth();
@@ -50,9 +52,10 @@ function MobileCardWithToast({ cardId }: { cardId: string }) {
 
 function AuthedWithToast({ meId }: { meId: string }) {
   const toast = useToastState();
+  const isMobile = useIsMobile();
   return (
     <ToastProvider value={toast}>
-      <Authed meId={meId} />
+      {isMobile ? <MobileShell meId={meId} /> : <Authed meId={meId} />}
       <ToastContainer toasts={toast.toasts} onDismiss={toast.removeToast} />
     </ToastProvider>
   );
