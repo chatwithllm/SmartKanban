@@ -219,7 +219,7 @@ git clone git@github.com:chatwithllm/SmartKanban.git
 cd SmartKanban
 
 docker compose up -d
-docker exec -i kanbanclaude-db-1 psql -U kanban -d kanban < server/schema.sql
+docker compose exec -T db psql -U kanban -d kanban < server/schema.sql
 
 (cd server && npm install)
 (cd web    && npm install)
@@ -301,7 +301,7 @@ Repeat step 2–3 for each additional family member.
 Requires the pgvector extension and an OpenAI key:
 
 ```bash
-docker exec -i kanbanclaude-db-1 psql -U kanban -d kanban \
+docker compose exec -T db psql -U kanban -d kanban \
   -c "CREATE EXTENSION IF NOT EXISTS vector;"
 echo "KNOWLEDGE_EMBEDDINGS=true" >> server/.env
 echo "OPENAI_API_KEY=sk-…"       >> server/.env

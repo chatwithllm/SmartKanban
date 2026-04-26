@@ -173,7 +173,7 @@ docker compose up -d db
 Wait ~5 seconds, then initialize the schema (idempotent — safe to re-run):
 
 ```bash
-docker exec -i kanbanclaude-db-1 psql -U kanban -d kanban < server/schema.sql
+docker compose exec -T db psql -U kanban -d kanban < server/schema.sql
 ```
 
 You should see a series of `CREATE TABLE` / `CREATE INDEX` lines and no
@@ -333,7 +333,7 @@ or sync `/var/backups/smartkanban/` to your preferred destination
 Requires the pgvector extension and an OpenAI key.
 
 ```bash
-docker exec -i kanbanclaude-db-1 psql -U kanban -d kanban \
+docker compose exec -T db psql -U kanban -d kanban \
   -c "CREATE EXTENSION IF NOT EXISTS vector;"
 echo "KNOWLEDGE_EMBEDDINGS=true" >> server/.env
 echo "OPENAI_API_KEY=sk-…"       >> server/.env
@@ -354,7 +354,7 @@ docker compose logs server | grep -i embed
 ```bash
 cd /opt/smartkanban
 git pull
-docker exec -i kanbanclaude-db-1 psql -U kanban -d kanban < server/schema.sql
+docker compose exec -T db psql -U kanban -d kanban < server/schema.sql
 docker compose up -d --build server
 docker compose logs -f server
 ```
@@ -419,7 +419,7 @@ docker compose down
 docker volume rm kanbanclaude_kanban_pgdata   # destroys current DB
 docker compose up -d db
 gunzip -c /var/backups/smartkanban/db-<ts>.sql.gz \
-  | docker exec -i kanbanclaude-db-1 psql -U kanban -d kanban
+  | docker compose exec -T db psql -U kanban -d kanban
 tar -xzf /var/backups/smartkanban/attachments-<ts>.tar.gz \
   -C /opt/smartkanban/server/data/
 docker compose up -d server
