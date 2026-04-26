@@ -19,6 +19,8 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
   const [shares, setShares] = useState<string[]>(card.shares);
   const [dueDate, setDueDate] = useState(card.due_date ?? '');
 
+  const [showQr, setShowQr] = useState(false);
+
   const [linked, setLinked] = useState<KnowledgeItem[]>([]);
   const [picking, setPicking] = useState(false);
   const [pickerQ, setPickerQ] = useState('');
@@ -108,12 +110,37 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
         className="w-full max-w-xl rounded-xl border border-neutral-800 bg-neutral-900 p-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full bg-transparent text-lg font-medium text-neutral-100 outline-none"
-          placeholder="Title"
-        />
+        <div className="flex items-center justify-between">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="flex-1 bg-transparent text-lg font-medium text-neutral-100 outline-none"
+            placeholder="Title"
+          />
+          <button
+            onClick={() => setShowQr((v) => !v)}
+            aria-label="Show QR code"
+            title="Show QR code"
+            className="text-neutral-400 hover:text-neutral-100 mr-1"
+          >
+            📱
+          </button>
+        </div>
+
+        {showQr && (
+          <div className="mb-4 rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+            <img
+              src={api.cardQrUrl(card.id)}
+              alt="QR code"
+              className="mx-auto h-48 w-48 bg-white p-2"
+            />
+            <p className="mt-2 text-center text-xs text-neutral-400">Scan to open on phone</p>
+            <code className="mt-2 block break-all text-center text-xs text-neutral-500">
+              {`${location.origin}/m/card/${card.id}`}
+            </code>
+          </div>
+        )}
+
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
