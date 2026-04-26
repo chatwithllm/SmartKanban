@@ -149,6 +149,8 @@ export async function attachmentUploadRoutes(app: FastifyInstance) {
 
         // Insert a placeholder card first to get an id, then save the file under it.
         const userId = req.user!.id;
+        // UTC timestamp; intentionally not local-time so the title is reproducible
+        // across servers and clients with skewed clocks.
         const tsTitle = `Screenshot ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`;
         const insertCard = await pool.query<{ id: string }>(
           `INSERT INTO cards (title, description, status, source, created_by, position, needs_review)

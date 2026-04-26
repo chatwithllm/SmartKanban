@@ -208,7 +208,8 @@ test('POST /api/cards/from-image: 201 creates card with timestamped title when A
 });
 
 test('POST /api/cards/from-image: honors status field', async () => {
-  const prev = process.env.OPENROUTER_API_KEY;
+  const prevORK = process.env.OPENROUTER_API_KEY;
+  const prevOAI = process.env.OPENAI_API_KEY;
   delete process.env.OPENROUTER_API_KEY;
   delete process.env.OPENAI_API_KEY;
   try {
@@ -241,7 +242,8 @@ test('POST /api/cards/from-image: honors status field', async () => {
     const card = res.json() as { status: string };
     assert.equal(card.status, 'backlog');
   } finally {
-    if (prev) process.env.OPENROUTER_API_KEY = prev;
+    if (prevORK) process.env.OPENROUTER_API_KEY = prevORK;
+    if (prevOAI) process.env.OPENAI_API_KEY = prevOAI;
   }
 });
 
