@@ -30,35 +30,37 @@ export function ActivityTimeline({ cardId }: Props) {
   }, [cardId, open]);
 
   return (
-    <div className="mt-4 border-t border-neutral-800 pt-3">
+    <div className="mt-4 border-t border-ink/10 pt-3">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-300"
+        className="flex items-center gap-1 text-1 tracking-tight2 text-ink-soft hover:text-ink"
       >
         <span className={`transition-transform ${open ? 'rotate-90' : ''}`}>▶</span>
         Activity
       </button>
       {open && (
         <div className="mt-2">
-          {err && <div className="text-xs text-red-300">{err}</div>}
-          {!entries && !err && <div className="text-xs text-neutral-500">Loading…</div>}
+          {err && <div className="text-1 tracking-tight2 text-red">{err}</div>}
+          {!entries && !err && <div className="text-1 tracking-tight2 text-ink-soft">Loading…</div>}
           {entries && entries.length === 0 && (
-            <div className="text-xs text-neutral-600">No activity recorded</div>
+            <div className="text-1 tracking-tight2 text-ink-soft">No activity recorded</div>
           )}
           {entries && entries.length > 0 && (
-            <ul className="space-y-1.5">
+            <ol className="relative ml-3 border-l-2 border-ceramic">
               {entries.map((e) => (
-                <li key={e.id} className="flex items-baseline gap-2 text-xs">
-                  <span className="font-medium text-neutral-300">
-                    {e.actor_name ?? 'System'}
-                  </span>
-                  <span className="text-neutral-400">{e.action}</span>
-                  <span className="ml-auto shrink-0 text-neutral-600" title={new Date(e.created_at).toLocaleString()}>
+                <li key={e.id} className="relative pl-6 pb-4">
+                  <span className="absolute -left-[7px] top-1.5 h-3 w-3 rounded-full bg-green-accent" aria-hidden />
+                  <time className="block text-1 text-ink-soft tracking-tight2" title={new Date(e.created_at).toLocaleString()}>
                     {relativeTime(e.created_at)}
-                  </span>
+                  </time>
+                  <p className="text-2 text-ink tracking-tight2">
+                    <span className="font-medium">{e.actor_name ?? 'System'}</span>
+                    {' '}
+                    <span>{e.action}</span>
+                  </p>
                 </li>
               ))}
-            </ul>
+            </ol>
           )}
         </div>
       )}

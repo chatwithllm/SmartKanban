@@ -24,7 +24,7 @@ export function App() {
   const { user, loading } = useAuth();
   const path = location.pathname;
 
-  if (loading) return <div className="p-8 text-sm text-neutral-500">Loading…</div>;
+  if (loading) return <div className="p-8 text-2 text-ink-soft tracking-tight2">Loading…</div>;
 
   // Strict UUID shape — looser regex would let typoed URLs reach the
   // server where Postgres throws 22P02 on the cards.id cast and returns 500.

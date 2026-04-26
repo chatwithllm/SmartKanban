@@ -95,154 +95,156 @@ export function TemplatesTab({ me }: Props) {
     }
   };
 
-  if (loading) return <div className="p-4 text-sm text-neutral-400">Loading…</div>;
-  if (error) return <div className="p-4 text-sm text-red-400">{error}</div>;
+  if (loading) return <div className="p-4 text-2 tracking-tight2 text-ink-soft">Loading…</div>;
+  if (error) return <div className="p-4 text-2 tracking-tight2 text-red">{error}</div>;
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Templates</h3>
-        <button
-          disabled={!!form || busy}
-          onClick={startNew}
-          className="rounded bg-neutral-700 px-2 py-1 text-xs hover:bg-neutral-600 disabled:opacity-50"
-        >
-          + New template
-        </button>
-      </div>
-
-      {form && (
-        <div className="rounded-lg border border-neutral-700 bg-neutral-900 p-3 text-sm">
-          {errMsg && <p className="mb-2 text-xs text-red-400">{errMsg}</p>}
-          <div className="grid grid-cols-2 gap-2">
-            <label className="col-span-1 flex flex-col text-xs">
-              Name
-              <input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="mt-1 rounded bg-neutral-800 px-2 py-1 text-sm"
-              />
-            </label>
-            <label className="col-span-1 flex flex-col text-xs">
-              Visibility
-              <select
-                value={form.visibility}
-                onChange={(e) =>
-                  setForm({ ...form, visibility: e.target.value as TemplateVisibility })
-                }
-                className="mt-1 rounded bg-neutral-800 px-2 py-1 text-sm"
-              >
-                <option value="private">🔒 Private</option>
-                <option value="shared">👥 Shared</option>
-              </select>
-            </label>
-            <label className="col-span-2 flex flex-col text-xs">
-              Title
-              <input
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="mt-1 rounded bg-neutral-800 px-2 py-1 text-sm"
-              />
-            </label>
-            <label className="col-span-2 flex flex-col text-xs">
-              Description
-              <textarea
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                className="mt-1 min-h-[60px] rounded bg-neutral-800 px-2 py-1 text-sm"
-              />
-            </label>
-            <label className="col-span-2 flex flex-col text-xs">
-              Tags (space-separated)
-              <input
-                value={form.tags}
-                onChange={(e) => setForm({ ...form, tags: e.target.value })}
-                className="mt-1 rounded bg-neutral-800 px-2 py-1 text-sm"
-              />
-            </label>
-            <label className="col-span-1 flex flex-col text-xs">
-              Status
-              <select
-                value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value as Status })}
-                className="mt-1 rounded bg-neutral-800 px-2 py-1 text-sm"
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {STATUS_LABELS[s]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="col-span-1 flex flex-col text-xs">
-              Due offset (days, optional)
-              <input
-                type="number"
-                min={0}
-                max={365}
-                value={form.dueOffsetDays}
-                onChange={(e) => setForm({ ...form, dueOffsetDays: e.target.value })}
-                className="mt-1 rounded bg-neutral-800 px-2 py-1 text-sm"
-              />
-            </label>
-          </div>
-          <div className="mt-3 flex gap-2">
-            <button
-              disabled={busy}
-              onClick={save}
-              className="rounded bg-blue-600 px-3 py-1 text-xs font-medium hover:bg-blue-500 disabled:opacity-50"
-            >
-              Save
-            </button>
-            <button
-              disabled={busy}
-              onClick={() => setForm(null)}
-              className="rounded bg-neutral-700 px-3 py-1 text-xs hover:bg-neutral-600 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-          </div>
+    <section className="bg-gold-lightest rounded-card p-4 -m-4">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-3 font-semibold text-ink tracking-tight2">Templates</h3>
+          <button
+            disabled={!!form || busy}
+            onClick={startNew}
+            className="btn-pill btn-pill-filled-green"
+          >
+            + New template
+          </button>
         </div>
-      )}
 
-      <ul className="flex flex-col gap-1">
-        {templates.length === 0 && (
-          <li className="py-3 text-center text-xs text-neutral-500">No templates yet.</li>
+        {form && (
+          <div className="card-surface p-4 mb-2">
+            {errMsg && <p className="mb-2 text-1 tracking-tight2 text-red">{errMsg}</p>}
+            <div className="grid grid-cols-2 gap-2">
+              <label className="col-span-1 flex flex-col text-1 tracking-tight2 text-ink-soft">
+                Name
+                <input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="mt-1 rounded-card border border-ink/10 bg-card px-2 py-1 text-2 tracking-tight2 text-ink"
+                />
+              </label>
+              <label className="col-span-1 flex flex-col text-1 tracking-tight2 text-ink-soft">
+                Visibility
+                <select
+                  value={form.visibility}
+                  onChange={(e) =>
+                    setForm({ ...form, visibility: e.target.value as TemplateVisibility })
+                  }
+                  className="mt-1 rounded-card border border-ink/10 bg-card px-2 py-1 text-2 tracking-tight2 text-ink"
+                >
+                  <option value="private">🔒 Private</option>
+                  <option value="shared">👥 Shared</option>
+                </select>
+              </label>
+              <label className="col-span-2 flex flex-col text-1 tracking-tight2 text-ink-soft">
+                Title
+                <input
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  className="mt-1 rounded-card border border-ink/10 bg-card px-2 py-1 text-2 tracking-tight2 text-ink"
+                />
+              </label>
+              <label className="col-span-2 flex flex-col text-1 tracking-tight2 text-ink-soft">
+                Description
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  className="mt-1 min-h-[60px] rounded-card border border-ink/10 bg-card px-2 py-1 text-2 tracking-tight2 text-ink"
+                />
+              </label>
+              <label className="col-span-2 flex flex-col text-1 tracking-tight2 text-ink-soft">
+                Tags (space-separated)
+                <input
+                  value={form.tags}
+                  onChange={(e) => setForm({ ...form, tags: e.target.value })}
+                  className="mt-1 rounded-card border border-ink/10 bg-card px-2 py-1 text-2 tracking-tight2 text-ink"
+                />
+              </label>
+              <label className="col-span-1 flex flex-col text-1 tracking-tight2 text-ink-soft">
+                Status
+                <select
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value as Status })}
+                  className="mt-1 rounded-card border border-ink/10 bg-card px-2 py-1 text-2 tracking-tight2 text-ink"
+                >
+                  {STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {STATUS_LABELS[s]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="col-span-1 flex flex-col text-1 tracking-tight2 text-ink-soft">
+                Due offset (days, optional)
+                <input
+                  type="number"
+                  min={0}
+                  max={365}
+                  value={form.dueOffsetDays}
+                  onChange={(e) => setForm({ ...form, dueOffsetDays: e.target.value })}
+                  className="mt-1 rounded-card border border-ink/10 bg-card px-2 py-1 text-2 tracking-tight2 text-ink"
+                />
+              </label>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <button
+                disabled={busy}
+                onClick={save}
+                className="btn-pill btn-pill-filled-green"
+              >
+                Save
+              </button>
+              <button
+                disabled={busy}
+                onClick={() => setForm(null)}
+                className="btn-pill btn-pill-outlined-dark"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         )}
-        {templates.map((t) => {
-          const mine = t.owner_id === me.id;
-          return (
-            <li
-              key={t.id}
-              className="flex items-center justify-between rounded bg-neutral-800 px-3 py-2 text-sm"
-            >
-              <div className="flex flex-col">
-                <span className="flex items-center gap-2">
-                  <span className="font-medium">{t.name}</span>
-                  <span className="text-xs">{t.visibility === 'private' ? '🔒' : '👥'}</span>
-                </span>
-                <span className="text-xs text-neutral-400">{t.title}</span>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  disabled={!mine || busy}
-                  onClick={() => startEdit(t)}
-                  className="text-xs text-neutral-300 hover:text-neutral-100 disabled:opacity-30"
-                >
-                  Edit
-                </button>
-                <button
-                  disabled={!mine || busy}
-                  onClick={() => remove(t)}
-                  className="text-xs text-red-400 hover:text-red-300 disabled:opacity-30"
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+
+        <ul className="flex flex-col gap-1">
+          {templates.length === 0 && (
+            <li className="py-3 text-center text-1 tracking-tight2 text-ink-soft">No templates yet.</li>
+          )}
+          {templates.map((t) => {
+            const mine = t.owner_id === me.id;
+            return (
+              <li
+                key={t.id}
+                className="card-surface p-4 mb-2 flex items-center justify-between"
+              >
+                <div className="flex flex-col">
+                  <span className="flex items-center gap-2">
+                    <span className="text-3 font-semibold text-ink tracking-tight2">{t.name}</span>
+                    <span className="tag-pill text-1 tracking-tight2">{t.visibility === 'private' ? '🔒' : '👥'}</span>
+                  </span>
+                  <span className="text-1 text-ink-soft tracking-tight2">{t.title}</span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    disabled={!mine || busy}
+                    onClick={() => startEdit(t)}
+                    className="btn-pill btn-pill-outlined-dark disabled:opacity-30"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    disabled={!mine || busy}
+                    onClick={() => remove(t)}
+                    className="btn-pill btn-pill-destructive disabled:opacity-30"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </section>
   );
 }

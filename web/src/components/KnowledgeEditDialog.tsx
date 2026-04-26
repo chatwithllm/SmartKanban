@@ -68,89 +68,104 @@ export function KnowledgeEditDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-lg border border-neutral-700 bg-neutral-900 p-4 shadow-2xl">
-        <h2 className="mb-3 text-base font-semibold text-neutral-100">
-          {initial?.id ? 'Edit' : 'New'} knowledge
-        </h2>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="modal-surface w-full max-w-[560px] max-h-[90vh] overflow-y-auto flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header strip */}
+        <div className="modal-header-strip flex items-center justify-between px-5 py-3 shrink-0">
+          <span className="text-3 font-semibold tracking-tight2 text-white">
+            {initial?.id ? 'Edit' : 'New'} knowledge
+          </span>
+          <button onClick={onClose} aria-label="Close" className="text-2 text-white/80 hover:text-white">
+            ✕
+          </button>
+        </div>
 
-        <label className="mb-3 block text-xs text-neutral-400">
-          URL
-          <input
-            type="url"
-            className="mt-1 w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-sm text-neutral-100"
-            value={url}
-            onChange={(e) => onUrlChange(e.target.value)}
-          />
-        </label>
+        {/* Body */}
+        <div className="p-6 flex flex-col gap-4">
+          <label className="flex flex-col gap-1">
+            <span className="text-1 tracking-tight2 text-ink-soft">URL</span>
+            <input
+              type="url"
+              className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full"
+              value={url}
+              onChange={(e) => onUrlChange(e.target.value)}
+            />
+          </label>
 
-        <label className="mb-3 block text-xs text-neutral-400">
-          Title
-          <input
-            type="text"
-            className="mt-1 w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-sm text-neutral-100"
-            value={title}
-            onChange={(e) => onTitleChange(e.target.value)}
-          />
-        </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-1 tracking-tight2 text-ink-soft">Title</span>
+            <input
+              type="text"
+              className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full"
+              value={title}
+              onChange={(e) => onTitleChange(e.target.value)}
+            />
+          </label>
 
-        <label className="mb-3 block text-xs text-neutral-400">
-          Body
-          <textarea
-            rows={12}
-            className="mt-1 w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1 font-mono text-xs text-neutral-100"
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-          />
-        </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-1 tracking-tight2 text-ink-soft">Body</span>
+            <textarea
+              rows={12}
+              className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full font-mono resize-none"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+            />
+          </label>
 
-        <label className="mb-3 block text-xs text-neutral-400">
-          Tags (space-separated)
-          <input
-            type="text"
-            className="mt-1 w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-sm text-neutral-100"
-            value={tagsText}
-            onChange={(e) => setTagsText(e.target.value)}
-          />
-        </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-1 tracking-tight2 text-ink-soft">Tags (space-separated)</span>
+            <input
+              type="text"
+              className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full"
+              value={tagsText}
+              onChange={(e) => setTagsText(e.target.value)}
+            />
+          </label>
 
-        <fieldset className="mb-3 text-xs text-neutral-400">
-          <legend>Visibility</legend>
-          {(['private', 'inbox', 'shared'] as const).map((v) => (
-            <label key={v} className="mr-3 inline-flex items-center gap-1">
-              <input
-                type="radio"
-                name="vis"
-                checked={visibility === v}
-                onChange={() => setVisibility(v)}
-              />
-              <span>{v}</span>
-            </label>
-          ))}
-        </fieldset>
+          <fieldset className="flex flex-col gap-1">
+            <legend className="text-1 tracking-tight2 text-ink-soft mb-1">Visibility</legend>
+            <div className="flex gap-4">
+              {(['private', 'inbox', 'shared'] as const).map((v) => (
+                <label key={v} className="inline-flex items-center gap-1.5 text-3 tracking-tight2 text-ink cursor-pointer">
+                  <input
+                    type="radio"
+                    name="vis"
+                    checked={visibility === v}
+                    onChange={() => setVisibility(v)}
+                  />
+                  <span>{v}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
 
-        <label className="mb-3 block text-xs text-neutral-400">
-          <input
-            type="checkbox"
-            checked={autoFetch}
-            onChange={(e) => setAutoFetch(e.target.checked)}
-          />{' '}
-          Auto-fetch when I save
-        </label>
+          <label className="inline-flex items-center gap-2 text-3 tracking-tight2 text-ink cursor-pointer">
+            <input
+              type="checkbox"
+              checked={autoFetch}
+              onChange={(e) => setAutoFetch(e.target.checked)}
+            />
+            Auto-fetch when I save
+          </label>
 
-        {err && <div className="mb-2 text-xs text-red-400">{err}</div>}
+          {err && <div className="text-1 tracking-tight2 text-red">{err}</div>}
+        </div>
 
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="rounded border border-neutral-700 px-3 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
-          >
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-ink/6 flex justify-end gap-3 shrink-0">
+          <button onClick={onClose} className="btn-pill btn-pill-outlined-dark">
             Cancel
           </button>
           <button
             onClick={save}
             disabled={!canSave}
-            className="rounded bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-900 disabled:opacity-50"
+            className="btn-pill btn-pill-filled-green disabled:opacity-50"
           >
             Save
           </button>

@@ -178,14 +178,14 @@ export function MobileShell({ meId }: { meId: string }) {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 pb-20 text-neutral-100">
+    <div className="bg-canvas min-h-screen pb-[calc(56px+env(safe-area-inset-bottom))]">
       {tab === 'board' && (
         <>
-          <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b border-neutral-800 bg-neutral-900 px-3">
+          <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b border-ink/10 bg-card px-3">
             <select
               value={scope}
               onChange={(e) => setScope(e.target.value as Scope)}
-              className="bg-neutral-900 text-sm outline-none"
+              className="bg-card text-ink text-sm outline-none"
             >
               {SCOPES.map((s) => (
                 <option key={s.value} value={s.value}>
@@ -193,45 +193,46 @@ export function MobileShell({ meId }: { meId: string }) {
                 </option>
               ))}
             </select>
-            <h1 className="flex-1 text-center text-sm font-medium">Kanban</h1>
+            <h1 className="flex-1 text-center text-3 font-medium text-ink tracking-tight2">Kanban</h1>
             <button onClick={() => setSearchOpen((v) => !v)} aria-label="Search" className="text-lg">
               🔍
-            </button>
-            <button onClick={() => setAdding(true)} aria-label="Add card" className="text-xl leading-none">
-              +
             </button>
           </header>
 
           {searchOpen && (
-            <div className="border-b border-neutral-800 bg-neutral-900 p-2">
+            <div className="border-b border-ink/10 bg-card p-2">
               <input
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search cards…"
-                className="w-full rounded bg-neutral-800 px-3 py-2 text-sm text-neutral-100"
+                className="input-pill w-full"
               />
             </div>
           )}
 
-          <nav className="flex gap-1 overflow-x-auto border-b border-neutral-800 px-2 py-2">
-            {STATUSES.map((s) => (
-              <button
-                key={s}
-                onClick={() => setActiveStatus(s)}
-                className={`shrink-0 rounded-full px-3 py-1.5 text-xs ${
-                  activeStatus === s
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-neutral-800 text-neutral-300'
-                }`}
-              >
-                {STATUS_BADGE[s]} {STATUS_LABELS[s]} <span className="opacity-60">{counts[s]}</span>
-              </button>
-            ))}
-          </nav>
+          <div className="flex gap-2 overflow-x-auto px-4 py-3 bg-canvas">
+            {STATUSES.map((s) => {
+              const active = activeStatus === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setActiveStatus(s)}
+                  className={`relative shrink-0 inline-flex items-center gap-1 rounded-pill px-3.5 py-1.5 text-2 tracking-tight2 transition-colors ${
+                    active ? 'bg-card text-green-starbucks font-semibold' : 'bg-ceramic text-ink-soft'
+                  }`}
+                >
+                  <span aria-hidden>{STATUS_BADGE[s]}</span>
+                  <span>{STATUS_LABELS[s]}</span>
+                  {active && <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-gold" aria-hidden />}
+                </button>
+              );
+            })}
+          </div>
 
           {adding && (
-            <div className="mx-3 mt-3 rounded-lg border border-neutral-700 bg-neutral-900 p-2">
+            <div className="mx-3 mt-3 rounded-card border border-ink/10 bg-card p-2">
               <textarea
                 autoFocus
                 value={draft}
@@ -247,7 +248,7 @@ export function MobileShell({ meId }: { meId: string }) {
                 }}
                 onBlur={submitCreate}
                 placeholder="New card… (or /template-name)"
-                className="w-full resize-none bg-transparent text-sm text-neutral-100 outline-none"
+                className="input-pill w-full resize-none bg-transparent outline-none"
                 rows={2}
               />
             </div>
@@ -255,7 +256,7 @@ export function MobileShell({ meId }: { meId: string }) {
 
           <ul className="flex flex-col gap-2 p-3">
             {filtered.length === 0 && (
-              <li className="py-8 text-center text-xs text-neutral-500">
+              <li className="py-8 text-center text-2 text-ink-soft">
                 {searchQuery ? 'No cards match your search' : `No cards in ${STATUS_LABELS[activeStatus]}`}
               </li>
             )}
@@ -278,29 +279,50 @@ export function MobileShell({ meId }: { meId: string }) {
             />
           )}
 
+          {tab === 'board' && (
+            <button
+              type="button"
+              className="fab"
+              style={{
+                width: '56px',
+                height: '56px',
+                right: 'calc(16px + env(safe-area-inset-right))',
+                bottom: 'calc(56px + 16px + env(safe-area-inset-bottom))',
+                opacity: actionsCard ? 0 : 1,
+                pointerEvents: actionsCard ? 'none' : 'auto',
+                transition: 'opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease',
+              }}
+              onClick={() => setAdding(true)}
+              aria-label="Add card"
+            >
+              <span className="text-2xl leading-none" aria-hidden>+</span>
+            </button>
+          )}
+
           {canInstall && !installDismissed && (
-            <div className="fixed bottom-16 inset-x-2 z-30 rounded-lg bg-blue-900/95 p-3 shadow-lg">
-              <p className="text-sm text-white">Install Kanban as an app for a better experience.</p>
-              <div className="mt-2 flex gap-2">
-                <button
-                  onClick={async () => {
-                    await install();
-                    setInstallDismissed(true);
-                  }}
-                  className="rounded bg-white px-3 py-1 text-xs font-medium text-blue-900"
-                >
-                  Install
-                </button>
-                <button
-                  onClick={() => {
-                    localStorage.setItem('install-dismissed', '1');
-                    setInstallDismissed(true);
-                  }}
-                  className="px-3 py-1 text-xs text-blue-100"
-                >
-                  Later
-                </button>
+            <div className="fixed left-4 right-4 bottom-[calc(56px+16px+env(safe-area-inset-bottom))] z-30 bg-green-house text-ink-rev rounded-card p-4 flex items-center gap-3">
+              <div className="flex-1">
+                <div className="text-3 font-semibold tracking-tight2">Install SmartKanban</div>
+                <div className="text-1 text-ink-rev-soft tracking-tight2">Add to home screen for full-screen access</div>
               </div>
+              <button
+                onClick={async () => {
+                  await install();
+                  setInstallDismissed(true);
+                }}
+                className="btn-pill btn-pill-on-dark-filled"
+              >
+                Install
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.setItem('install-dismissed', '1');
+                  setInstallDismissed(true);
+                }}
+                className="btn-pill btn-pill-on-dark-outlined"
+              >
+                Dismiss
+              </button>
             </div>
           )}
         </>
@@ -309,34 +331,27 @@ export function MobileShell({ meId }: { meId: string }) {
       {tab === 'knowledge' && <KnowledgeView />}
       {tab === 'more' && <MobileMore onCardRestored={onCardRestored} />}
 
-      <nav className="fixed bottom-0 inset-x-0 z-20 flex h-14 border-t border-neutral-800 bg-neutral-900 pb-[env(safe-area-inset-bottom)]">
-        <TabButton icon="📋" label="Board" active={tab === 'board'} onClick={() => setTab('board')} />
-        <TabButton icon="📚" label="Knowledge" active={tab === 'knowledge'} onClick={() => setTab('knowledge')} />
-        <TabButton icon="⋯" label="More" active={tab === 'more'} onClick={() => setTab('more')} />
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-30 bg-green-house text-ink-rev grid grid-cols-3"
+        style={{ height: 'calc(56px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)', boxShadow: '0 -1px 3px rgba(0,0,0,0.1)' }}
+      >
+        {(['board', 'knowledge', 'more'] as const).map((t) => {
+          const active = tab === t;
+          return (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              className="flex flex-col items-center justify-center gap-1 relative"
+            >
+              <span className="text-xl" aria-hidden>{t === 'board' ? '📋' : t === 'knowledge' ? '📚' : '⋯'}</span>
+              <span className={`text-[12px] tracking-tight2 ${active ? 'font-semibold text-white' : 'text-ink-rev-soft'}`}>{t === 'board' ? 'Board' : t === 'knowledge' ? 'Knowledge' : 'More'}</span>
+              {active && <span className="absolute bottom-1 h-1 w-1 rounded-full bg-gold" aria-hidden />}
+            </button>
+          );
+        })}
       </nav>
     </div>
-  );
-}
-
-function TabButton({
-  icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: string;
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs"
-    >
-      <span className="text-lg">{icon}</span>
-      <span className={active ? 'text-blue-400' : 'text-neutral-400'}>{label}</span>
-    </button>
   );
 }
 
@@ -363,19 +378,19 @@ function MobileCardRow({
       onTouchMove={lp.onTouchMove}
       onTouchCancel={lp.onTouchCancel}
       onContextMenu={lp.onContextMenu}
-      className="rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 active:bg-neutral-800"
+      className="card-surface px-3 py-2 active:bg-ceramic"
     >
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-neutral-100">{card.title || 'Untitled'}</p>
+          <p className="text-3 text-ink">{card.title || 'Untitled'}</p>
           {card.tags.length > 0 && (
-            <p className="mt-1 text-xs text-neutral-500 truncate">
+            <p className="mt-1 text-1 text-ink-soft truncate">
               {card.tags.map((t) => `#${t}`).join(' ')}
             </p>
           )}
         </div>
         {owner && (
-          <span className="rounded bg-neutral-800 px-2 py-0.5 text-xs text-neutral-300">
+          <span className="tag-pill">
             {owner.short_name || owner.name}
           </span>
         )}

@@ -33,28 +33,35 @@ export function KnowledgeView({
 
   return (
     <div className="mx-auto max-w-3xl">
+      {/* House-Green feature band */}
+      <section className="bg-green-house text-ink-rev rounded-card mb-6 overflow-hidden">
+        <div className="grid md:grid-cols-[1fr_auto] gap-6 items-center px-6 py-10">
+          <div>
+            <h1 className="text-8 font-semibold tracking-tight2">Knowledge</h1>
+            <p className="mt-2 text-3 text-ink-rev-soft tracking-tight2">URLs, snippets, notes — all linked back to cards</p>
+            <div className="mt-4 flex gap-3 flex-wrap">
+              <button onClick={() => setCreating(true)} className="btn-pill btn-pill-on-dark-filled">+ New note</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="mb-3 flex items-center gap-2">
         <select
           value={scope}
           onChange={(e) => setScope(e.target.value as Scope)}
-          className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs text-neutral-200"
+          className="rounded border border-ink/10 bg-card px-2 py-1 text-1 tracking-tight2 text-ink"
         >
           <option value="mine">mine</option>
           <option value="inbox">inbox</option>
           <option value="all">all</option>
         </select>
         <input
-          className="flex-1 rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-sm text-neutral-100"
+          className="flex-1 rounded border border-ink/10 bg-card px-2 py-1 text-2 tracking-tight2 text-ink"
           placeholder="search…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <button
-          onClick={() => setCreating(true)}
-          className="rounded bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-900"
-        >
-          + New
-        </button>
       </div>
       {topTags.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1">
@@ -62,10 +69,10 @@ export function KnowledgeView({
             <button
               key={t}
               onClick={() => setTag((prev) => (prev === t ? null : t))}
-              className={`rounded-full border px-2 py-0.5 text-xs ${
+              className={`tag-pill text-1 tracking-tight2 ${
                 tag === t
-                  ? 'border-neutral-100 bg-neutral-100 text-neutral-900'
-                  : 'border-neutral-700 text-neutral-400 hover:text-neutral-200'
+                  ? 'bg-green-accent text-ink-rev'
+                  : ''
               }`}
             >
               #{t}
@@ -73,12 +80,12 @@ export function KnowledgeView({
           ))}
         </div>
       )}
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.map((item) => (
           <KnowledgeRow key={item.id} item={item} onOpen={() => setDetail(item)} />
         ))}
         {items.length === 0 && (
-          <div className="py-12 text-center text-xs text-neutral-500">No knowledge yet.</div>
+          <div className="col-span-full py-12 text-center text-1 tracking-tight2 text-ink-soft">No knowledge yet.</div>
         )}
       </div>
       {creating && (
