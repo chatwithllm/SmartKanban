@@ -5,15 +5,25 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 const STORAGE_KEY = 'theme';
 
 function readStored(): ThemeMode {
-  if (typeof localStorage === 'undefined') return 'system';
-  const v = localStorage.getItem(STORAGE_KEY);
-  return v === 'light' || v === 'dark' || v === 'system' ? v : 'system';
+  try {
+    const v = localStorage.getItem(STORAGE_KEY);
+    return v === 'light' || v === 'dark' || v === 'system' ? v : 'system';
+  } catch {
+    return 'system';
+  }
+}
+
+function writeStored(m: ThemeMode): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, m);
+  } catch {
+    /* private mode / quota — silently ignore */
+  }
 }
 
 function systemPrefersDark(): boolean {
-  return typeof window !== 'undefined'
-    && window.matchMedia
-    && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
 function effectiveOf(mode: ThemeMode): 'light' | 'dark' {
@@ -30,8 +40,9 @@ export function useTheme(): {
   effective: 'light' | 'dark';
   set: (m: ThemeMode) => void;
 } {
-  const [mode, setMode] = useState<ThemeMode>(() => readStored());
-  const [effective, setEffective] = useState<'light' | 'dark'>(() => effectiveOf(readStored()));
+  const initial = (() => readStored())();
+  const [mode, setMode] = useState<ThemeMode>(initial);
+  const [effective, setEffective] = useState<'light' | 'dark'>(() => effectiveOf(initial));
 
   useEffect(() => {
     applyTheme(effective);
@@ -39,6 +50,7 @@ export function useTheme(): {
 
   useEffect(() => {
     if (mode !== 'system') return;
+    if (typeof window === 'undefined' || !window.matchMedia) return;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = () => setEffective(systemPrefersDark() ? 'dark' : 'light');
     mq.addEventListener('change', handler);
@@ -46,7 +58,7 @@ export function useTheme(): {
   }, [mode]);
 
   const set = (m: ThemeMode) => {
-    localStorage.setItem(STORAGE_KEY, m);
+    writeStored(m);
     setMode(m);
     setEffective(effectiveOf(m));
   };

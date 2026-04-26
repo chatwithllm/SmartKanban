@@ -60,6 +60,7 @@ export default {
   safelist: [
     'bg-red/5', 'border-red', 'text-red',
     'bg-gold-lightest', 'border-gold', 'text-gold',
+    'bg-yellow/10', 'border-yellow', 'text-yellow',
     'bg-ceramic', 'text-ink-soft',
   ],
   plugins: [],
