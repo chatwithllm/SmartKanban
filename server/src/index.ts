@@ -12,8 +12,11 @@ import { mirrorRoutes } from './routes/mirror.js';
 import { reviewRoutes } from './routes/review.js';
 import { telegramRoutes } from './routes/telegram.js';
 import { attachmentRoutes } from './routes/attachments.js';
+import { templateRoutes } from './routes/templates.js';
+import { knowledgeRoutes } from './routes/knowledge.js';
 import { wsRoutes } from './ws.js';
 import { startTelegramBot } from './telegram/bot.js';
+import { pool } from './db.js';
 
 const app = Fastify({ logger: true });
 
@@ -32,6 +35,8 @@ await app.register(authRoutes);
 await app.register(cardRoutes);
 await app.register(mirrorRoutes);
 await app.register(reviewRoutes);
+await app.register(templateRoutes);
+await app.register(knowledgeRoutes);
 await app.register(telegramRoutes);
 await app.register(attachmentRoutes, { attachmentsDir });
 await app.register(wsRoutes);
@@ -56,6 +61,26 @@ if (fs.existsSync(webDist)) {
 }
 
 app.get('/health', async () => ({ ok: true }));
+
+if (process.env.KNOWLEDGE_EMBEDDINGS === 'true') {
+  try {
+    await pool.query('CREATE EXTENSION IF NOT EXISTS vector');
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS knowledge_embeddings (
+        knowledge_id UUID PRIMARY KEY REFERENCES knowledge_items(id) ON DELETE CASCADE,
+        embedding    vector(1536) NOT NULL,
+        model        TEXT NOT NULL,
+        embedded_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_knowledge_embed_cos
+        ON knowledge_embeddings USING ivfflat (embedding vector_cosine_ops)
+        WITH (lists = 100)`);
+    app.log.info('knowledge embeddings: pgvector ready');
+  } catch (e) {
+    app.log.warn({ err: e }, 'pgvector unavailable; semantic search disabled');
+  }
+}
 
 const port = Number(process.env.PORT ?? 3001);
 await app.listen({ port, host: '0.0.0.0' });

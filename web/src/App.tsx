@@ -13,6 +13,9 @@ import { ToastContainer } from './components/Toast.tsx';
 import { ToastProvider, useToast, useToastState } from './hooks/useToast.ts';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.ts';
 import { connectWS } from './ws.ts';
+import { applyTemplateEvent } from './hooks/useTemplates.ts';
+import { KnowledgeView } from './KnowledgeView.tsx';
+import { applyKnowledgeEvent } from './hooks/useKnowledge.ts';
 
 export function App() {
   const { user, loading } = useAuth();
@@ -41,7 +44,23 @@ function Authed({ meId }: { meId: string }) {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [section, setSection] = useState<'board' | 'knowledge'>('board');
+  const [shareInitial, setShareInitial] = useState<{ title?: string; url?: string; body?: string } | null>(null);
   const { addToast } = useToast();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.location.pathname === '/knowledge/share') {
+      const p = new URLSearchParams(window.location.search);
+      setShareInitial({
+        title: p.get('title') ?? undefined,
+        url: p.get('url') ?? undefined,
+        body: p.get('text') ?? undefined,
+      });
+      setSection('knowledge');
+      window.history.replaceState({}, '', '/knowledge');
+    }
+  }, []);
 
   const handleCloseDialog = useCallback(() => {
     if (settingsOpen) setSettingsOpen(false);
@@ -75,6 +94,20 @@ function Authed({ meId }: { meId: string }) {
 
   useEffect(() => {
     const disconnect = connectWS((ev) => {
+      if (ev.type === 'template.created' || ev.type === 'template.updated' || ev.type === 'template.deleted') {
+        applyTemplateEvent(ev);
+        return;
+      }
+      if (
+        ev.type === 'knowledge.created' ||
+        ev.type === 'knowledge.updated' ||
+        ev.type === 'knowledge.deleted' ||
+        ev.type === 'knowledge.link.created' ||
+        ev.type === 'knowledge.link.deleted'
+      ) {
+        applyKnowledgeEvent(ev, meId);
+        return;
+      }
       if (ev.type === 'card.created' || ev.type === 'card.updated') {
         const incoming = ev.card;
         if (incoming.archived) {
@@ -156,16 +189,25 @@ function Authed({ meId }: { meId: string }) {
         onOpenReview={() => setReviewOpen(true)}
         onOpenArchive={() => setArchiveOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
+        section={section}
+        onSection={setSection}
       />
-      <Board
-        cards={cards}
-        searchQuery={searchQuery}
-        users={users}
-        onCreate={handleCreate}
-        onEdit={setEditing}
-        onDelete={handleDelete}
-        onMove={handleMove}
-      />
+      {section === 'board' ? (
+        <Board
+          cards={cards}
+          searchQuery={searchQuery}
+          users={users}
+          onCreate={handleCreate}
+          onEdit={setEditing}
+          onDelete={handleDelete}
+          onMove={handleMove}
+        />
+      ) : (
+        <KnowledgeView
+          shareInitial={shareInitial}
+          onShareConsumed={() => setShareInitial(null)}
+        />
+      )}
       {editing && (
         <EditDialog
           card={editing}

@@ -61,3 +61,66 @@ test('extractMentions: emails not captured', () => {
   // Accept whatever behavior we get, but ensure plain text without @ returns empty.
   assert.deepEqual(extractMentions('no mentions here'), []);
 });
+
+test('parseCommand: /use <name>', () => {
+  const r = parseCommand('/use grocery');
+  assert.equal(r.command, 'use');
+  assert.equal(r.rest, 'grocery');
+});
+
+test('parseCommand: /t alias', () => {
+  const r = parseCommand('/t grocery');
+  assert.equal(r.command, 't');
+  assert.equal(r.rest, 'grocery');
+});
+
+test('parseCommand: /templates list command', () => {
+  const r = parseCommand('/templates');
+  assert.equal(r.command, 'templates');
+  assert.equal(r.rest, '');
+});
+
+test('parseCommand: /use with @botname suffix', () => {
+  const r = parseCommand('/use@familybot grocery');
+  assert.equal(r.command, 'use');
+  assert.equal(r.rest, 'grocery');
+});
+
+test('parseCommand: /use no arg', () => {
+  const r = parseCommand('/use');
+  assert.equal(r.command, 'use');
+  assert.equal(r.rest, '');
+});
+
+import { parseKnowledgeCommand } from '../telegram/bot.js';
+
+test('parseKnowledgeCommand /save url only', () => {
+  assert.deepEqual(
+    parseKnowledgeCommand('/save https://example.com'),
+    { cmd: 'save', url: 'https://example.com', title: undefined },
+  );
+});
+test('parseKnowledgeCommand /save url | title', () => {
+  assert.deepEqual(
+    parseKnowledgeCommand('/save https://example.com | My Title'),
+    { cmd: 'save', url: 'https://example.com', title: 'My Title' },
+  );
+});
+test('parseKnowledgeCommand /note multi-line', () => {
+  assert.deepEqual(
+    parseKnowledgeCommand('/note buy eggs\nremember organic'),
+    { cmd: 'note', title: 'buy eggs', body: 'remember organic' },
+  );
+});
+test('parseKnowledgeCommand /k query', () => {
+  assert.deepEqual(parseKnowledgeCommand('/k some query'), { cmd: 'k', q: 'some query' });
+});
+test('parseKnowledgeCommand /klist', () => {
+  assert.deepEqual(parseKnowledgeCommand('/klist'), { cmd: 'klist' });
+});
+test('parseKnowledgeCommand empty /save', () => {
+  assert.deepEqual(parseKnowledgeCommand('/save'), { cmd: 'save', error: 'no url' });
+});
+test('parseKnowledgeCommand non-knowledge command returns null', () => {
+  assert.equal(parseKnowledgeCommand('/use grocery'), null);
+});

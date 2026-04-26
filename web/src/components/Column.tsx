@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { api } from '../api.ts';
 import type { Card, Status, User } from '../types.ts';
 import { STATUS_LABELS } from '../types.ts';
 import { CardView } from './CardView.tsx';
 import { EmptyColumn } from './EmptyColumn.tsx';
+import { useTemplates } from '../hooks/useTemplates.ts';
+import { useToast } from '../hooks/useToast.ts';
 
 type Props = {
   status: Status;
@@ -20,6 +23,11 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
   const { setNodeRef, isOver } = useDroppable({ id: `column:${status}`, data: { status } });
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
+  const [showPicker, setShowPicker] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const { templates } = useTemplates();
+  const { addToast } = useToast();
+  const pickerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const onAddCard = (e: Event) => {
@@ -30,11 +38,52 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
     return () => window.removeEventListener('kanban:add-card', onAddCard);
   }, [status]);
 
-  const submit = () => {
+  useEffect(() => {
+    if (!showPicker) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [showPicker]);
+
+  const submit = async () => {
+    if (submitting) return;
     const t = draft.trim();
-    if (t) onCreate(t);
     setDraft('');
     setAdding(false);
+    if (!t) return;
+    if (t.startsWith('/') && !/\s/.test(t)) {
+      const name = t.slice(1);
+      const tpl = templates.find((tt) => tt.name.toLowerCase() === name.toLowerCase());
+      if (tpl) {
+        setSubmitting(true);
+        try {
+          await api.instantiateTemplate(tpl.id, { status_override: status });
+        } catch (e) {
+          addToast(`Failed to use template: ${e instanceof Error ? e.message : 'error'}`, 'error');
+        } finally {
+          setSubmitting(false);
+        }
+        return;
+      }
+    }
+    onCreate(t);
+  };
+
+  const useTemplate = async (id: string) => {
+    setShowPicker(false);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await api.instantiateTemplate(id, { status_override: status });
+    } catch (e) {
+      addToast(`Failed to use template: ${e instanceof Error ? e.message : 'error'}`, 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -49,13 +98,44 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
           <h2 className="text-sm font-medium text-neutral-200">{STATUS_LABELS[status]}</h2>
           <span className="text-xs text-neutral-500">{cards.length}</span>
         </div>
-        <button
-          onClick={() => setAdding(true)}
-          className="text-neutral-500 hover:text-neutral-200 text-lg leading-none"
-          aria-label={`Add card to ${STATUS_LABELS[status]}`}
-        >
-          +
-        </button>
+        <div className="flex items-center gap-1">
+          {templates.length > 0 && (
+            <div className="relative" ref={pickerRef}>
+              <button
+                onClick={() => setShowPicker((v) => !v)}
+                className="text-neutral-500 hover:text-neutral-200 text-sm"
+                aria-label={`Use template in ${STATUS_LABELS[status]}`}
+                aria-haspopup="menu"
+                aria-expanded={showPicker}
+                title="Use template"
+              >
+                📋
+              </button>
+              {showPicker && (
+                <ul className="absolute right-0 top-6 z-10 w-48 rounded border border-neutral-700 bg-neutral-900 py-1 shadow-lg">
+                  {templates.map((t) => (
+                    <li key={t.id}>
+                      <button
+                        onClick={() => useTemplate(t.id)}
+                        className="block w-full px-3 py-1 text-left text-xs hover:bg-neutral-800"
+                      >
+                        <span className="mr-1">{t.visibility === 'private' ? '🔒' : '👥'}</span>
+                        {t.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+          <button
+            onClick={() => setAdding(true)}
+            className="text-neutral-500 hover:text-neutral-200 text-lg leading-none"
+            aria-label={`Add card to ${STATUS_LABELS[status]}`}
+          >
+            +
+          </button>
+        </div>
       </div>
 
       <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
@@ -76,7 +156,7 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
                   }
                 }}
                 onBlur={submit}
-                placeholder="New card…"
+                placeholder="New card… (or /template-name)"
                 className="w-full resize-none bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
                 rows={2}
               />

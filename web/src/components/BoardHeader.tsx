@@ -18,6 +18,8 @@ type Props = {
   onOpenReview: () => void;
   onOpenArchive: () => void;
   onOpenSettings: () => void;
+  section: 'board' | 'knowledge';
+  onSection: (s: 'board' | 'knowledge') => void;
 };
 
 const SCOPES: Array<{ id: Scope; label: string }> = [
@@ -26,7 +28,7 @@ const SCOPES: Array<{ id: Scope; label: string }> = [
   { id: 'all', label: 'Everything' },
 ];
 
-export function BoardHeader({ scope, onScope, cardCount, searchQuery, onSearchChange, onOpenReview, onOpenArchive, onOpenSettings }: Props) {
+export function BoardHeader({ scope, onScope, cardCount, searchQuery, onSearchChange, onOpenReview, onOpenArchive, onOpenSettings, section, onSection }: Props) {
   const { user, logout } = useAuth();
   const [showShortcuts, setShowShortcuts] = useState(false);
   return (
@@ -34,22 +36,39 @@ export function BoardHeader({ scope, onScope, cardCount, searchQuery, onSearchCh
       <div className="flex items-center gap-3">
         <h1 className="text-lg font-semibold text-neutral-100">Kanban</h1>
         <div className="flex rounded-lg bg-neutral-900 p-0.5">
-          {SCOPES.map((s) => (
+          {(['board', 'knowledge'] as const).map((s) => (
             <button
-              key={s.id}
-              onClick={() => onScope(s.id)}
+              key={s}
+              onClick={() => onSection(s)}
               className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                scope === s.id
-                  ? 'bg-neutral-700 text-neutral-100'
-                  : 'text-neutral-400 hover:text-neutral-200'
+                section === s ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400 hover:text-neutral-200'
               }`}
             >
-              {s.label}
+              {s === 'board' ? 'Board' : 'Knowledge'}
             </button>
           ))}
         </div>
-        <span className="text-xs text-neutral-500">{cardCount} cards</span>
-        <SearchBar value={searchQuery} onChange={onSearchChange} />
+        {section === 'board' && (
+          <>
+            <div className="flex rounded-lg bg-neutral-900 p-0.5">
+              {SCOPES.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => onScope(s.id)}
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                    scope === s.id
+                      ? 'bg-neutral-700 text-neutral-100'
+                      : 'text-neutral-400 hover:text-neutral-200'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs text-neutral-500">{cardCount} cards</span>
+            <SearchBar value={searchQuery} onChange={onSearchChange} />
+          </>
+        )}
       </div>
       <div className="flex items-center gap-3 text-sm">
         <button onClick={onOpenReview} className="text-neutral-400 hover:text-neutral-100 text-xs">

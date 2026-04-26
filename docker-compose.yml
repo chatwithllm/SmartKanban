@@ -9,11 +9,31 @@ services:
       - "5432:5432"
     volumes:
       - kanban_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U kanban -d kanban"]
       interval: 5s
       timeout: 3s
       retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./server/.env
+    environment:
+      DATABASE_URL: postgresql://kanban:kanban@db:5432/kanban
+      ATTACHMENTS_DIR: /app/server/data/attachments
+      PORT: "3001"
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./server/data:/app/server/data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   kanban_pgdata:

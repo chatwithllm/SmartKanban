@@ -11,6 +11,8 @@ export function ArchiveDialog({ onClose, onRestore }: Props) {
   const [cards, setCards] = useState<Card[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [restoring, setRestoring] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [purging, setPurging] = useState(false);
 
   useEffect(() => {
     api.listArchived().then(setCards).catch((e) => setErr(String(e)));
@@ -29,6 +31,35 @@ export function ArchiveDialog({ onClose, onRestore }: Props) {
     }
   };
 
+  const handlePermanentDelete = async (id: string, title: string) => {
+    if (!confirm(`Permanently delete "${title}"? This cannot be undone.`)) return;
+    setDeleting(id);
+    setErr(null);
+    try {
+      await api.permanentDeleteCard(id);
+      setCards((prev) => prev.filter((c) => c.id !== id));
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const handlePurgeAll = async () => {
+    if (cards.length === 0) return;
+    if (!confirm(`Permanently delete all ${cards.length} archived cards? This cannot be undone.`)) return;
+    setPurging(true);
+    setErr(null);
+    try {
+      await api.purgeArchived();
+      setCards([]);
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setPurging(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
@@ -44,6 +75,17 @@ export function ArchiveDialog({ onClose, onRestore }: Props) {
             ✕
           </button>
         </div>
+        {cards.length > 0 && (
+          <div className="mb-3 flex justify-end">
+            <button
+              onClick={handlePurgeAll}
+              disabled={purging}
+              className="rounded bg-red-900/40 px-3 py-1 text-xs text-red-200 hover:bg-red-900/60 disabled:opacity-50"
+            >
+              {purging ? 'Purging…' : `Delete all (${cards.length})`}
+            </button>
+          </div>
+        )}
         {err && <div className="text-xs text-red-300">{err}</div>}
         {!cards.length && !err && (
           <div className="text-sm text-neutral-500">No archived cards.</div>
@@ -63,13 +105,22 @@ export function ArchiveDialog({ onClose, onRestore }: Props) {
                     </span>
                   )}
                 </div>
-                <button
-                  onClick={() => handleRestore(c.id)}
-                  disabled={restoring === c.id}
-                  className="text-xs text-neutral-400 hover:text-neutral-100 disabled:opacity-50"
-                >
-                  {restoring === c.id ? 'Restoring…' : 'Restore'}
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => handleRestore(c.id)}
+                    disabled={restoring === c.id || deleting === c.id || purging}
+                    className="text-xs text-neutral-400 hover:text-neutral-100 disabled:opacity-50"
+                  >
+                    {restoring === c.id ? 'Restoring…' : 'Restore'}
+                  </button>
+                  <button
+                    onClick={() => handlePermanentDelete(c.id, c.title)}
+                    disabled={restoring === c.id || deleting === c.id || purging}
+                    className="text-xs text-red-400 hover:text-red-300 disabled:opacity-50"
+                  >
+                    {deleting === c.id ? 'Deleting…' : 'Delete forever'}
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

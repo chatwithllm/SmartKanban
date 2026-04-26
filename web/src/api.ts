@@ -1,4 +1,4 @@
-import type { ActivityEntry, Card, MirrorToken, ReviewData, Scope, Status, User } from './types.ts';
+import type { ActivityEntry, Card, KnowledgeItem, KnowledgeVisibility, MirrorToken, ReviewData, Scope, Status, Template, User } from './types.ts';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -73,8 +73,62 @@ export const api = {
   listArchived: () => req<Card[]>('/api/cards/archived'),
   restoreCard: (id: string) =>
     req<Card>(`/api/cards/${id}/restore`, { method: 'PATCH' }),
+  permanentDeleteCard: (id: string) =>
+    req<void>(`/api/cards/${id}/permanent`, { method: 'DELETE' }),
+  purgeArchived: () => req<{ deleted: number }>('/api/cards/archived/purge', json({})),
   cardActivity: (id: string) => req<ActivityEntry[]>(`/api/cards/${id}/activity`),
 
   moveCard: (id: string, status: Status, position: number) =>
     api.updateCard(id, { status, position } as Partial<Card>),
+
+  listKnowledge: (params: { scope?: 'mine' | 'inbox' | 'all'; q?: string; tag?: string; cursor?: string } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.scope) qs.set('scope', params.scope);
+    if (params.q) qs.set('q', params.q);
+    if (params.tag) qs.set('tag', params.tag);
+    if (params.cursor) qs.set('cursor', params.cursor);
+    return req<{ items: KnowledgeItem[]; next_cursor: string | null }>(
+      `/api/knowledge?${qs.toString()}`,
+    );
+  },
+  getKnowledge: (id: string) => req<KnowledgeItem>(`/api/knowledge/${id}`),
+  createKnowledge: (b: {
+    title: string;
+    title_auto?: boolean;
+    url?: string | null;
+    body?: string;
+    tags?: string[];
+    visibility: KnowledgeVisibility;
+    shares?: string[];
+    auto_fetch?: boolean;
+  }) => req<KnowledgeItem>('/api/knowledge', json(b)),
+  updateKnowledge: (id: string, b: Partial<KnowledgeItem>) =>
+    req<KnowledgeItem>(`/api/knowledge/${id}`, { ...json(b), method: 'PATCH' }),
+  archiveKnowledge: (id: string) => req<void>(`/api/knowledge/${id}`, { method: 'DELETE' }),
+  refetchKnowledge: (id: string) =>
+    req<{ queued: boolean }>(`/api/knowledge/${id}/refetch`, { method: 'POST' }),
+  linkKnowledge: (id: string, cardId: string) =>
+    req<void>(`/api/knowledge/${id}/links`, json({ card_id: cardId })),
+  unlinkKnowledge: (id: string, cardId: string) =>
+    req<void>(`/api/knowledge/${id}/links/${cardId}`, { method: 'DELETE' }),
+  listKnowledgeForCard: (cardId: string) =>
+    req<{ items: KnowledgeItem[] }>(`/api/cards/${cardId}/knowledge`).then(r => r.items),
+  createKnowledgeFromCard: (cardId: string) =>
+    req<KnowledgeItem>(`/api/knowledge/from-card/${cardId}`, { method: 'POST' }),
+
+  listTemplates: () => req<Template[]>('/api/templates'),
+  createTemplate: (b: {
+    name: string;
+    visibility: 'private' | 'shared';
+    title: string;
+    description?: string;
+    tags?: string[];
+    status?: Status;
+    due_offset_days?: number | null;
+  }) => req<Template>('/api/templates', json(b)),
+  updateTemplate: (id: string, b: Partial<Template>) =>
+    req<Template>(`/api/templates/${id}`, { ...json(b), method: 'PATCH' }),
+  deleteTemplate: (id: string) => req<void>(`/api/templates/${id}`, { method: 'DELETE' }),
+  instantiateTemplate: (id: string, body?: { status_override?: Status }) =>
+    req<Card>(`/api/templates/${id}/instantiate`, json(body ?? {})),
 };

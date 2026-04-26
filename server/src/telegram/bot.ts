@@ -15,6 +15,17 @@ import {
   getPending,
   updatePending,
 } from './proposals.js';
+import { findTemplateByName, instantiateTemplate, listTemplates } from '../templates.js';
+import {
+  createKnowledge,
+  listKnowledge,
+  loadKnowledge,
+  updateKnowledge,
+  archiveKnowledge,
+  canUserSeeKnowledge,
+  KnowledgeValidationError,
+} from '../knowledge.js';
+import { triggerFetch } from '../knowledge_fetch.js';
 
 let botInstance: Bot | null = null;
 let pollingStarted = false;
@@ -24,6 +35,20 @@ export function getBot(): Bot | null {
 }
 
 const ATTACHMENTS_DIR = path.resolve(process.env.ATTACHMENTS_DIR ?? 'data/attachments');
+
+const STATUS_EMOJI: Record<Status, string> = {
+  backlog: '📥',
+  today: '📅',
+  in_progress: '⚡',
+  done: '✅',
+};
+
+const STATUS_LABEL: Record<Status, string> = {
+  backlog: 'Backlog',
+  today: 'Today',
+  in_progress: 'Doing',
+  done: 'Done',
+};
 
 function allowedGroupId(): number | null {
   const raw = process.env.TELEGRAM_GROUP_ID;
@@ -55,6 +80,52 @@ export function parseCommand(text: string): { command: string | null; rest: stri
   const m = text.match(/^\/(\w+)(?:@\w+)?\s*(.*)$/s);
   if (!m) return { command: null, rest: text };
   return { command: m[1]!.toLowerCase(), rest: m[2] ?? '' };
+}
+
+export type KnowledgeBotCommand =
+  | { cmd: 'save'; url: string; title: string | undefined }
+  | { cmd: 'save'; error: 'no url' }
+  | { cmd: 'note'; title: string; body: string }
+  | { cmd: 'note'; error: 'no body' }
+  | { cmd: 'k'; q: string }
+  | { cmd: 'k'; error: 'no query' }
+  | { cmd: 'klist' };
+
+const URL_RE = /^https?:\/\/\S+/;
+
+export function parseKnowledgeCommand(text: string): KnowledgeBotCommand | null {
+  const trimmed = text.trimStart();
+  if (trimmed.startsWith('/save')) {
+    const rest = trimmed.slice(5).trim();
+    if (!rest) return { cmd: 'save', error: 'no url' };
+    const [urlPart, ...titleParts] = rest.split('|').map((s) => s.trim());
+    if (!urlPart || !URL_RE.test(urlPart)) return { cmd: 'save', error: 'no url' };
+    return {
+      cmd: 'save',
+      url: urlPart,
+      title: titleParts.length ? titleParts.join('|').trim() : undefined,
+    };
+  }
+  if (trimmed.startsWith('/note')) {
+    const rest = trimmed.slice(5);
+    const stripped = rest.replace(/^\s+/, '');
+    if (!stripped) return { cmd: 'note', error: 'no body' };
+    const lines = stripped.split('\n');
+    return {
+      cmd: 'note',
+      title: lines[0]!.slice(0, 200),
+      body: lines.slice(1).join('\n').trimStart(),
+    };
+  }
+  if (trimmed === '/klist' || trimmed.startsWith('/klist ') || trimmed.startsWith('/klist@')) {
+    return { cmd: 'klist' };
+  }
+  if (trimmed === '/k' || trimmed.startsWith('/k ') || trimmed.startsWith('/k@')) {
+    const q = trimmed.replace(/^\/k(@\S+)?\s*/, '').trim();
+    if (!q) return { cmd: 'k', error: 'no query' };
+    return { cmd: 'k', q };
+  }
+  return null;
 }
 
 function splitTitleDesc(text: string): { title: string; description: string } {
@@ -379,6 +450,67 @@ async function handleText(
     broadcast({ type: 'card.created', card });
     await reactOk(ctx);
     if (!isPrivate) await sendPrivacyPrompt(ctx, cardId);
+    return;
+  }
+
+  // Templates: only meaningful in DM. Group invocations are silent (early return)
+  // to prevent the command body from being passed to the AI-propose flow as a card seed.
+  if ((command === 'use' || command === 't' || command === 'templates') && !isPrivate) {
+    return;
+  }
+  if ((command === 'use' || command === 't') && isPrivate) {
+    const name = rest.trim();
+    if (!name) {
+      await ctx.reply('Usage: `/use <template>` — see `/templates` for the list.', {
+        parse_mode: 'Markdown',
+      });
+      return;
+    }
+    const tpl = await findTemplateByName(createdBy, name);
+    if (!tpl) {
+      await ctx.reply(`No template \`${escapeMd(name)}\`. Try /templates.`, {
+        parse_mode: 'Markdown',
+      });
+      return;
+    }
+    const card = await instantiateTemplate(createdBy, tpl.id, {
+      source: 'telegram',
+      telegramChatId: chatId,
+      telegramMessageId: ctx.msg?.message_id,
+    });
+    if (!card) {
+      await ctx.reply('Template no longer exists.');
+      return;
+    }
+    broadcast({ type: 'card.created', card });
+    // instantiateTemplate already logs a 'create' activity with template_id/template_name.
+    // The source=telegram column on the card distinguishes this path; no extra log needed.
+    await reactOk(ctx);
+    await ctx.reply(`✓ Saved · ${STATUS_EMOJI[card.status]} ${STATUS_LABEL[card.status]} — ${escapeMd(card.title)}`, {
+      parse_mode: 'Markdown',
+      reply_markup: postSaveKeyboard(card.id, card.status),
+    });
+    return;
+  }
+
+  if (command === 'templates' && isPrivate) {
+    const list = await listTemplates(createdBy);
+    if (list.length === 0) {
+      await ctx.reply('No templates yet. Add one in Settings → Templates.');
+      return;
+    }
+    const lines = list.map(
+      (t) => `${t.visibility === 'private' ? '🔒' : '👥'} \`${escapeMd(t.name)}\` — ${escapeMd(t.title)}`,
+    );
+    await ctx.reply(lines.join('\n'), { parse_mode: 'Markdown' });
+    return;
+  }
+
+  // Knowledge: DM-only. Group invocations are silent (early return).
+  const kcmd = parseKnowledgeCommand(text);
+  if (kcmd && !isPrivate) return;
+  if (kcmd) {
+    await handleKnowledgeCommand(ctx, kcmd, createdBy, chatId);
     return;
   }
 
@@ -766,6 +898,140 @@ async function handlePrivacyCallback(ctx: Context): Promise<void> {
   await ctx.answerCallbackQuery({ text: label });
 }
 
+function safeHost(url: string): string | null {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return null;
+  }
+}
+
+async function handleKnowledgeCommand(
+  ctx: Context,
+  cmd: KnowledgeBotCommand,
+  createdBy: string,
+  chatId: number | undefined,
+): Promise<void> {
+  if (cmd.cmd === 'save') {
+    if ('error' in cmd) {
+      await ctx.reply('Usage: `/save <url> [| title]`', { parse_mode: 'Markdown' });
+      return;
+    }
+    let placeholder;
+    try {
+      placeholder = await ctx.reply(`🔗 Saving ${new URL(cmd.url).hostname}...`);
+    } catch {
+      placeholder = null;
+    }
+    try {
+      const titleAuto = !cmd.title;
+      const k = await createKnowledge(createdBy, {
+        title: cmd.title ?? new URL(cmd.url).hostname,
+        title_auto: titleAuto,
+        url: cmd.url,
+        visibility: 'private',
+        source: 'telegram',
+        auto_fetch: true,
+      });
+      broadcast({ type: 'knowledge.created', knowledge: k });
+      triggerFetch(k.id);
+
+      // Wait briefly for fetch worker, then edit placeholder.
+      setTimeout(async () => {
+        const updated = await loadKnowledge(k.id);
+        const buttons = new InlineKeyboard()
+          .text('👥 Share with family', `kshare:${k.id}`)
+          .row()
+          .text('🏷 Tag', `ktag:${k.id}`)
+          .text('🗑 Discard', `karchive:${k.id}`);
+        const txt =
+          updated?.fetch_status === 'ok'
+            ? `✓ Saved · ${updated.title}`
+            : updated?.fetch_status === 'failed'
+              ? `⚠ Saved (no preview): ${updated.fetch_error ?? 'fetch failed'}`
+              : `✓ Saved (still fetching) · ${k.title}`;
+        if (placeholder && chatId) {
+          await ctx.api
+            .editMessageText(chatId, placeholder.message_id, txt, { reply_markup: buttons })
+            .catch(() => {});
+        } else {
+          await ctx.reply(txt, { reply_markup: buttons }).catch(() => {});
+        }
+      }, 4000);
+    } catch (e) {
+      const msg =
+        e instanceof KnowledgeValidationError ? e.message : (e as Error).message;
+      const errText = `Cannot save: ${msg}`;
+      if (placeholder && chatId) {
+        await ctx.api.editMessageText(chatId, placeholder.message_id, errText).catch(() => {});
+      } else {
+        await ctx.reply(errText).catch(() => {});
+      }
+    }
+    return;
+  }
+
+  if (cmd.cmd === 'note') {
+    if ('error' in cmd) {
+      await ctx.reply('Usage: `/note <body>`', { parse_mode: 'Markdown' });
+      return;
+    }
+    try {
+      const k = await createKnowledge(createdBy, {
+        title: cmd.title,
+        body: cmd.body,
+        visibility: 'private',
+        source: 'telegram',
+        auto_fetch: false,
+      });
+      broadcast({ type: 'knowledge.created', knowledge: k });
+      await ctx.reply(`✓ Note saved · ${k.title}`);
+    } catch (e) {
+      const msg = e instanceof KnowledgeValidationError ? e.message : (e as Error).message;
+      await ctx.reply(`Cannot save note: ${msg}`);
+    }
+    return;
+  }
+
+  if (cmd.cmd === 'k') {
+    if ('error' in cmd) {
+      await ctx.reply('Usage: `/k <query>`', { parse_mode: 'Markdown' });
+      return;
+    }
+    const items = await listKnowledge(createdBy, { q: cmd.q, scope: 'all', limit: 5 });
+    if (items.length === 0) {
+      await ctx.reply('Nothing matched.');
+      return;
+    }
+    const lines = items
+      .map((k, i) => {
+        const host = k.url ? safeHost(k.url) : null;
+        return `${i + 1}. ${k.title}${host ? ` — ${host}` : ''}`;
+      })
+      .join('\n');
+    const kb = new InlineKeyboard();
+    items.forEach((k, i) => kb.text(`${i + 1}`, `kshow:${k.id}`));
+    await ctx.reply(lines, { reply_markup: kb });
+    return;
+  }
+
+  if (cmd.cmd === 'klist') {
+    const items = await listKnowledge(createdBy, { scope: 'all', limit: 10 });
+    if (items.length === 0) {
+      await ctx.reply('No knowledge yet.');
+      return;
+    }
+    const lines = items
+      .map((k, i) => {
+        const host = k.url ? safeHost(k.url) : null;
+        return `${i + 1}. ${k.title}${host ? ` — ${host}` : ''}`;
+      })
+      .join('\n');
+    await ctx.reply(lines);
+    return;
+  }
+}
+
 export function buildBot(token: string): Bot {
   const bot = new Bot(token);
 
@@ -779,6 +1045,81 @@ export function buildBot(token: string): Bot {
         await ctx.answerCallbackQuery({ text: 'error' });
       } catch {}
     }
+  });
+
+  bot.callbackQuery(/^kshow:/, async (ctx) => {
+    const id = ctx.callbackQuery.data.slice('kshow:'.length);
+    const tgId = ctx.from.id;
+    const userId = await resolveAppUser(tgId);
+    if (!userId) {
+      await ctx.answerCallbackQuery({ text: 'Link your Telegram identity first.' });
+      return;
+    }
+    const k = await loadKnowledge(id);
+    if (!k) {
+      await ctx.answerCallbackQuery({ text: 'Item not found.' });
+      return;
+    }
+    if (!(await canUserSeeKnowledge(userId, k))) {
+      await ctx.answerCallbackQuery({ text: 'Not visible.' });
+      return;
+    }
+    const body = (k.body || '').slice(0, 4000);
+    await ctx.answerCallbackQuery();
+    await ctx.reply(`${k.title}\n\n${body}${(k.body ?? '').length > 4000 ? '\n...' : ''}`);
+  });
+
+  bot.callbackQuery(/^kshare:/, async (ctx) => {
+    const id = ctx.callbackQuery.data.slice('kshare:'.length);
+    const userId = await resolveAppUser(ctx.from.id);
+    if (!userId) {
+      await ctx.answerCallbackQuery({ text: 'Link your Telegram identity first.' });
+      return;
+    }
+    try {
+      const updated = await updateKnowledge(userId, id, { visibility: 'inbox' });
+      if (!updated) {
+        await ctx.answerCallbackQuery({ text: 'Not found.' });
+        return;
+      }
+      broadcast({ type: 'knowledge.updated', knowledge: updated });
+      await ctx.answerCallbackQuery({ text: 'Shared with family.' });
+    } catch {
+      await ctx.answerCallbackQuery({ text: 'Cannot change visibility.' });
+    }
+  });
+
+  bot.callbackQuery(/^karchive:/, async (ctx) => {
+    const id = ctx.callbackQuery.data.slice('karchive:'.length);
+    const userId = await resolveAppUser(ctx.from.id);
+    if (!userId) {
+      await ctx.answerCallbackQuery({ text: 'Link your Telegram identity first.' });
+      return;
+    }
+    const k = await loadKnowledge(id);
+    if (!k) {
+      await ctx.answerCallbackQuery({ text: 'Not found.' });
+      return;
+    }
+    const ok = await archiveKnowledge(userId, id);
+    if (!ok) {
+      await ctx.answerCallbackQuery({ text: 'Forbidden.' });
+      return;
+    }
+    broadcast({
+      type: 'knowledge.deleted',
+      id,
+      owner_id: k.owner_id,
+      visibility: k.visibility,
+      shares: k.shares ?? [],
+    });
+    await ctx.answerCallbackQuery({ text: 'Archived.' });
+  });
+
+  bot.callbackQuery(/^ktag:/, async (ctx) => {
+    await ctx.answerCallbackQuery({
+      text: 'Reply to the saved message with #tag #tag — coming soon.',
+    });
   });
 
   bot.on('message', async (ctx, next) => {

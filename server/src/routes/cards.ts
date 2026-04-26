@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { pool } from '../db.js';
 import { requireUser, requireUserOrMirror } from '../auth.js';
@@ -14,6 +16,17 @@ import {
   logActivity,
 } from '../cards.js';
 import { broadcast } from '../ws.js';
+import { listKnowledgeForCard } from '../knowledge.js';
+
+const ATTACHMENTS_DIR = path.resolve(process.env.ATTACHMENTS_DIR ?? 'data/attachments');
+
+async function rmAttachmentsDir(cardId: string): Promise<void> {
+  // Delete the per-card attachments directory if it exists. Errors are ignored
+  // (best-effort cleanup; missing directory is fine).
+  try {
+    await fs.rm(path.join(ATTACHMENTS_DIR, cardId), { recursive: true, force: true });
+  } catch {}
+}
 
 export async function cardRoutes(app: FastifyInstance) {
   // GET /api/cards?scope=personal|inbox|all
@@ -207,6 +220,20 @@ export async function cardRoutes(app: FastifyInstance) {
     },
   );
 
+  // GET /api/cards/:id/knowledge
+  app.get<{ Params: { id: string } }>(
+    '/api/cards/:id/knowledge',
+    { preHandler: requireUser },
+    async (req, reply) => {
+      // Visibility check: user must be able to see the card itself.
+      if (!(await canUserSeeCard(req.user!.id, req.params.id))) {
+        return reply.code(404).send({ error: 'not found' });
+      }
+      const items = await listKnowledgeForCard(req.user!.id, req.params.id);
+      return reply.send({ items });
+    },
+  );
+
   app.delete<{ Params: { id: string } }>(
     '/api/cards/:id',
     { preHandler: requireUser },
@@ -222,6 +249,45 @@ export async function cardRoutes(app: FastifyInstance) {
       await logActivity(req.user!.id, req.params.id, 'archive');
       broadcast({ type: 'card.deleted', id: req.params.id });
       return reply.code(204).send();
+    },
+  );
+
+  // Permanently delete a single archived card. Visibility-checked. Cascades via FKs;
+  // attachment directory is removed best-effort.
+  app.delete<{ Params: { id: string } }>(
+    '/api/cards/:id/permanent',
+    { preHandler: requireUser },
+    async (req, reply) => {
+      const id = req.params.id;
+      if (!(await canUserSeeCard(req.user!.id, id))) {
+        return reply.code(404).send({ error: 'not found' });
+      }
+      const { rowCount } = await pool.query(
+        `DELETE FROM cards WHERE id = $1 AND archived`,
+        [id],
+      );
+      if (rowCount === 0) return reply.code(404).send({ error: 'not found' });
+      await rmAttachmentsDir(id);
+      broadcast({ type: 'card.deleted', id });
+      return reply.code(204).send();
+    },
+  );
+
+  // Purge all archived cards visible to the caller. Returns count deleted.
+  app.post(
+    '/api/cards/archived/purge',
+    { preHandler: requireUser },
+    async (req) => {
+      const userId = req.user!.id;
+      const visible = await listArchivedCards(userId);
+      if (visible.length === 0) return { deleted: 0 };
+      const ids = visible.map((c) => c.id);
+      await pool.query(`DELETE FROM cards WHERE id = ANY($1::uuid[])`, [ids]);
+      for (const id of ids) {
+        await rmAttachmentsDir(id);
+        broadcast({ type: 'card.deleted', id });
+      }
+      return { deleted: ids.length };
     },
   );
 }

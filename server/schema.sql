@@ -116,3 +116,71 @@ CREATE TABLE IF NOT EXISTS activity_log (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log(created_at DESC);
+
+-- ---------- card templates ----------
+CREATE TABLE IF NOT EXISTS card_templates (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name             TEXT NOT NULL,
+  visibility       TEXT NOT NULL CHECK (visibility IN ('private','shared')),
+  title            TEXT NOT NULL,
+  description      TEXT NOT NULL DEFAULT '',
+  tags             TEXT[] NOT NULL DEFAULT '{}',
+  status           card_status NOT NULL DEFAULT 'today',
+  due_offset_days  INTEGER,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS card_templates_owner_name_key
+  ON card_templates (owner_id, lower(name));
+
+CREATE INDEX IF NOT EXISTS card_templates_visibility_idx
+  ON card_templates (visibility);
+
+-- ---------- knowledge ----------
+CREATE TABLE IF NOT EXISTS knowledge_items (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title         TEXT NOT NULL,
+  title_auto    BOOLEAN NOT NULL DEFAULT FALSE,
+  url           TEXT,
+  body          TEXT NOT NULL DEFAULT '',
+  tags          TEXT[] NOT NULL DEFAULT '{}',
+  visibility    TEXT NOT NULL CHECK (visibility IN ('private','inbox','shared')),
+  source        TEXT NOT NULL DEFAULT 'manual'
+                CHECK (source IN ('manual','telegram','share_target','from_card')),
+  fetch_status  TEXT CHECK (fetch_status IN ('pending','ok','failed','skipped')),
+  fetch_error   TEXT,
+  fetched_at    TIMESTAMPTZ,
+  archived      BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE knowledge_items ADD COLUMN IF NOT EXISTS fts tsvector
+  GENERATED ALWAYS AS (
+    to_tsvector('english',
+      coalesce(title,'') || ' ' || coalesce(body,'') || ' ' || coalesce(url,'')
+    )
+  ) STORED;
+
+CREATE INDEX IF NOT EXISTS idx_knowledge_fts   ON knowledge_items USING GIN(fts);
+CREATE INDEX IF NOT EXISTS idx_knowledge_owner ON knowledge_items(owner_id) WHERE NOT archived;
+CREATE INDEX IF NOT EXISTS idx_knowledge_tags  ON knowledge_items USING GIN(tags);
+
+CREATE TABLE IF NOT EXISTS knowledge_shares (
+  knowledge_id UUID NOT NULL REFERENCES knowledge_items(id) ON DELETE CASCADE,
+  user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  PRIMARY KEY (knowledge_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_knowledge_shares_user ON knowledge_shares(user_id);
+
+CREATE TABLE IF NOT EXISTS knowledge_card_links (
+  knowledge_id UUID NOT NULL REFERENCES knowledge_items(id) ON DELETE CASCADE,
+  card_id      UUID NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+  created_by   UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (knowledge_id, card_id)
+);
+CREATE INDEX IF NOT EXISTS idx_klc_card ON knowledge_card_links(card_id);

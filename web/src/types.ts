@@ -66,3 +66,43 @@ export type Toast = {
   type: 'success' | 'error' | 'info';
   message: string;
 };
+
+export type TemplateVisibility = 'private' | 'shared';
+
+export type Template = {
+  id: string;
+  owner_id: string;
+  name: string;
+  visibility: TemplateVisibility;
+  title: string;
+  description: string;
+  tags: string[];
+  status: Status;
+  due_offset_days: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type KnowledgeVisibility = 'private' | 'inbox' | 'shared';
+export type KnowledgeFetchStatus = 'pending' | 'ok' | 'failed' | 'skipped';
+export type KnowledgeSource = 'manual' | 'telegram' | 'share_target' | 'from_card';
+
+export type KnowledgeItem = {
+  id: string;
+  owner_id: string;
+  title: string;
+  title_auto: boolean;
+  url: string | null;
+  body: string;
+  tags: string[];
+  visibility: KnowledgeVisibility;
+  source: KnowledgeSource;
+  fetch_status: KnowledgeFetchStatus | null;
+  fetch_error: string | null;
+  fetched_at: string | null;
+  archived: boolean;
+  created_at: string;
+  updated_at: string;
+  shares?: string[];
+  linked_card_ids?: string[];
+};

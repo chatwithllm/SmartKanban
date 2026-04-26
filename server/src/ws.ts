@@ -2,11 +2,21 @@ import type { FastifyInstance } from 'fastify';
 import type { WebSocket } from '@fastify/websocket';
 import { SESSION_COOKIE, userFromMirrorToken, userFromSession } from './auth.js';
 import type { Card } from './cards.js';
+import type { Template, Visibility } from './templates.js';
+import type { KnowledgeItem, KnowledgeVisibility } from './knowledge.js';
 
 export type BroadcastEvent =
   | { type: 'card.created'; card: Card }
   | { type: 'card.updated'; card: Card }
-  | { type: 'card.deleted'; id: string };
+  | { type: 'card.deleted'; id: string }
+  | { type: 'template.created'; template: Template }
+  | { type: 'template.updated'; template: Template }
+  | { type: 'template.deleted'; id: string; owner_id: string; visibility: Visibility }
+  | { type: 'knowledge.created'; knowledge: KnowledgeItem }
+  | { type: 'knowledge.updated'; knowledge: KnowledgeItem }
+  | { type: 'knowledge.deleted'; id: string; owner_id: string; visibility: KnowledgeVisibility; shares: string[] }
+  | { type: 'knowledge.link.created'; knowledge_id: string; card_id: string }
+  | { type: 'knowledge.link.deleted'; knowledge_id: string; card_id: string };
 
 type Client = { socket: WebSocket; userId: string };
 const clients = new Set<Client>();
@@ -22,12 +32,43 @@ function cardVisibleTo(card: Card, userId: string): boolean {
   );
 }
 
+// A template is visible to `userId` if they own it or it's shared with the family.
+// Mirrors `canUserSeeTemplate` in templates.ts.
+function templateVisibleTo(t: Template | { owner_id: string; visibility: Visibility }, userId: string): boolean {
+  return t.owner_id === userId || t.visibility === 'shared';
+}
+
 export function broadcast(ev: BroadcastEvent) {
   for (const c of clients) {
     if (c.socket.readyState !== 1 /* OPEN */) continue;
     if (ev.type === 'card.created' || ev.type === 'card.updated') {
       if (!cardVisibleTo(ev.card, c.userId)) continue;
     }
+    if (ev.type === 'template.created' || ev.type === 'template.updated') {
+      if (!templateVisibleTo(ev.template, c.userId)) continue;
+    }
+    if (ev.type === 'template.deleted') {
+      if (!templateVisibleTo(ev, c.userId)) continue;
+    }
+    if (
+      ev.type === 'knowledge.created' ||
+      ev.type === 'knowledge.updated'
+    ) {
+      const k = ev.knowledge;
+      if (
+        k.owner_id !== c.userId &&
+        k.visibility !== 'inbox' &&
+        !(k.visibility === 'shared' && (k.shares ?? []).includes(c.userId))
+      ) continue;
+    }
+    if (ev.type === 'knowledge.deleted') {
+      if (
+        ev.owner_id !== c.userId &&
+        ev.visibility !== 'inbox' &&
+        !(ev.visibility === 'shared' && ev.shares.includes(c.userId))
+      ) continue;
+    }
+    // knowledge.link.* events: visibility was checked at the route layer; broadcast to all auth'd clients.
     c.socket.send(JSON.stringify(ev));
   }
 }
