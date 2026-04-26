@@ -138,6 +138,22 @@ test('POST /api/cards/:id/attachments: 415 on bad MIME', async () => {
   assert.equal(res.statusCode, 415);
 });
 
+test('POST /api/cards/:id/attachments: 413 on oversize file', async () => {
+  const cardId = await createCard(cookieA, 'sample');
+  // 6 MB exceeds the default 5 MB ATTACHMENT_MAX_BYTES limit. Bytes are
+  // arbitrary (filler 0x42); MIME type is what matters for the validation
+  // ordering — must be in the allowlist so we reach the size check.
+  const big = Buffer.alloc(6_000_000, 0x42);
+  const { body, headers } = multipartBody('file', 'big.png', 'image/png', big);
+  const res = await app.inject({
+    method: 'POST',
+    url: `/api/cards/${cardId}/attachments`,
+    headers: { ...headers, cookie: cookieA },
+    payload: body,
+  });
+  assert.equal(res.statusCode, 413);
+});
+
 test('POST /api/cards/:id/attachments: 400 when file field missing', async () => {
   const cardId = await createCard(cookieA, 'sample');
   const boundary = '----test' + Math.random().toString(36).slice(2);

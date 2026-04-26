@@ -45,7 +45,12 @@ async function readImagePart(req: FastifyRequest): Promise<{
   // text field for the from-image endpoint.
   let part: MultipartFile | null = null;
   let status: string | undefined;
-  for await (const p of req.parts()) {
+  // Pass our cap + 1 to busboy so anything above the real cap gets truncated
+  // and we can detect it via `part.file.truncated`. Without this, the default
+  // multipart fileSize limit (1 MB) silently truncates files long before our
+  // chunk counter would catch them.
+  const partsOpts = { limits: { fileSize: ATTACHMENT_MAX_BYTES + 1 } };
+  for await (const p of req.parts(partsOpts)) {
     if (p.type === 'file' && p.fieldname === 'file' && !part) {
       part = p;
       break; // stream consumption stops at the first file; trailing fields would block.
@@ -71,6 +76,12 @@ async function readImagePart(req: FastifyRequest): Promise<{
       throw new HttpError(413, { error: 'file too large', max_bytes: ATTACHMENT_MAX_BYTES });
     }
     chunks.push(chunk);
+  }
+  // If busboy truncated mid-stream because the upload exceeded our cap, the
+  // chunk loop above may have completed without crossing the threshold (the
+  // truncation happens inside busboy's pipe).
+  if (part.file.truncated) {
+    throw new HttpError(413, { error: 'file too large', max_bytes: ATTACHMENT_MAX_BYTES });
   }
   return {
     buffer: Buffer.concat(chunks),
