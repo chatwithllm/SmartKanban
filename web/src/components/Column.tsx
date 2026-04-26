@@ -97,20 +97,21 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
     <div
       ref={setNodeRef}
       data-column-status={status}
-      className={`flex flex-col rounded-xl bg-neutral-900/40 p-3 min-h-[60vh] transition-colors
-        ${isOver ? 'bg-neutral-800/60' : ''}`}
+      className={`flex flex-col rounded-card bg-ceramic/40 p-3 min-h-[60vh] transition-colors
+        ${status === 'in_progress' ? 'border-l-4 border-green-uplift' : ''}
+        ${isOver ? 'bg-ceramic' : ''}`}
     >
       <div className="mb-3 flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-medium text-neutral-200">{STATUS_LABELS[status]}</h2>
-          <span className="text-xs text-neutral-500">{cards.length}</span>
+          <h2 className="text-3 font-normal text-ink tracking-tight2">{STATUS_LABELS[status]}</h2>
+          <span className="text-1 text-ink-soft tracking-tight2">{cards.length}</span>
         </div>
         <div className="flex items-center gap-1">
           {templates.length > 0 && (
             <div className="relative" ref={pickerRef}>
               <button
                 onClick={() => setShowPicker((v) => !v)}
-                className="text-neutral-500 hover:text-neutral-200 text-sm"
+                className="text-ink-soft hover:text-ink text-2"
                 aria-label={`Use template in ${STATUS_LABELS[status]}`}
                 aria-haspopup="menu"
                 aria-expanded={showPicker}
@@ -119,12 +120,12 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
                 📋
               </button>
               {showPicker && (
-                <ul className="absolute right-0 top-6 z-10 w-48 rounded border border-neutral-700 bg-neutral-900 py-1 shadow-lg">
+                <ul className="absolute right-0 top-6 z-10 w-48 rounded-card border border-ink/10 bg-card py-1 shadow-modal">
                   {templates.map((t) => (
                     <li key={t.id}>
                       <button
                         onClick={() => useTemplate(t.id)}
-                        className="block w-full px-3 py-1 text-left text-xs hover:bg-neutral-800"
+                        className="block w-full px-3 py-1 text-left text-2 text-ink hover:bg-ceramic tracking-tight2"
                       >
                         <span className="mr-1">{t.visibility === 'private' ? '🔒' : '👥'}</span>
                         {t.name}
@@ -137,7 +138,7 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
           )}
           <button
             onClick={() => setAdding(true)}
-            className="text-neutral-500 hover:text-neutral-200 text-lg leading-none"
+            className="text-green-accent hover:text-green-starbucks text-lg leading-none"
             aria-label={`Add card to ${STATUS_LABELS[status]}`}
           >
             +
@@ -148,7 +149,7 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
       <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
         <div className="flex flex-col gap-2">
           {adding && (
-            <div className="rounded-lg border border-neutral-700 bg-neutral-900 p-2">
+            <div className="rounded-card border border-dashed border-ink/20 bg-card p-2 hover:border-green-accent transition-colors">
               <textarea
                 autoFocus
                 value={draft}
@@ -164,7 +165,7 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
                 }}
                 onBlur={submit}
                 placeholder="New card… (or /template-name)"
-                className="w-full resize-none bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
+                className="w-full resize-none bg-transparent text-3 text-ink outline-none placeholder:text-ink-soft tracking-tight2"
                 rows={2}
               />
             </div>
@@ -180,7 +181,7 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
           ))}
           {!adding && cards.length === 0 && (
             searchActive ? (
-              <p className="py-8 text-center text-xs text-neutral-500">No cards match your search</p>
+              <p className="py-8 text-center text-2 text-ink-soft tracking-tight2">No cards match your search</p>
             ) : (
               <EmptyColumn status={status} />
             )

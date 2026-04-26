@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, ChangeEvent } from 'react';
 
 type Props = {
   value: string;
@@ -24,19 +24,31 @@ export function SearchBar({ value, onChange }: Props) {
   }, [onChange]);
 
   return (
-    <div className="relative">
+    <div className="relative w-64">
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-soft pointer-events-none"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-3.5-3.5" />
+      </svg>
       <input
         ref={inputRef}
         type="text"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Search cards…"
-        className="w-40 rounded-md bg-neutral-900 px-2.5 py-1 text-xs text-neutral-100 outline-none placeholder:text-neutral-500 focus:ring-1 focus:ring-neutral-600"
+        onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+        placeholder="Search…"
+        className="input-pill w-full pl-10 pr-9 text-2 text-ink tracking-tight2"
       />
       {value && (
         <button
+          type="button"
           onClick={() => onChange('')}
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-200 text-xs"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-soft hover:text-ink text-2"
           aria-label="Clear search"
         >
           ✕

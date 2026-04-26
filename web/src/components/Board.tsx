@@ -97,7 +97,7 @@ export function Board({ cards, users, searchQuery, onCreate, onEdit, onDelete, o
       onDragEnd={onDragEnd}
       onDragCancel={() => setActiveId(null)}
     >
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {STATUSES.map((status) => (
           <Column
             key={status}
@@ -114,6 +114,15 @@ export function Board({ cards, users, searchQuery, onCreate, onEdit, onDelete, o
       <DragOverlay>
         {activeCard ? <CardView card={activeCard} users={users} dragging /> : null}
       </DragOverlay>
+      <button
+        type="button"
+        className="fab hidden md:inline-flex"
+        style={{ width: '48px', height: '48px', right: '24px', bottom: '24px' }}
+        onClick={() => window.dispatchEvent(new CustomEvent('kanban:add-card', { detail: { status: 'today' } }))}
+        aria-label="Add card to Today"
+      >
+        <span className="text-2xl leading-none" aria-hidden>+</span>
+      </button>
     </DndContext>
   );
 }

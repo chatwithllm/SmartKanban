@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { getServerClockSkewMs } from '../api.ts';
@@ -45,10 +46,10 @@ function dueDateBadge(due: string): { label: string; cls: string } {
   const dueDate = new Date(due + 'T00:00:00');
   const diffDays = Math.round((dueDate.getTime() - today.getTime()) / 86_400_000);
   const label = dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  if (diffDays < 0) return { label, cls: 'bg-red-900/40 text-red-200' };
-  if (diffDays === 0) return { label: 'Today', cls: 'bg-amber-900/40 text-amber-200' };
-  if (diffDays <= 3) return { label, cls: 'bg-yellow-900/40 text-yellow-200' };
-  return { label, cls: 'bg-neutral-800 text-neutral-300' };
+  if (diffDays < 0) return { label, cls: 'bg-red/5 border border-red text-red' };
+  if (diffDays === 0) return { label: 'Today', cls: 'bg-gold-lightest border border-gold text-gold' };
+  if (diffDays <= 3) return { label, cls: 'bg-yellow/10 border border-yellow text-yellow' };
+  return { label, cls: 'bg-ceramic text-ink-soft' };
 }
 
 export function CardView({ card, users = [], onClick, onDelete, dragging, compact }: Props) {
@@ -69,6 +70,16 @@ export function CardView({ card, users = [], onClick, onDelete, dragging, compac
   const firstImage = card.attachments.find((a) => a.kind === 'image');
   const hasAudio = card.attachments.some((a) => a.kind === 'audio');
 
+  useEffect(() => {
+    if (card.source !== 'telegram') return;
+    if (document.getElementById('font-kalam-link')) return;
+    const link = document.createElement('link');
+    link.id = 'font-kalam-link';
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Kalam:wght@400&display=swap';
+    document.head.appendChild(link);
+  }, [card.source]);
+
   return (
     <div
       ref={setNodeRef}
@@ -77,24 +88,30 @@ export function CardView({ card, users = [], onClick, onDelete, dragging, compac
       {...listeners}
       onClick={onClick}
       className={`
-        group cursor-grab active:cursor-grabbing rounded-lg border border-neutral-800 bg-neutral-900 p-3
-        hover:border-neutral-700 hover:bg-neutral-900/80
+        group relative card-surface cursor-grab active:cursor-grabbing p-3
         ${isDragging || dragging ? 'opacity-40' : ''}
-        ${card.needs_review ? 'ring-1 ring-amber-700/60' : ''}
+        ${card.ai_summarized || card.needs_review ? 'border-l-4 border-l-gold pl-3' : ''}
       `}
+      data-dragging={isDragging || dragging ? 'true' : undefined}
     >
       {firstImage && !compact && (
         <img
           src={`/attachments/${firstImage.storage_path}`}
           alt=""
-          className="mb-2 w-full max-h-40 object-cover rounded-md"
+          className="mb-2 w-full max-h-40 object-cover rounded-card"
+          style={{ transition: 'opacity 0.3s ease-in' }}
         />
       )}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <div className="text-sm text-neutral-100 break-words">{card.title}</div>
+          <div className="text-3 text-ink font-semibold break-words tracking-tight2">{card.title}</div>
+          {card.source === 'telegram' && creator && (
+            <div className="font-script text-1 text-ink-soft mt-0.5">
+              from {displayShort(creator)} via bot
+            </div>
+          )}
           {card.description && !compact && (
-            <div className="mt-1 text-xs text-neutral-400 line-clamp-2 break-words">
+            <div className="mt-1 text-1 text-ink-soft line-clamp-2 break-words tracking-tight2">
               {card.description}
             </div>
           )}
@@ -102,35 +119,35 @@ export function CardView({ card, users = [], onClick, onDelete, dragging, compac
             {card.tags.map((t) => (
               <span
                 key={t}
-                className="rounded bg-neutral-800 px-1.5 py-0.5 text-[10px] text-neutral-300"
+                className="tag-pill text-1"
               >
                 #{t}
               </span>
             ))}
             {card.source === 'telegram' && (
-              <span className="rounded bg-sky-900/40 px-1.5 py-0.5 text-[10px] text-sky-200">
+              <span className="tag-pill text-1">
                 telegram
               </span>
             )}
             {card.ai_summarized && (
-              <span className="rounded bg-violet-900/40 px-1.5 py-0.5 text-[10px] text-violet-200">
+              <span className="tag-pill text-1 bg-gold-lightest text-gold">
                 AI
               </span>
             )}
             {hasAudio && (
-              <span className="rounded bg-emerald-900/40 px-1.5 py-0.5 text-[10px] text-emerald-200">
+              <span className="tag-pill text-1 bg-green-light text-green-accent">
                 voice
               </span>
             )}
             {card.needs_review && (
-              <span className="rounded bg-amber-900/40 px-1.5 py-0.5 text-[10px] text-amber-200">
+              <span className="tag-pill text-1 bg-gold-lightest text-gold">
                 review
               </span>
             )}
             {card.due_date && (() => {
               const badge = dueDateBadge(card.due_date);
               return (
-                <span className={`rounded px-1.5 py-0.5 text-[10px] ${badge.cls}`}>
+                <span className={`inline-flex items-center rounded-pill px-2 py-0.5 text-1 tracking-tight2 ${badge.cls}`}>
                   📅 {badge.label}
                 </span>
               );
@@ -145,7 +162,7 @@ export function CardView({ card, users = [], onClick, onDelete, dragging, compac
                 e.stopPropagation();
                 onDelete();
               }}
-              className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-neutral-200 text-xs"
+              className="opacity-0 group-hover:opacity-100 text-ink-soft hover:text-red text-2"
               aria-label="Delete card"
             >
               ✕
@@ -159,8 +176,8 @@ export function CardView({ card, users = [], onClick, onDelete, dragging, compac
                   title={role === 'creator' ? `from ${user.name}` : user.name}
                   className={`rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap ${
                     role === 'creator'
-                      ? 'bg-neutral-800 text-neutral-300 border border-dashed border-neutral-600'
-                      : 'bg-neutral-700 text-neutral-100'
+                      ? 'bg-ceramic text-ink-soft border border-dashed border-ink/20'
+                      : 'bg-green-light text-green-starbucks'
                   }`}
                 >
                   {displayShort(user)}
@@ -172,7 +189,7 @@ export function CardView({ card, users = [], onClick, onDelete, dragging, compac
       </div>
       {!compact && (
         <div
-          className="mt-2 text-[10px] text-neutral-500"
+          className="mt-2 text-1 text-ink-soft tracking-tight2"
           title={`Created ${absoluteTime(card.created_at)}${
             card.updated_at !== card.created_at ? `\nUpdated ${absoluteTime(card.updated_at)}` : ''
           }`}
