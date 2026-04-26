@@ -182,6 +182,11 @@ function Authed({ meId }: { meId: string }) {
     };
     document.addEventListener('paste', onPaste);
     return () => document.removeEventListener('paste', onPaste);
+    // Listener registers once. setCards/setEditing are stable React setters
+    // and addToast comes from a stable context value; the closure captures
+    // them safely. Mutable `editing` is read via editingRef so it doesn't
+    // need to be in the dep array.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCreate = async (title: string, status: Status) => {
