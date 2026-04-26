@@ -90,15 +90,26 @@ export async function requireUserOrMirror(req: FastifyRequest, reply: FastifyRep
   await requireUser(req, reply);
 }
 
+// Session cookie is `secure` (HTTPS-only) when APP_URL is https://, so the
+// browser never transmits it over plain HTTP. Falls back to non-secure for
+// local dev and HTTP-only deployments. Override with COOKIE_SECURE=true|false.
+function cookieSecure(): boolean {
+  const env = process.env.COOKIE_SECURE;
+  if (env === 'true') return true;
+  if (env === 'false') return false;
+  return (process.env.APP_URL ?? '').startsWith('https://');
+}
+
 export function setSessionCookie(reply: FastifyReply, token: string) {
   reply.setCookie(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
+    secure: cookieSecure(),
     path: '/',
     maxAge: SESSION_DAYS * 86400,
   });
 }
 
 export function clearSessionCookie(reply: FastifyReply) {
-  reply.clearCookie(SESSION_COOKIE, { path: '/' });
+  reply.clearCookie(SESSION_COOKIE, { path: '/', secure: cookieSecure() });
 }
