@@ -31,26 +31,46 @@ ok()     { printf "    ${C_GREEN}✓${C_RESET} %s\n" "$*"; }
 warn()   { printf "    ${C_YELLOW}!${C_RESET} %s\n" "$*"; }
 die()    { printf "${C_RED}✗ %s${C_RESET}\n" "$*" >&2; exit 1; }
 
+# When run via `curl | bash`, stdin is the script itself — `read` would
+# consume script lines as user input. Always read from /dev/tty.
+if [[ ! -t 0 || ! -e /dev/tty ]]; then
+  TTY_AVAILABLE=false
+else
+  TTY_AVAILABLE=true
+fi
+
 ask() {
   local prompt="$1" default="${2:-}" answer
+  if [[ "$TTY_AVAILABLE" != "true" ]]; then
+    echo "${default}"
+    return
+  fi
   if [[ -n "$default" ]]; then
-    read -r -p "    $prompt [$default]: " answer
+    read -r -p "    $prompt [$default]: " answer </dev/tty
     echo "${answer:-$default}"
   else
-    read -r -p "    $prompt: " answer
+    read -r -p "    $prompt: " answer </dev/tty
     echo "$answer"
   fi
 }
 
 ask_secret() {
   local prompt="$1" answer
-  read -r -s -p "    $prompt: " answer; echo
+  if [[ "$TTY_AVAILABLE" != "true" ]]; then
+    echo ""
+    return
+  fi
+  read -r -s -p "    $prompt: " answer </dev/tty; echo
   echo "$answer"
 }
 
 ask_yn() {
   local prompt="$1" default="${2:-y}" answer
-  read -r -p "    $prompt [${default}/$( [[ $default == y ]] && echo n || echo y )]: " answer
+  if [[ "$TTY_AVAILABLE" != "true" ]]; then
+    [[ "$default" == "y" ]]
+    return
+  fi
+  read -r -p "    $prompt [${default}/$( [[ $default == y ]] && echo n || echo y )]: " answer </dev/tty
   answer="${answer:-$default}"
   [[ "${answer,,}" == "y" || "${answer,,}" == "yes" ]]
 }
