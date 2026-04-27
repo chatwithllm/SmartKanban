@@ -131,3 +131,45 @@ test('API-scope token accepted on api-scope endpoints', async () => {
   });
   assert.equal(act.statusCode, 201);
 });
+
+test('POST /api/cards with Bearer api token works', async () => {
+  const at = await app.inject({
+    method: 'POST', url: '/api/tokens', headers: { cookie: cookieA },
+    payload: { label: 'b' },
+  });
+  const { token } = at.json() as { token: string };
+
+  const r = await app.inject({
+    method: 'POST',
+    url: '/api/cards',
+    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    payload: { title: 'via api', project: 'p1' },
+  });
+  assert.equal(r.statusCode, 201);
+  const card = r.json() as { project: string; title: string };
+  assert.equal(card.project, 'p1');
+  assert.equal(card.title, 'via api');
+});
+
+test('PATCH /api/cards/:id with Bearer api token replaces tags', async () => {
+  const at = await app.inject({
+    method: 'POST', url: '/api/tokens', headers: { cookie: cookieA },
+    payload: { label: 'c' },
+  });
+  const { token } = at.json() as { token: string };
+  const c = await app.inject({
+    method: 'POST', url: '/api/cards', headers: { cookie: cookieA },
+    payload: { title: 'tagging', tags: ['a', 'b'] },
+  });
+  const cardId = (c.json() as { id: string }).id;
+
+  const p = await app.inject({
+    method: 'PATCH',
+    url: `/api/cards/${cardId}`,
+    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    payload: { tags: ['a', 'b', 'deployed-local'] },
+  });
+  assert.equal(p.statusCode, 200);
+  const updated = p.json() as { tags: string[] };
+  assert.deepEqual(updated.tags.sort(), ['a', 'b', 'deployed-local'].sort());
+});

@@ -105,6 +105,21 @@ export async function requireUser(req: FastifyRequest, reply: FastifyReply) {
   req.user = user;
 }
 
+export async function requireUserOrApiToken(req: FastifyRequest, reply: FastifyReply) {
+  const sessionToken = req.cookies?.[SESSION_COOKIE];
+  if (sessionToken) {
+    const user = await userFromSession(sessionToken);
+    if (user) { req.user = user; return; }
+  }
+  const tok = bearerToken(req);
+  const user = await userFromApiToken(tok);
+  if (!user) {
+    reply.code(401).send({ error: 'auth required' });
+    return;
+  }
+  req.user = user;
+}
+
 export async function requireUserOrMirror(req: FastifyRequest, reply: FastifyReply) {
   const mirrorTok = req.headers[MIRROR_HEADER];
   if (typeof mirrorTok === 'string') {

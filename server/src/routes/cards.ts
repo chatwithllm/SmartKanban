@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { pool } from '../db.js';
-import { requireUser, requireUserOrMirror, requireApiToken } from '../auth.js';
+import { requireApiToken, requireUser, requireUserOrApiToken, requireUserOrMirror } from '../auth.js';
 import {
   type Card,
   type Scope,
@@ -74,7 +74,7 @@ export async function cardRoutes(app: FastifyInstance) {
       source?: 'manual' | 'telegram' | 'mirror';
       project?: string | null;
     };
-  }>('/api/cards', { preHandler: requireUser }, async (req, reply) => {
+  }>('/api/cards', { preHandler: requireUserOrApiToken }, async (req, reply) => {
     const {
       title,
       description = '',
@@ -129,7 +129,7 @@ export async function cardRoutes(app: FastifyInstance) {
       needs_review: boolean;
       project: string | null;
     }>;
-  }>('/api/cards/:id', { preHandler: requireUser }, async (req, reply) => {
+  }>('/api/cards/:id', { preHandler: requireUserOrApiToken }, async (req, reply) => {
     const { id } = req.params;
     const body = req.body;
 
