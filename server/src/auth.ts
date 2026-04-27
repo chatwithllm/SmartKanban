@@ -54,10 +54,38 @@ export async function userFromMirrorToken(token: string | undefined): Promise<Au
   const { rows } = await pool.query<AuthUser>(
     `SELECT u.id, u.name, COALESCE(u.short_name, u.name) AS short_name, u.email
      FROM mirror_tokens m JOIN users u ON u.id = m.user_id
-     WHERE m.token = $1`,
+     WHERE m.token = $1 AND m.scope = 'mirror'`,
     [token],
   );
   return rows[0] ?? null;
+}
+
+export async function userFromApiToken(token: string | undefined): Promise<AuthUser | null> {
+  if (!token) return null;
+  const { rows } = await pool.query<AuthUser>(
+    `SELECT u.id, u.name, COALESCE(u.short_name, u.name) AS short_name, u.email
+     FROM mirror_tokens m JOIN users u ON u.id = m.user_id
+     WHERE m.token = $1 AND m.scope = 'api'`,
+    [token],
+  );
+  return rows[0] ?? null;
+}
+
+function bearerToken(req: FastifyRequest): string | undefined {
+  const h = req.headers.authorization;
+  if (typeof h !== 'string') return undefined;
+  const m = h.match(/^Bearer\s+(\S+)$/i);
+  return m ? m[1] : undefined;
+}
+
+export async function requireApiToken(req: FastifyRequest, reply: FastifyReply) {
+  const tok = bearerToken(req);
+  const user = await userFromApiToken(tok);
+  if (!user) {
+    reply.code(403).send({ error: 'api token required' });
+    return;
+  }
+  req.user = user;
 }
 
 declare module 'fastify' {
@@ -72,6 +100,21 @@ export async function requireUser(req: FastifyRequest, reply: FastifyReply) {
   const user = await userFromSession(sessionToken);
   if (!user) {
     reply.code(401).send({ error: 'unauthorized' });
+    return;
+  }
+  req.user = user;
+}
+
+export async function requireUserOrApiToken(req: FastifyRequest, reply: FastifyReply) {
+  const sessionToken = req.cookies?.[SESSION_COOKIE];
+  if (sessionToken) {
+    const user = await userFromSession(sessionToken);
+    if (user) { req.user = user; return; }
+  }
+  const tok = bearerToken(req);
+  const user = await userFromApiToken(tok);
+  if (!user) {
+    reply.code(401).send({ error: 'auth required' });
     return;
   }
   req.user = user;

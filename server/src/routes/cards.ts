@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { pool } from '../db.js';
-import { requireUser, requireUserOrMirror } from '../auth.js';
+import { requireApiToken, requireUser, requireUserOrApiToken, requireUserOrMirror } from '../auth.js';
 import {
   type Card,
   type Scope,
@@ -30,12 +30,13 @@ async function rmAttachmentsDir(cardId: string): Promise<void> {
 
 export async function cardRoutes(app: FastifyInstance) {
   // GET /api/cards?scope=personal|inbox|all
-  app.get<{ Querystring: { scope?: Scope } }>(
+  app.get<{ Querystring: { scope?: Scope; project?: string } }>(
     '/api/cards',
     { preHandler: requireUserOrMirror },
     async (req) => {
       const scope: Scope = req.query.scope ?? 'personal';
-      return listCards(req.user!.id, scope);
+      const project = req.query.project?.trim() || undefined;
+      return listCards(req.user!.id, scope, project);
     },
   );
 
@@ -71,8 +72,9 @@ export async function cardRoutes(app: FastifyInstance) {
       due_date?: string | null;
       assignees?: string[];
       source?: 'manual' | 'telegram' | 'mirror';
+      project?: string | null;
     };
-  }>('/api/cards', { preHandler: requireUser }, async (req, reply) => {
+  }>('/api/cards', { preHandler: requireUserOrApiToken }, async (req, reply) => {
     const {
       title,
       description = '',
@@ -81,6 +83,7 @@ export async function cardRoutes(app: FastifyInstance) {
       due_date = null,
       assignees,
       source = 'manual',
+      project = null,
     } = req.body;
     if (!title || typeof title !== 'string' || !title.trim()) {
       return reply.code(400).send({ error: 'title required' });
@@ -91,11 +94,11 @@ export async function cardRoutes(app: FastifyInstance) {
     const actualAssignees = assignees ?? [userId]; // default: assign to self
 
     const { rows } = await pool.query<{ id: string }>(
-      `INSERT INTO cards (title, description, status, tags, due_date, source, created_by, position)
-       VALUES ($1, $2, $3, $4, $5, $6, $7,
+      `INSERT INTO cards (title, description, status, tags, due_date, source, created_by, project, position)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
          COALESCE((SELECT MIN(position) - 1 FROM cards WHERE status = $3 AND NOT archived), 0))
        RETURNING id`,
-      [title.trim(), description, status, tags, due_date, source, userId],
+      [title.trim(), description, status, tags, due_date, source, userId, project ? project.trim() : null],
     );
     const cardId = rows[0]!.id;
 
@@ -124,8 +127,9 @@ export async function cardRoutes(app: FastifyInstance) {
       assignees: string[];
       shares: string[];
       needs_review: boolean;
+      project: string | null;
     }>;
-  }>('/api/cards/:id', { preHandler: requireUser }, async (req, reply) => {
+  }>('/api/cards/:id', { preHandler: requireUserOrApiToken }, async (req, reply) => {
     const { id } = req.params;
     const body = req.body;
 
@@ -152,6 +156,9 @@ export async function cardRoutes(app: FastifyInstance) {
     if (body.due_date !== undefined) push('due_date', body.due_date);
     if (body.position !== undefined) push('position', body.position);
     if (body.needs_review !== undefined) push('needs_review', body.needs_review);
+    if (body.project !== undefined) {
+      push('project', body.project === null ? null : body.project.trim());
+    }
 
     if (sets.length > 0) {
       sets.push(`updated_at = NOW()`);
@@ -217,6 +224,35 @@ export async function cardRoutes(app: FastifyInstance) {
         return reply.code(404).send({ error: 'not found' });
       }
       return getCardActivity(id);
+    },
+  );
+
+  // POST /api/cards/:id/activity — append an activity entry from an api-scope token.
+  app.post<{
+    Params: { id: string };
+    Body: { type: string; body: string; details?: Record<string, unknown> };
+  }>(
+    '/api/cards/:id/activity',
+    { preHandler: requireApiToken },
+    async (req, reply) => {
+      const { id } = req.params;
+      const body = req.body ?? ({} as { type?: string; body?: string; details?: Record<string, unknown> });
+      const { type, body: text, details = {} } = body;
+      if (typeof type !== 'string' || !type.trim()) {
+        return reply.code(400).send({ error: 'type required' });
+      }
+      if (typeof text !== 'string' || !text.trim()) {
+        return reply.code(400).send({ error: 'body required' });
+      }
+      const card = await loadCard(id);
+      if (!card) return reply.code(404).send({ error: 'not found' });
+      if (!(await canUserSeeCard(req.user!.id, id))) {
+        return reply.code(404).send({ error: 'not found' });
+      }
+      await logActivity(req.user!.id, id, type.trim(), { ...details, body: text.trim() });
+      const updated = (await loadCard(id))!;
+      broadcast({ type: 'card.updated', card: updated });
+      return reply.code(201).send({ ok: true });
     },
   );
 

@@ -44,6 +44,8 @@ export type Scope = 'personal' | 'inbox' | 'all';
 
 export type MirrorToken = { token: string; label: string; created_at: string };
 
+export type ApiToken = { token: string; label: string; created_at: string; scope: 'api' };
+
 export type ReviewData = {
   done: Array<{ id: string; title: string; status: Status; tags: string[]; updated_at: string }>;
   stale: Array<{ id: string; title: string; status: Status; tags: string[]; updated_at: string }>;
