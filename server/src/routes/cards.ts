@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { pool } from '../db.js';
-import { requireUser, requireUserOrMirror } from '../auth.js';
+import { requireUser, requireUserOrMirror, requireApiToken } from '../auth.js';
 import {
   type Card,
   type Scope,
@@ -224,6 +224,35 @@ export async function cardRoutes(app: FastifyInstance) {
         return reply.code(404).send({ error: 'not found' });
       }
       return getCardActivity(id);
+    },
+  );
+
+  // POST /api/cards/:id/activity — append an activity entry from an api-scope token.
+  app.post<{
+    Params: { id: string };
+    Body: { type: string; body: string; details?: Record<string, unknown> };
+  }>(
+    '/api/cards/:id/activity',
+    { preHandler: requireApiToken },
+    async (req, reply) => {
+      const { id } = req.params;
+      const body = req.body ?? ({} as { type?: string; body?: string; details?: Record<string, unknown> });
+      const { type, body: text, details = {} } = body;
+      if (typeof type !== 'string' || !type.trim()) {
+        return reply.code(400).send({ error: 'type required' });
+      }
+      if (typeof text !== 'string' || !text.trim()) {
+        return reply.code(400).send({ error: 'body required' });
+      }
+      const card = await loadCard(id);
+      if (!card) return reply.code(404).send({ error: 'not found' });
+      if (!(await canUserSeeCard(req.user!.id, id))) {
+        return reply.code(404).send({ error: 'not found' });
+      }
+      await logActivity(req.user!.id, id, type.trim(), { ...details, body: text.trim() });
+      const updated = (await loadCard(id))!;
+      broadcast({ type: 'card.updated', card: updated });
+      return reply.code(201).send({ ok: true });
     },
   );
 
