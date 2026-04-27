@@ -30,12 +30,13 @@ async function rmAttachmentsDir(cardId: string): Promise<void> {
 
 export async function cardRoutes(app: FastifyInstance) {
   // GET /api/cards?scope=personal|inbox|all
-  app.get<{ Querystring: { scope?: Scope } }>(
+  app.get<{ Querystring: { scope?: Scope; project?: string } }>(
     '/api/cards',
     { preHandler: requireUserOrMirror },
     async (req) => {
       const scope: Scope = req.query.scope ?? 'personal';
-      return listCards(req.user!.id, scope);
+      const project = req.query.project?.trim() || undefined;
+      return listCards(req.user!.id, scope, project);
     },
   );
 
@@ -71,6 +72,7 @@ export async function cardRoutes(app: FastifyInstance) {
       due_date?: string | null;
       assignees?: string[];
       source?: 'manual' | 'telegram' | 'mirror';
+      project?: string | null;
     };
   }>('/api/cards', { preHandler: requireUser }, async (req, reply) => {
     const {
@@ -81,6 +83,7 @@ export async function cardRoutes(app: FastifyInstance) {
       due_date = null,
       assignees,
       source = 'manual',
+      project = null,
     } = req.body;
     if (!title || typeof title !== 'string' || !title.trim()) {
       return reply.code(400).send({ error: 'title required' });
@@ -91,11 +94,11 @@ export async function cardRoutes(app: FastifyInstance) {
     const actualAssignees = assignees ?? [userId]; // default: assign to self
 
     const { rows } = await pool.query<{ id: string }>(
-      `INSERT INTO cards (title, description, status, tags, due_date, source, created_by, position)
-       VALUES ($1, $2, $3, $4, $5, $6, $7,
+      `INSERT INTO cards (title, description, status, tags, due_date, source, created_by, project, position)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
          COALESCE((SELECT MIN(position) - 1 FROM cards WHERE status = $3 AND NOT archived), 0))
        RETURNING id`,
-      [title.trim(), description, status, tags, due_date, source, userId],
+      [title.trim(), description, status, tags, due_date, source, userId, project ? project.trim() : null],
     );
     const cardId = rows[0]!.id;
 
@@ -124,6 +127,7 @@ export async function cardRoutes(app: FastifyInstance) {
       assignees: string[];
       shares: string[];
       needs_review: boolean;
+      project: string | null;
     }>;
   }>('/api/cards/:id', { preHandler: requireUser }, async (req, reply) => {
     const { id } = req.params;
@@ -152,6 +156,9 @@ export async function cardRoutes(app: FastifyInstance) {
     if (body.due_date !== undefined) push('due_date', body.due_date);
     if (body.position !== undefined) push('position', body.position);
     if (body.needs_review !== undefined) push('needs_review', body.needs_review);
+    if (body.project !== undefined) {
+      push('project', body.project === null ? null : body.project.trim());
+    }
 
     if (sets.length > 0) {
       sets.push(`updated_at = NOW()`);

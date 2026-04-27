@@ -30,6 +30,7 @@ export type Card = {
   created_by: string | null;
   ai_summarized: boolean;
   needs_review: boolean;
+  project: string | null;
   assignees: string[];
   shares: string[];
   attachments: Attachment[];
@@ -78,8 +79,12 @@ export async function canUserSeeCard(userId: string, cardId: string): Promise<bo
   return !!rows[0]?.ok;
 }
 
-export async function listCards(userId: string, scope: Scope): Promise<Card[]> {
-  const where =
+export async function listCards(
+  userId: string,
+  scope: Scope,
+  project?: string,
+): Promise<Card[]> {
+  const baseWhere =
     scope === 'inbox'
       ? `NOT c.archived AND NOT EXISTS (SELECT 1 FROM card_assignees a WHERE a.card_id = c.id)`
       : scope === 'personal'
@@ -89,7 +94,14 @@ export async function listCards(userId: string, scope: Scope): Promise<Card[]> {
              OR EXISTS (SELECT 1 FROM card_shares    WHERE card_id = c.id AND user_id = $1)
            )`
         : `NOT c.archived AND ${VISIBLE_TO_USER}`;
-  const params = scope === 'inbox' ? [] : [userId];
+
+  const params: unknown[] = scope === 'inbox' ? [] : [userId];
+  let where = baseWhere;
+  if (project) {
+    params.push(project);
+    where = `${baseWhere} AND c.project = $${params.length}`;
+  }
+
   const { rows } = await pool.query<Card>(
     `
     SELECT
