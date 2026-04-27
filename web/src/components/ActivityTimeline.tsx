@@ -58,6 +58,14 @@ export function ActivityTimeline({ cardId }: Props) {
                     {' '}
                     <span>{e.action}</span>
                   </p>
+                  {(() => {
+                    const body = (e.details as { body?: unknown } | null | undefined)?.body;
+                    return typeof body === 'string' && body.trim() ? (
+                      <pre className="mt-1 whitespace-pre-wrap text-1 tracking-tight2 text-ink-soft font-mono">
+                        {body}
+                      </pre>
+                    ) : null;
+                  })()}
                 </li>
               ))}
             </ol>
