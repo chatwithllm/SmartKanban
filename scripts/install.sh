@@ -380,7 +380,7 @@ fi
 
 # ---------- step 8: backups ----------
 
-step "Step 8/8 — backups (optional)"
+step "Step 8/9 — backups (optional)"
 
 if ask_yn "Set up daily 3am backup cron job?" "y"; then
   BACKUP_DIR="$(ask "Backup target directory" "/var/backups/smartkanban")"
@@ -390,6 +390,48 @@ if ask_yn "Set up daily 3am backup cron job?" "y"; then
   ( crontab -l 2>/dev/null | grep -v "$INSTALL_DIR/scripts/backup.sh" ; echo "$CRON_LINE" ) | crontab -
   ok "cron installed: $CRON_LINE"
   info "first backup test: $INSTALL_DIR/scripts/backup.sh $BACKUP_DIR"
+fi
+
+# ---------- notetaker-kanban (optional) ----------
+
+step "Step 9/9 — notetaker-kanban bridge (optional)"
+
+info "notetaker-kanban auto-records Claude Code dev sessions into kanban:"
+info "  • /kanban-start in any repo → creates card from git history"
+info "  • /kanban-deployed-local, /kanban-deployed-prod → lifecycle tags"
+info "  • /kanban-flush → session summary appended to card activity"
+info ""
+info "Each developer installs the bridge ON THEIR OWN MACHINE — this server"
+info "host doesn't run the bridge itself, it only serves the API."
+
+if ask_yn "Print developer onboarding instructions to share with your team?" "y"; then
+  PUBLIC="${APP_URL_FROM_ENV:-http://$(hostname -f 2>/dev/null || hostname):3001}"
+  cat <<EOF
+
+  ${C_BOLD}Share these steps with each developer:${C_RESET}
+
+  1. Install the bridge on their machine (one-time):
+       git clone https://github.com/chatwithllm/notetaker-kanban.git ~/.notetaker-kanban
+       cd ~/.notetaker-kanban && ./install.sh
+
+  2. Open this kanban in a browser, log in, then:
+       Settings → API tokens → Generate → copy the token
+
+  3. Add to ~/.zshrc (or ~/.bashrc):
+       export KANBAN_URL=$PUBLIC
+       export KANBAN_TOKEN=<paste-token-here>
+     Reload: source ~/.zshrc
+
+  4. Restart any open Claude Code sessions (env captured at startup).
+
+  5. In any git repo:
+       claude
+       /kanban-start
+
+  Bridge repo + full command list:
+    https://github.com/chatwithllm/notetaker-kanban
+
+EOF
 fi
 
 # ---------- summary ----------

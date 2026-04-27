@@ -472,6 +472,48 @@ Endpoints accepting `Authorization: Bearer <api-token>`:
 
 Cards now carry an optional `project: string` field; the list endpoint accepts `?project=<key>` for filtering.
 
+### notetaker-kanban (optional Claude Code bridge)
+
+If you use [Claude Code](https://claude.ai/code), the **notetaker-kanban**
+bridge auto-records dev work into SmartKanban — cards created from your
+git history, lifecycle tags from slash commands, and per-session activity
+summaries.
+
+**Per developer (one-time setup on each machine):**
+
+```bash
+git clone https://github.com/chatwithllm/notetaker-kanban.git ~/.notetaker-kanban
+cd ~/.notetaker-kanban
+./install.sh
+```
+
+Then in your shell rc (`~/.zshrc` / `~/.bashrc`):
+
+```bash
+export KANBAN_URL=https://your-kanban-host
+export KANBAN_TOKEN=<api-token from Settings → API tokens>
+```
+
+Reload terminal. In any git repo, in a Claude Code session:
+
+```
+/kanban-start              # creates card from branch history
+/kanban-doing              # move card to In Progress
+/kanban-deployed-local     # tag deployed-local
+/kanban-deployed-prod      # tag deployed-prod, status=done
+/kanban-feedback "<text>"  # append feedback
+/kanban-flush              # post session summary as activity entry
+```
+
+Cards land on this kanban tagged `project=<git-remote-or-folder>`. Use
+the SmartMirror `active-work` tile to surface in-flight cards on a wall
+display.
+
+Each user generates their **own** api token; tokens are scoped per user.
+Bridge runs locally — no daemon, no network beyond the kanban API.
+
+Full docs: https://github.com/chatwithllm/notetaker-kanban
+
 ### WebSocket events
 
 ```
