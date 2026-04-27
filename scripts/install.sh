@@ -13,12 +13,13 @@ set -euo pipefail
 
 # ---------- colour / output helpers ----------
 
-C_RESET="\033[0m"
-C_BOLD="\033[1m"
-C_RED="\033[31m"
-C_GREEN="\033[32m"
-C_YELLOW="\033[33m"
-C_BLUE="\033[34m"
+# B3: use ANSI-C quoting so variables hold real ESC bytes
+C_RESET=$'\033[0m'
+C_BOLD=$'\033[1m'
+C_RED=$'\033[31m'
+C_GREEN=$'\033[32m'
+C_YELLOW=$'\033[33m'
+C_BLUE=$'\033[34m'
 
 step()   { printf "\n${C_BOLD}${C_BLUE}==>${C_RESET} ${C_BOLD}%s${C_RESET}\n" "$*"; }
 info()   { printf "    %s\n" "$*"; }
@@ -136,41 +137,28 @@ resolve_docker() {
   fi
 }
 
-# detect_install_state — sets INSTALL_DIR and echoes one of:
+# detect_install_state — takes the install dir as $1 and echoes one of:
 #   new | up-to-date | behind | ahead | diverged | broken
+# Does NOT write to any globals.
 detect_install_state() {
-  # Honour INSTALL_DIR if already set (e.g. from a previous ask during install)
-  if [[ -z "${INSTALL_DIR:-}" ]]; then
-    local default_dir="$HOME/smartkanban"
-    if [[ -d "$default_dir" ]]; then
-      INSTALL_DIR="$default_dir"
-    else
-      # Non-interactive: assume default; interactive: ask
-      if [[ "$TTY_AVAILABLE" == "true" ]]; then
-        INSTALL_DIR="$(ask "Install directory to check" "$default_dir")"
-        INSTALL_DIR="${INSTALL_DIR/#\~/$HOME}"
-      else
-        INSTALL_DIR="$default_dir"
-      fi
-    fi
-  fi
+  local dir="$1"
 
   # No directory at all (or empty)
-  if [[ ! -d "$INSTALL_DIR" ]] || [[ -z "$(ls -A "$INSTALL_DIR" 2>/dev/null)" ]]; then
+  if [[ ! -d "$dir" ]] || [[ -z "$(ls -A "$dir" 2>/dev/null)" ]]; then
     echo "new"
     return
   fi
 
   # Directory exists but no .git
-  if [[ ! -d "$INSTALL_DIR/.git" ]]; then
+  if [[ ! -d "$dir/.git" ]]; then
     echo "broken"
     return
   fi
 
   # Fetch quietly to update remote refs
-  if ! git -C "$INSTALL_DIR" fetch --quiet origin 2>/dev/null; then
+  if ! git -C "$dir" fetch --quiet origin 2>/dev/null; then
     # Network unavailable — treat as broken only if we cannot read HEAD
-    if ! git -C "$INSTALL_DIR" rev-parse HEAD >/dev/null 2>&1; then
+    if ! git -C "$dir" rev-parse HEAD >/dev/null 2>&1; then
       echo "broken"
       return
     fi
@@ -180,8 +168,8 @@ detect_install_state() {
   fi
 
   local local_sha origin_sha merge_base
-  local_sha="$(git -C "$INSTALL_DIR" rev-parse HEAD 2>/dev/null)"
-  origin_sha="$(git -C "$INSTALL_DIR" rev-parse origin/main 2>/dev/null || true)"
+  local_sha="$(git -C "$dir" rev-parse HEAD 2>/dev/null)"
+  origin_sha="$(git -C "$dir" rev-parse origin/main 2>/dev/null || true)"
 
   if [[ -z "$origin_sha" ]]; then
     echo "broken"
@@ -193,7 +181,7 @@ detect_install_state() {
     return
   fi
 
-  merge_base="$(git -C "$INSTALL_DIR" merge-base HEAD origin/main 2>/dev/null || true)"
+  merge_base="$(git -C "$dir" merge-base HEAD origin/main 2>/dev/null || true)"
 
   if [[ "$merge_base" == "$local_sha" ]]; then
     echo "behind"
@@ -204,13 +192,58 @@ detect_install_state() {
   fi
 }
 
+# resolve_install_dir — resolves and sets the global INSTALL_DIR.
+# Honours existing INSTALL_DIR if set; otherwise asks or uses default.
+resolve_install_dir() {
+  if [[ -z "${INSTALL_DIR:-}" ]]; then
+    local default_dir="$HOME/smartkanban"
+    if [[ -d "$default_dir" ]]; then
+      INSTALL_DIR="$default_dir"
+    elif [[ "$TTY_AVAILABLE" == "true" ]]; then
+      INSTALL_DIR="$(ask "Install directory to check" "$default_dir")"
+      INSTALL_DIR="${INSTALL_DIR/#\~/$HOME}"
+    else
+      INSTALL_DIR="$default_dir"
+    fi
+  fi
+}
+
+# ---------- wait helpers (I5) ----------
+
+wait_for_pg() {
+  info "waiting for Postgres to be healthy…"
+  for i in {1..30}; do
+    if $DOCKER compose ps db --format json 2>/dev/null | grep -q '"Health":"healthy"'; then
+      ok "Postgres healthy"; return 0
+    fi
+    if $DOCKER compose exec -T db pg_isready -U kanban >/dev/null 2>&1; then
+      ok "Postgres ready (pg_isready)"; return 0
+    fi
+    sleep 2
+  done
+  die "Postgres did not become healthy in 60s"
+}
+
+wait_for_health() {
+  info "waiting for server to listen on 3001…"
+  for i in {1..30}; do
+    if /usr/bin/curl -sf http://localhost:3001/health >/dev/null 2>&1; then
+      ok "server healthy"; return 0
+    fi
+    sleep 2
+  done
+  die "server did not become healthy in 60s"
+}
+
 # ---------- do_status ----------
 
 do_status() {
   step "SmartKanban status"
 
+  # B1: resolve INSTALL_DIR in the caller before the subshell call
+  INSTALL_DIR="${INSTALL_DIR:-$HOME/smartkanban}"
   local state
-  state="$(detect_install_state)"
+  state="$(detect_install_state "$INSTALL_DIR")"
 
   info "Install directory : ${INSTALL_DIR}"
   info "Install state     : ${state}"
@@ -231,14 +264,21 @@ do_status() {
   local_date="$(git -C "$INSTALL_DIR" log -1 --format='%ci' 2>/dev/null || echo unknown)"
   info "Current commit    : ${local_sha} (${local_date})"
 
-  # Docker / container status
+  # B2: Docker / container status — use docker compose ps directly
   if command -v docker >/dev/null 2>&1 || command -v sudo >/dev/null 2>&1; then
     resolve_docker 2>/dev/null || true
     if [[ -f "$INSTALL_DIR/docker-compose.yml" || -f "$INSTALL_DIR/compose.yml" ]]; then
       info ""
       info "Container status:"
-      $DOCKER compose -f "${INSTALL_DIR}/$(ls "$INSTALL_DIR"/docker-compose.yml "$INSTALL_DIR"/compose.yml 2>/dev/null | head -1 | xargs basename)" \
-        --project-directory "$INSTALL_DIR" ps 2>/dev/null || warn "could not read container status"
+      local compose_file
+      if [[ -f "$INSTALL_DIR/docker-compose.yml" ]]; then
+        compose_file="$INSTALL_DIR/docker-compose.yml"
+      else
+        compose_file="$INSTALL_DIR/compose.yml"
+      fi
+      $DOCKER compose -f "$compose_file" --project-directory "$INSTALL_DIR" \
+        ps --format '{{.Service}}\t{{.State}}\t{{.Status}}' 2>/dev/null \
+        || warn "docker compose not reachable"
     fi
   fi
 
@@ -303,6 +343,17 @@ do_upgrade() {
     die "No git repo found at $INSTALL_DIR — cannot upgrade. Run 'install' first."
   fi
 
+  # I4: short-circuit when already up-to-date
+  local state
+  state="$(detect_install_state "$INSTALL_DIR")"
+  if [[ "$state" == "up-to-date" ]]; then
+    ok "Already up to date."
+    if ask_yn "Re-print bridge onboarding for new team members?" "n"; then
+      do_print_bridge_docs
+    fi
+    return 0
+  fi
+
   resolve_docker
 
   step "Pulling latest"
@@ -313,30 +364,14 @@ do_upgrade() {
   cd "$INSTALL_DIR"
   # Ensure db is running
   $DOCKER compose up -d db
-  info "waiting for Postgres…"
-  for i in {1..30}; do
-    if $DOCKER compose exec -T db pg_isready -U kanban >/dev/null 2>&1; then
-      ok "Postgres ready"; break
-    fi
-    sleep 2
-    if [[ $i -eq 30 ]]; then die "Postgres did not become ready in 60s"; fi
-  done
+  wait_for_pg
   $DOCKER compose exec -T db psql -U kanban -d kanban < server/schema.sql >/dev/null
   ok "schema applied"
 
   step "Rebuilding + restarting server"
   $DOCKER compose up -d --build server
-  info "waiting for /health 200…"
-  for i in {1..30}; do
-    if curl -sf http://localhost:3001/health >/dev/null 2>&1; then
-      ok "server healthy: $(curl -s http://localhost:3001/health)"; break
-    fi
-    sleep 2
-    if [[ $i -eq 30 ]]; then
-      warn "server didn't respond on /health in 60s"
-      info "check logs: $DOCKER compose logs --tail=100 server"
-    fi
-  done
+  wait_for_health
+  ok "server healthy: $(curl -s http://localhost:3001/health)"
 
   ok "Upgrade complete."
 
@@ -348,6 +383,11 @@ do_upgrade() {
 # ---------- do_uninstall ----------
 
 do_uninstall() {
+  # I8: refuse to run without a TTY
+  if [[ "${TTY_AVAILABLE:-true}" != "true" ]]; then
+    die "uninstall requires interactive terminal — re-run from a TTY (not via curl|bash)"
+  fi
+
   step "Uninstall SmartKanban"
   warn "this stops the kanban containers and may remove data."
 
@@ -366,11 +406,13 @@ do_uninstall() {
     fi
   fi
 
+  # I7: volume rm with if/else instead of broken ||
   if ask_yn "Remove database volume? THIS DELETES ALL CARDS." "n"; then
-    $DOCKER volume rm smartkanban_db_data 2>/dev/null || \
-      $DOCKER volume ls --format '{{.Name}}' | grep -i kanban | xargs -r $DOCKER volume rm || \
-      warn "could not remove volume — remove manually: docker volume ls"
-    ok "database volume removed"
+    if $DOCKER volume rm "$(basename "$INSTALL_DIR")_db_data" 2>/dev/null; then
+      ok "database volume removed"
+    else
+      warn "database volume not found or could not be removed"
+    fi
   fi
 
   if ask_yn "Remove install dir at $INSTALL_DIR?" "n"; then
@@ -378,18 +420,29 @@ do_uninstall() {
     ok "removed $INSTALL_DIR"
   fi
 
-  if ask_yn "Remove backup cron entry?" "y"; then
-    ( crontab -l 2>/dev/null | grep -v "$INSTALL_DIR/scripts/backup.sh" | crontab - ) || true
-    ok "cron entry removed"
+  # I6: cron gate — check applicability before prompting
+  if crontab -l 2>/dev/null | grep -q "$INSTALL_DIR/scripts/backup.sh"; then
+    if ask_yn "Remove backup cron entry?" "y"; then
+      crontab -l 2>/dev/null | grep -v "$INSTALL_DIR/scripts/backup.sh" | crontab -
+      ok "cron entry removed"
+    fi
+  else
+    info "no backup cron entry found, skipping"
   fi
 
-  if ask_yn "Remove Caddy site config (if installed by us)?" "y"; then
-    sudo rm -f /etc/caddy/sites-enabled/smartkanban 2>/dev/null || true
-    # Also remove any block in the main Caddyfile referencing kanban
+  # I6: caddy gate — check applicability before prompting
+  if [[ -f /etc/caddy/sites-enabled/smartkanban ]] || sudo test -f /etc/caddy/sites-enabled/smartkanban 2>/dev/null; then
+    if ask_yn "Remove Caddy site config?" "y"; then
+      sudo rm -f /etc/caddy/sites-enabled/smartkanban
+      sudo systemctl reload caddy 2>/dev/null || true
+      ok "caddy config removed"
+    fi
+  else
+    info "no Caddy site config found, skipping"
+    # Still warn about inline Caddyfile block if present
     if [[ -f /etc/caddy/Caddyfile ]] && grep -q 'reverse_proxy localhost:3001' /etc/caddy/Caddyfile; then
       warn "Caddyfile block for port 3001 detected — remove manually from /etc/caddy/Caddyfile"
     fi
-    ok "Caddy site config removed (if present)"
   fi
 
   ok "Uninstall complete."
@@ -594,19 +647,7 @@ EOF
   resolve_docker
 
   $DOCKER compose up -d db
-  info "waiting for Postgres to be healthy…"
-  for i in {1..30}; do
-    if $DOCKER compose ps db --format json 2>/dev/null | grep -q '"Health":"healthy"'; then
-      ok "Postgres healthy"; break
-    fi
-    # Fallback: also check via pg_isready inside the container in case the
-    # healthcheck JSON shape differs across compose versions.
-    if $DOCKER compose exec -T db pg_isready -U kanban >/dev/null 2>&1; then
-      ok "Postgres ready (pg_isready)"; break
-    fi
-    sleep 2
-    if [[ $i -eq 30 ]]; then die "Postgres did not become healthy in 60s"; fi
-  done
+  wait_for_pg
 
   info "applying schema (idempotent)…"
   $DOCKER compose exec -T db psql -U kanban -d kanban < server/schema.sql >/dev/null
@@ -623,17 +664,8 @@ EOF
   step "Step 6/9 — building and starting the server"
 
   $DOCKER compose up -d --build server
-  info "waiting for server to listen on 3001…"
-  for i in {1..30}; do
-    if curl -sf http://localhost:3001/health >/dev/null 2>&1; then
-      ok "server healthy: $(curl -s http://localhost:3001/health)"; break
-    fi
-    sleep 2
-    if [[ $i -eq 30 ]]; then
-      warn "server didn't respond on /health in 60s"
-      info "check logs: $DOCKER compose logs --tail=100 server"
-    fi
-  done
+  wait_for_health
+  ok "server healthy: $(curl -s http://localhost:3001/health)"
 
   # ---------- step 7: optional Caddy ----------
 
@@ -767,9 +799,10 @@ main() {
   esac
 
   if [[ "$ACTION" == "auto" ]]; then
-    # Detect state first (sets INSTALL_DIR)
+    # B1: resolve INSTALL_DIR in the caller before the subshell call
+    resolve_install_dir
     local state
-    state="$(detect_install_state)"
+    state="$(detect_install_state "$INSTALL_DIR")"
 
     case "$state" in
       new)
