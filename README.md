@@ -276,7 +276,21 @@ curl -fsSL https://raw.githubusercontent.com/chatwithllm/SmartKanban/main/script
 
 Walks you through Docker install, repo clone, env config (with prompts
 for your domain + Telegram + AI keys), schema init, build, optional
-Caddy auto-HTTPS, and backups. Idempotent — safe to re-run.
+Caddy auto-HTTPS, backups, and a printable onboarding snippet for the
+notetaker-kanban Claude Code bridge.
+
+The installer auto-detects state on each invocation:
+
+| Run with | Behavior |
+|---|---|
+| `install.sh` (no arg) | Auto: `new` → fresh install. Existing → menu (upgrade / uninstall / re-print bridge docs / status). |
+| `install.sh install` | Force fresh install path. |
+| `install.sh upgrade` | Pull latest, re-apply schema, rebuild + restart server. No-op if already up-to-date. |
+| `install.sh uninstall` | Step-by-step gated removal: stop containers, optional db volume, optional install dir, cron entry, Caddy config. Safe defaults — no data destroyed without explicit `y`. |
+| `install.sh status` | Non-modifying state report: install dir, git SHA, container state, `/health` check. |
+| `install.sh --help` | Synopsis + examples. |
+
+Idempotent — safe to re-run any of the above.
 
 **Production (manual walkthrough)** — see
 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for a step-by-step guide from
