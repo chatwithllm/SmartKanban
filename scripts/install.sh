@@ -115,7 +115,7 @@ fi
 
 # ---------- step 1: prereqs ----------
 
-step "Step 1/8 — installing prerequisites"
+step "Step 1/9 — installing prerequisites"
 
 need_sudo apt-get update -qq
 PKGS=(ca-certificates curl gnupg lsb-release git ufw openssl)
@@ -150,7 +150,7 @@ fi
 
 # ---------- step 2: pick install dir + clone ----------
 
-step "Step 2/8 — repository location"
+step "Step 2/9 — repository location"
 
 DEFAULT_DIR="$HOME/smartkanban"
 INSTALL_DIR="$(ask "Install directory" "$DEFAULT_DIR")"
@@ -181,7 +181,7 @@ cd "$INSTALL_DIR"
 
 # ---------- step 3: firewall ----------
 
-step "Step 3/8 — firewall"
+step "Step 3/9 — firewall"
 
 if command -v ufw >/dev/null 2>&1; then
   if need_sudo ufw status | grep -q "Status: active"; then
@@ -201,7 +201,7 @@ fi
 
 # ---------- step 4: env config ----------
 
-step "Step 4/8 — environment configuration"
+step "Step 4/9 — environment configuration"
 
 ENV_FILE="$INSTALL_DIR/server/.env"
 EXAMPLE_FILE="$INSTALL_DIR/.env.example"
@@ -280,7 +280,7 @@ fi
 
 # ---------- step 5: database ----------
 
-step "Step 5/8 — Postgres + schema"
+step "Step 5/9 — Postgres + schema"
 
 # Need to call docker via sudo if user isn't yet in docker group (fresh install)
 DOCKER="docker"
@@ -320,7 +320,7 @@ fi
 
 # ---------- step 6: build + start ----------
 
-step "Step 6/8 — building and starting the server"
+step "Step 6/9 — building and starting the server"
 
 $DOCKER compose up -d --build server
 info "waiting for server to listen on 3001…"
@@ -337,7 +337,7 @@ done
 
 # ---------- step 7: optional Caddy ----------
 
-step "Step 7/8 — reverse proxy + HTTPS"
+step "Step 7/9 — reverse proxy + HTTPS"
 
 APP_URL_FROM_ENV="$(grep '^APP_URL=' "$ENV_FILE" | cut -d= -f2-)"
 if [[ "$APP_URL_FROM_ENV" == https://* ]]; then
