@@ -1,4 +1,4 @@
-import type { ActivityEntry, Card, KnowledgeItem, KnowledgeVisibility, MirrorToken, ReviewData, Scope, Status, Template, User } from './types.ts';
+import type { ActivityEntry, ApiToken, Card, KnowledgeItem, KnowledgeVisibility, MirrorToken, ReviewData, Scope, Status, Template, User } from './types.ts';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -56,6 +56,12 @@ export const api = {
     req<{ token: string; label: string; url: string }>('/api/mirror/tokens', json({ label })),
   deleteMirrorToken: (token: string) =>
     req<void>(`/api/mirror/tokens/${token}`, { method: 'DELETE' }),
+
+  apiTokens: () => req<ApiToken[]>('/api/tokens'),
+  createApiToken: (label?: string) =>
+    req<{ token: string; label: string; scope: 'api' }>('/api/tokens', json({ label })),
+  deleteApiToken: (token: string) =>
+    req<void>(`/api/tokens/${token}`, { method: 'DELETE' }),
 
   review: () => req<ReviewData>('/api/review'),
 

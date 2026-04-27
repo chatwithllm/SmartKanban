@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.ts';
 import { useAuth } from '../auth.tsx';
-import type { MirrorToken } from '../types.ts';
+import type { ApiToken, MirrorToken } from '../types.ts';
 import { TemplatesTab } from './TemplatesTab.tsx';
 import { useTheme } from '../hooks/useTheme.ts';
 
@@ -31,9 +31,14 @@ export function SettingsDialog({ onClose }: Props) {
   const [tgUser, setTgUser] = useState('');
   const [newLabel, setNewLabel] = useState('mirror');
   const [newToken, setNewToken] = useState<{ token: string; url: string } | null>(null);
+  const [apiTokens, setApiTokens] = useState<ApiToken[]>([]);
+  const [apiLabel, setApiLabel] = useState('laptop');
+  const [newApiToken, setNewApiToken] = useState<{ token: string; label: string } | null>(null);
+  const [apiTokenError, setApiTokenError] = useState<string | null>(null);
 
   const refresh = async () => {
     setTokens(await api.mirrorTokens());
+    setApiTokens(await api.apiTokens());
     setIdentities(await api.listTelegramIdentities());
   };
 
@@ -49,6 +54,22 @@ export function SettingsDialog({ onClose }: Props) {
   const deleteToken = async (t: string) => {
     await api.deleteMirrorToken(t);
     await refresh();
+  };
+  const mintApiToken = async () => {
+    setApiTokenError(null);
+    try {
+      const created = await api.createApiToken(apiLabel.trim() || 'api');
+      setNewApiToken({ token: created.token, label: created.label });
+      setApiLabel('laptop');
+      setApiTokens(await api.apiTokens());
+    } catch (e) {
+      setApiTokenError(e instanceof Error ? e.message : String(e));
+    }
+  };
+  const revokeApiToken = async (token: string) => {
+    if (!confirm('Revoke this token? Devices and integrations using it will stop working.')) return;
+    await api.deleteApiToken(token);
+    setApiTokens(await api.apiTokens());
   };
   const linkTg = async () => {
     const id = Number(tgId);
@@ -172,6 +193,74 @@ export function SettingsDialog({ onClose }: Props) {
                 <li className="px-3 py-2 text-1 tracking-tight2 text-ink-soft">No tokens yet.</li>
               )}
             </ul>
+          </section>
+
+          {/* API tokens */}
+          <section className="flex flex-col gap-3">
+            <h3 className="text-3 font-semibold text-ink tracking-tight2">API tokens</h3>
+            <p className="text-1 tracking-tight2 text-ink-soft">
+              Long-lived tokens for agent integrations like notetaker-kanban. Tokens have write access to your cards.
+            </p>
+            <div className="flex gap-2">
+              <input
+                value={apiLabel}
+                onChange={(e) => setApiLabel(e.target.value)}
+                placeholder="Label (e.g. laptop, desktop)"
+                className="flex-1 bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none"
+              />
+              <button onClick={mintApiToken} className="btn-pill btn-pill-filled-green">
+                Generate
+              </button>
+            </div>
+            {newApiToken && (
+              <div className="rounded-card border border-green-accent/30 bg-green-light/20 p-3 text-1 tracking-tight2 text-ink break-all">
+                <div className="font-semibold text-green-starbucks mb-1">
+                  Token created — copy now, it won't be shown again:
+                </div>
+                <code className="block bg-card rounded-card p-2 mt-1 font-mono">{newApiToken.token}</code>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    type="button"
+                    className="btn-pill btn-pill-filled-green"
+                    onClick={() => navigator.clipboard.writeText(newApiToken.token)}
+                  >
+                    Copy
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-pill btn-pill-outlined-dark"
+                    onClick={() => setNewApiToken(null)}
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            )}
+            <ul className="divide-y divide-ink/10 rounded-card border border-ink/10">
+              {apiTokens.map((t) => (
+                <li
+                  key={t.token}
+                  className="flex items-center justify-between px-3 py-2 text-2 tracking-tight2 text-ink"
+                >
+                  <span>
+                    {t.label} · <span className="text-ink-soft">…{t.token.slice(-8)}</span>
+                    <span className="ml-2 text-1 text-ink-soft">{new Date(t.created_at).toLocaleString()}</span>
+                  </span>
+                  <button
+                    onClick={() => revokeApiToken(t.token)}
+                    className="text-ink-soft hover:text-ink text-2 tracking-tight2"
+                  >
+                    Revoke
+                  </button>
+                </li>
+              ))}
+              {apiTokens.length === 0 && (
+                <li className="px-3 py-2 text-1 tracking-tight2 text-ink-soft">No tokens yet.</li>
+              )}
+            </ul>
+            {apiTokenError && (
+              <div className="text-1 tracking-tight2 text-red">{apiTokenError}</div>
+            )}
           </section>
 
           {/* Telegram identities */}
