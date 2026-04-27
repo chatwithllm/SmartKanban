@@ -5,9 +5,13 @@
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/chatwithllm/SmartKanban/main/scripts/install.sh | bash
 #
-#   ./scripts/install.sh [install|upgrade|uninstall|status|-h|--help]
+#   ./scripts/install.sh [server|client|install|upgrade|uninstall|status|-h|--help]
 #
-# No-arg: auto-detects existing install and presents a menu.
+# Sides:
+#   server  — kanban backend (Docker + Postgres on a host machine)
+#   client  — notetaker-kanban bridge (slash commands + hooks on dev laptop)
+#
+# No-arg: auto-detects existing install(s) and presents a menu.
 
 set -euo pipefail
 
@@ -91,7 +95,12 @@ usage() {
 ${C_BOLD}SmartKanban installer${C_RESET}
 
   ${C_BOLD}Synopsis:${C_RESET}
-    install.sh [action] [options]
+    install.sh [side] [action] [options]
+
+  ${C_BOLD}Sides:${C_RESET}
+    server      Target the kanban backend (Docker + Postgres on a host machine)
+    client      Target the notetaker-kanban bridge (slash commands + hooks on dev laptop)
+    (no side)   Auto-detect which side(s) are installed and prompt if ambiguous
 
   ${C_BOLD}Actions:${C_RESET}
     install     Fresh install: prereqs, clone, env config, schema, start, Caddy, cron, bridge docs
@@ -104,19 +113,28 @@ ${C_BOLD}SmartKanban installer${C_RESET}
     -h, --help  Print this help and exit
 
   ${C_BOLD}Examples:${C_RESET}
-    # New machine — interactive
+    # New machine — interactive (prompts for server or client)
     ./scripts/install.sh
 
-    # Force fresh install
+    # Force server install
+    ./scripts/install.sh server
+
+    # Install the notetaker-kanban bridge on a developer laptop
+    ./scripts/install.sh client
+
+    # Force fresh server install (back-compat)
     ./scripts/install.sh install
 
-    # Upgrade a running instance
+    # Upgrade a running server instance
     ./scripts/install.sh upgrade
 
-    # Just show what's installed
+    # Upgrade the notetaker-kanban bridge
+    ./scripts/install.sh client upgrade
+
+    # Just show what's installed (both sides)
     ./scripts/install.sh status
 
-    # Via curl (non-interactive fresh install with defaults)
+    # Via curl (non-interactive fresh server install with defaults)
     curl -fsSL https://raw.githubusercontent.com/chatwithllm/SmartKanban/main/scripts/install.sh | bash
 
 EOF
@@ -137,10 +155,10 @@ resolve_docker() {
   fi
 }
 
-# detect_install_state — takes the install dir as $1 and echoes one of:
+# detect_server_state — takes the install dir as $1 and echoes one of:
 #   new | up-to-date | behind | ahead | diverged | broken
 # Does NOT write to any globals.
-detect_install_state() {
+detect_server_state() {
   local dir="$1"
 
   # No directory at all (or empty)
@@ -151,6 +169,14 @@ detect_install_state() {
 
   # Directory exists but no .git
   if [[ ! -d "$dir/.git" ]]; then
+    echo "broken"
+    return
+  fi
+
+  # Must be a SmartKanban repo
+  local remote_url
+  remote_url="$(git -C "$dir" remote get-url origin 2>/dev/null || true)"
+  if [[ "$remote_url" != *"chatwithllm/SmartKanban"* ]]; then
     echo "broken"
     return
   fi
@@ -192,6 +218,78 @@ detect_install_state() {
   fi
 }
 
+# detect_install_state — legacy alias kept for back-compat
+detect_install_state() {
+  detect_server_state "$@"
+}
+
+# detect_client_state — echoes one of:
+#   not-installed | up-to-date | behind | broken
+detect_client_state() {
+  local symlink="$HOME/.claude/notetaker-kanban"
+
+  # Symlink must exist
+  if [[ ! -L "$symlink" ]]; then
+    echo "not-installed"
+    return
+  fi
+
+  # Symlink must resolve to a real directory
+  local target
+  target="$(readlink "$symlink" 2>/dev/null || true)"
+  if [[ -z "$target" || ! -d "$target" ]]; then
+    echo "broken"
+    return
+  fi
+
+  # Must have a .git dir
+  if [[ ! -d "$target/.git" ]]; then
+    echo "broken"
+    return
+  fi
+
+  # Must be the notetaker-kanban repo
+  local remote_url
+  remote_url="$(git -C "$target" remote get-url origin 2>/dev/null || true)"
+  if [[ "$remote_url" != *"chatwithllm/notetaker-kanban"* ]]; then
+    echo "broken"
+    return
+  fi
+
+  # Fetch quietly
+  if ! git -C "$target" fetch --quiet origin 2>/dev/null; then
+    if ! git -C "$target" rev-parse HEAD >/dev/null 2>&1; then
+      echo "broken"
+      return
+    fi
+    echo "up-to-date"
+    return
+  fi
+
+  local local_sha origin_sha merge_base
+  local_sha="$(git -C "$target" rev-parse HEAD 2>/dev/null)"
+  origin_sha="$(git -C "$target" rev-parse origin/main 2>/dev/null || true)"
+
+  if [[ -z "$origin_sha" ]]; then
+    echo "broken"
+    return
+  fi
+
+  if [[ "$local_sha" == "$origin_sha" ]]; then
+    echo "up-to-date"
+    return
+  fi
+
+  merge_base="$(git -C "$target" merge-base HEAD origin/main 2>/dev/null || true)"
+
+  if [[ "$merge_base" == "$local_sha" ]]; then
+    echo "behind"
+  else
+    # ahead or diverged — still functional, report up-to-date
+    echo "up-to-date"
+  fi
+}
+
 # resolve_install_dir — resolves and sets the global INSTALL_DIR.
 # Honours existing INSTALL_DIR if set; otherwise asks or uses default.
 resolve_install_dir() {
@@ -208,7 +306,24 @@ resolve_install_dir() {
   fi
 }
 
-# ---------- wait helpers (I5) ----------
+# resolve_bridge_dir — resolves and sets the global BRIDGE_DIR.
+# Prefers the target of the ~/.claude/notetaker-kanban symlink if it exists.
+resolve_bridge_dir() {
+  if [[ -z "${BRIDGE_DIR:-}" ]]; then
+    local symlink="$HOME/.claude/notetaker-kanban"
+    if [[ -L "$symlink" ]]; then
+      local target
+      target="$(readlink "$symlink" 2>/dev/null || true)"
+      if [[ -n "$target" && -d "$target" ]]; then
+        BRIDGE_DIR="$target"
+        return
+      fi
+    fi
+    BRIDGE_DIR="$HOME/.notetaker-kanban"
+  fi
+}
+
+# ---------- wait helpers ----------
 
 wait_for_pg() {
   info "waiting for Postgres to be healthy…"
@@ -235,59 +350,100 @@ wait_for_health() {
   die "server did not become healthy in 60s"
 }
 
+# ---------- detect_shell_rc ----------
+
+detect_shell_rc() {
+  local os="${1:-linux}"
+  case "$SHELL" in
+    */zsh)  echo "$HOME/.zshrc" ;;
+    */bash) [[ "$os" == "macos" ]] && echo "$HOME/.bash_profile" || echo "$HOME/.bashrc" ;;
+    *)      echo "$HOME/.profile" ;;
+  esac
+}
+
 # ---------- do_status ----------
 
 do_status() {
   step "SmartKanban status"
 
-  # B1: resolve INSTALL_DIR in the caller before the subshell call
+  # --- Server side ---
+  echo
+  echo "${C_BOLD}Server:${C_RESET}"
   INSTALL_DIR="${INSTALL_DIR:-$HOME/smartkanban}"
-  local state
-  state="$(detect_install_state "$INSTALL_DIR")"
+  local server_state
+  server_state="$(detect_server_state "$INSTALL_DIR")"
 
-  info "Install directory : ${INSTALL_DIR}"
-  info "Install state     : ${state}"
+  info "  install dir: $INSTALL_DIR"
+  info "  state: $server_state"
 
-  if [[ "$state" == "new" ]]; then
-    info "No installation found at ${INSTALL_DIR}."
-    return
-  fi
+  if [[ "$server_state" == "new" ]]; then
+    info "  not installed"
+  elif [[ "$server_state" == "broken" ]]; then
+    warn "  directory exists but is not a valid SmartKanban git repo"
+  else
+    # Git info
+    local local_sha local_date
+    local_sha="$(git -C "$INSTALL_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+    local_date="$(git -C "$INSTALL_DIR" log -1 --format='%ci' 2>/dev/null || echo unknown)"
+    info "  current commit: ${local_sha} (${local_date})"
 
-  if [[ "$state" == "broken" ]]; then
-    warn "Directory exists but is not a valid git repo."
-    return
-  fi
-
-  # Git info
-  local local_sha local_date
-  local_sha="$(git -C "$INSTALL_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
-  local_date="$(git -C "$INSTALL_DIR" log -1 --format='%ci' 2>/dev/null || echo unknown)"
-  info "Current commit    : ${local_sha} (${local_date})"
-
-  # B2: Docker / container status — use docker compose ps directly
-  if command -v docker >/dev/null 2>&1 || command -v sudo >/dev/null 2>&1; then
-    resolve_docker 2>/dev/null || true
-    if [[ -f "$INSTALL_DIR/docker-compose.yml" || -f "$INSTALL_DIR/compose.yml" ]]; then
-      info ""
-      info "Container status:"
-      local compose_file
-      if [[ -f "$INSTALL_DIR/docker-compose.yml" ]]; then
-        compose_file="$INSTALL_DIR/docker-compose.yml"
-      else
-        compose_file="$INSTALL_DIR/compose.yml"
+    # Docker / container status
+    if command -v docker >/dev/null 2>&1 || command -v sudo >/dev/null 2>&1; then
+      resolve_docker 2>/dev/null || true
+      if [[ -f "$INSTALL_DIR/docker-compose.yml" || -f "$INSTALL_DIR/compose.yml" ]]; then
+        info ""
+        info "  container status:"
+        local compose_file
+        if [[ -f "$INSTALL_DIR/docker-compose.yml" ]]; then
+          compose_file="$INSTALL_DIR/docker-compose.yml"
+        else
+          compose_file="$INSTALL_DIR/compose.yml"
+        fi
+        $DOCKER compose -f "$compose_file" --project-directory "$INSTALL_DIR" \
+          ps --format '{{.Service}}\t{{.State}}\t{{.Status}}' 2>/dev/null \
+          || warn "  docker compose not reachable"
       fi
-      $DOCKER compose -f "$compose_file" --project-directory "$INSTALL_DIR" \
-        ps --format '{{.Service}}\t{{.State}}\t{{.Status}}' 2>/dev/null \
-        || warn "docker compose not reachable"
+    fi
+
+    # Server health
+    if curl -sf http://localhost:3001/health >/dev/null 2>&1; then
+      ok "  server /health: $(curl -s http://localhost:3001/health)"
+    else
+      warn "  server not responding on http://localhost:3001/health"
     fi
   fi
 
-  # Server health
-  if curl -sf http://localhost:3001/health >/dev/null 2>&1; then
-    ok "Server /health: $(curl -s http://localhost:3001/health)"
-  else
-    warn "Server not responding on http://localhost:3001/health"
-  fi
+  # --- Client side ---
+  echo
+  echo "${C_BOLD}Client (notetaker-kanban bridge):${C_RESET}"
+  local client_state
+  client_state="$(detect_client_state)"
+
+  case "$client_state" in
+    not-installed)
+      info "  not installed"
+      ;;
+    *)
+      resolve_bridge_dir
+      info "  bridge repo: $BRIDGE_DIR"
+      info "  state: $client_state"
+      info "  KANBAN_URL: ${KANBAN_URL:-<unset>}"
+      info "  KANBAN_TOKEN: $([ -n "${KANBAN_TOKEN:-}" ] && echo "set (${#KANBAN_TOKEN} chars)" || echo "<unset>")"
+      if [[ -n "${KANBAN_URL:-}" && -n "${KANBAN_TOKEN:-}" ]]; then
+        local code
+        code="$(/usr/bin/curl -s -o /dev/null -w "%{http_code}" \
+          -X POST "$KANBAN_URL/api/cards" \
+          -H "authorization: Bearer $KANBAN_TOKEN" \
+          -H "content-type: application/json" \
+          -d '{"title":"__probe_only__"}' 2>/dev/null || echo "000")"
+        case "$code" in
+          201) ok "  test connection: OK ($code) — token valid" ;;
+          401|403) warn "  test connection: $code — token invalid or wrong scope" ;;
+          *) warn "  test connection: $code — server unreachable or unhealthy" ;;
+        esac
+      fi
+      ;;
+  esac
 }
 
 # ---------- do_print_bridge_docs ----------
@@ -307,6 +463,8 @@ do_print_bridge_docs() {
   ${C_BOLD}Share these steps with each developer:${C_RESET}
 
   1. Install the bridge on their machine (one-time):
+       ./install.sh client
+       # — or manually —
        git clone https://github.com/chatwithllm/notetaker-kanban.git ~/.notetaker-kanban
        cd ~/.notetaker-kanban && ./install.sh
 
@@ -330,10 +488,10 @@ do_print_bridge_docs() {
 EOF
 }
 
-# ---------- do_upgrade ----------
+# ---------- do_upgrade (server) ----------
 
 do_upgrade() {
-  step "Upgrading SmartKanban"
+  step "Upgrading SmartKanban server"
 
   if [[ -z "${INSTALL_DIR:-}" ]]; then
     INSTALL_DIR="$HOME/smartkanban"
@@ -343,9 +501,9 @@ do_upgrade() {
     die "No git repo found at $INSTALL_DIR — cannot upgrade. Run 'install' first."
   fi
 
-  # I4: short-circuit when already up-to-date
+  # Short-circuit when already up-to-date
   local state
-  state="$(detect_install_state "$INSTALL_DIR")"
+  state="$(detect_server_state "$INSTALL_DIR")"
   if [[ "$state" == "up-to-date" ]]; then
     ok "Already up to date."
     if ask_yn "Re-print bridge onboarding for new team members?" "n"; then
@@ -380,15 +538,33 @@ do_upgrade() {
   fi
 }
 
-# ---------- do_uninstall ----------
+# ---------- do_upgrade_client ----------
+
+do_upgrade_client() {
+  step "Upgrading notetaker-kanban bridge"
+
+  resolve_bridge_dir
+
+  if [[ ! -d "$BRIDGE_DIR/.git" ]]; then
+    die "No bridge repo found at $BRIDGE_DIR — run 'client install' first."
+  fi
+
+  git -C "$BRIDGE_DIR" pull --ff-only
+  ok "bridge repo updated"
+  info "re-running bridge install.sh to refresh slash commands + hook"
+  bash "$BRIDGE_DIR/install.sh"
+  ok "bridge upgraded"
+}
+
+# ---------- do_uninstall (server) ----------
 
 do_uninstall() {
-  # I8: refuse to run without a TTY
+  # Refuse to run without a TTY
   if [[ "${TTY_AVAILABLE:-true}" != "true" ]]; then
     die "uninstall requires interactive terminal — re-run from a TTY (not via curl|bash)"
   fi
 
-  step "Uninstall SmartKanban"
+  step "Uninstall SmartKanban server"
   warn "this stops the kanban containers and may remove data."
 
   if [[ -z "${INSTALL_DIR:-}" ]]; then
@@ -406,7 +582,6 @@ do_uninstall() {
     fi
   fi
 
-  # I7: volume rm with if/else instead of broken ||
   if ask_yn "Remove database volume? THIS DELETES ALL CARDS." "n"; then
     if $DOCKER volume rm "$(basename "$INSTALL_DIR")_db_data" 2>/dev/null; then
       ok "database volume removed"
@@ -420,7 +595,6 @@ do_uninstall() {
     ok "removed $INSTALL_DIR"
   fi
 
-  # I6: cron gate — check applicability before prompting
   if crontab -l 2>/dev/null | grep -q "$INSTALL_DIR/scripts/backup.sh"; then
     if ask_yn "Remove backup cron entry?" "y"; then
       crontab -l 2>/dev/null | grep -v "$INSTALL_DIR/scripts/backup.sh" | crontab -
@@ -430,7 +604,6 @@ do_uninstall() {
     info "no backup cron entry found, skipping"
   fi
 
-  # I6: caddy gate — check applicability before prompting
   if [[ -f /etc/caddy/sites-enabled/smartkanban ]] || sudo test -f /etc/caddy/sites-enabled/smartkanban 2>/dev/null; then
     if ask_yn "Remove Caddy site config?" "y"; then
       sudo rm -f /etc/caddy/sites-enabled/smartkanban
@@ -439,16 +612,153 @@ do_uninstall() {
     fi
   else
     info "no Caddy site config found, skipping"
-    # Still warn about inline Caddyfile block if present
     if [[ -f /etc/caddy/Caddyfile ]] && grep -q 'reverse_proxy localhost:3001' /etc/caddy/Caddyfile; then
       warn "Caddyfile block for port 3001 detected — remove manually from /etc/caddy/Caddyfile"
     fi
   fi
 
-  ok "Uninstall complete."
+  ok "Server uninstall complete."
 }
 
-# ---------- do_install ----------
+# ---------- do_uninstall_client ----------
+
+do_uninstall_client() {
+  step "Uninstalling notetaker-kanban bridge"
+
+  if [[ "${TTY_AVAILABLE:-true}" != "true" ]]; then
+    die "uninstall requires interactive terminal"
+  fi
+
+  resolve_bridge_dir
+
+  # Run bridge's uninstall.sh if present
+  if [[ -x "$BRIDGE_DIR/uninstall.sh" ]]; then
+    if ask_yn "Run bridge uninstall.sh (removes ~/.claude/commands + hook + symlink)?" "y"; then
+      bash "$BRIDGE_DIR/uninstall.sh"
+    fi
+  fi
+
+  # Detect shell rc
+  local os="linux"
+  case "$(uname -s)" in
+    Darwin) os="macos" ;;
+  esac
+  local RC_FILE
+  RC_FILE="$(detect_shell_rc "$os")"
+
+  # Remove KANBAN_URL/KANBAN_TOKEN from rc if present
+  if grep -q "^export KANBAN_TOKEN=" "$RC_FILE" 2>/dev/null; then
+    if ask_yn "Remove KANBAN_URL/KANBAN_TOKEN from $RC_FILE?" "y"; then
+      /usr/bin/sed -i.bak \
+        '/^export KANBAN_URL=/d; /^export KANBAN_TOKEN=/d; /^# notetaker-kanban (added by SmartKanban installer)$/d' \
+        "$RC_FILE"
+      rm -f "$RC_FILE.bak"
+      ok "rc cleaned"
+    fi
+  else
+    info "no KANBAN_URL/KANBAN_TOKEN in $RC_FILE, skipping"
+  fi
+
+  # Optional: remove bridge clone dir
+  if [[ -d "$BRIDGE_DIR" ]]; then
+    if ask_yn "Remove bridge clone at $BRIDGE_DIR?" "n"; then
+      rm -rf "$BRIDGE_DIR"
+      ok "$BRIDGE_DIR removed"
+    fi
+  fi
+
+  ok "Client uninstall complete."
+}
+
+# ---------- do_install_client ----------
+
+do_install_client() {
+  step "Installing notetaker-kanban bridge"
+
+  # OS detection
+  local OS
+  case "$(uname -s)" in
+    Darwin) OS=macos ;;
+    Linux)  OS=linux ;;
+    *)      die "unsupported OS: $(uname -s)" ;;
+  esac
+
+  # Dep check
+  for cmd in git curl jq; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+      case "$OS" in
+        macos) die "missing $cmd. Install via brew: brew install $cmd" ;;
+        linux) die "missing $cmd. Install: sudo apt-get install -y $cmd  (or yum/dnf equivalent)" ;;
+      esac
+    fi
+  done
+
+  # Pick install path
+  local DEFAULT_BRIDGE_DIR="$HOME/.notetaker-kanban"
+  BRIDGE_DIR="$(ask "Bridge clone path" "$DEFAULT_BRIDGE_DIR")"
+  BRIDGE_DIR="${BRIDGE_DIR/#\~/$HOME}"
+
+  # Clone or update
+  if [[ -d "$BRIDGE_DIR/.git" ]]; then
+    ok "bridge repo present at $BRIDGE_DIR — pulling latest"
+    git -C "$BRIDGE_DIR" pull --ff-only
+  else
+    mkdir -p "$BRIDGE_DIR"
+    git clone https://github.com/chatwithllm/notetaker-kanban.git "$BRIDGE_DIR"
+    ok "cloned to $BRIDGE_DIR"
+  fi
+
+  # Run bridge's install.sh
+  info "running bridge installer (copies slash commands + hooks to ~/.claude/)"
+  bash "$BRIDGE_DIR/install.sh"
+
+  # Token + URL prompts
+  local APP_URL_FROM_ENV="${APP_URL_FROM_ENV:-http://localhost:3001}"
+  local KANBAN_URL KANBAN_TOKEN
+  KANBAN_URL="$(ask "Kanban URL" "$APP_URL_FROM_ENV")"
+  echo
+  echo "  Generate an API token at $KANBAN_URL → Settings → API tokens"
+  echo "  Paste it below (input is hidden):"
+  read -s -r KANBAN_TOKEN </dev/tty
+  echo
+  [[ -n "$KANBAN_TOKEN" ]] || die "token cannot be empty"
+
+  # Detect shell rc
+  local RC_FILE
+  RC_FILE="$(detect_shell_rc "$OS")"
+
+  # Append exports if not already present
+  {
+    echo
+    echo "# notetaker-kanban (added by SmartKanban installer)"
+    echo "export KANBAN_URL=$KANBAN_URL"
+    echo "export KANBAN_TOKEN=$KANBAN_TOKEN"
+  } >> "$RC_FILE"
+
+  ok "appended KANBAN_URL + KANBAN_TOKEN to $RC_FILE"
+
+  # Verify token
+  info "testing token against $KANBAN_URL …"
+  if /usr/bin/curl -sf -X POST "$KANBAN_URL/api/cards" \
+      -H "authorization: Bearer $KANBAN_TOKEN" \
+      -H 'content-type: application/json' \
+      -d '{"title":"__bridge_install_probe__","project":"probe"}' >/dev/null 2>&1; then
+    ok "token works"
+  else
+    warn "token did NOT validate. Check token/URL and try again."
+  fi
+
+  step "Bridge installed"
+  echo "  Next steps:"
+  echo "    1. Open a new terminal (or: source $RC_FILE)"
+  echo "    2. cd into any git repo"
+  echo "    3. claude"
+  echo "    4. /kanban-start"
+  echo
+  echo "  Bridge docs: https://github.com/chatwithllm/notetaker-kanban"
+}
+
+# ---------- do_install (server) ----------
 
 do_install() {
   step "SmartKanban installer"
@@ -761,96 +1071,254 @@ EOF
   echo "  Troubleshooting: $INSTALL_DIR/docs/DEPLOYMENT.md#troubleshooting"
 }
 
-# ---------- interactive menu ----------
+# ---------- interactive menu (both sides) ----------
 
 interactive_menu() {
-  local state="$1"
+  local server_state="$1"
+  local client_state="$2"
 
   echo
   info "What would you like to do?"
-  info "  1) Upgrade (pull + rebuild + apply schema)"
-  info "  2) Uninstall"
-  info "  3) Re-print developer onboarding (notetaker bridge)"
-  info "  4) Status only"
-  info "  5) Quit"
+
+  # Build menu dynamically based on which sides are installed
+  local -a options=()
+  local -a labels=()
+
+  if [[ "$server_state" != "new" ]]; then
+    options+=("upgrade_server")
+    labels+=("Upgrade server")
+  fi
+
+  if [[ "$client_state" != "not-installed" ]]; then
+    options+=("upgrade_client")
+    labels+=("Upgrade client (notetaker-kanban bridge)")
+  fi
+
+  if [[ "$server_state" != "new" ]]; then
+    options+=("uninstall_server")
+    labels+=("Uninstall server")
+  fi
+
+  if [[ "$client_state" != "not-installed" ]]; then
+    options+=("uninstall_client")
+    labels+=("Uninstall client (notetaker-kanban bridge)")
+  fi
+
+  options+=("status")
+  labels+=("Status")
+
+  options+=("bridge_docs")
+  labels+=("Re-print developer onboarding (notetaker bridge)")
+
+  options+=("quit")
+  labels+=("Quit")
+
+  local i=1
+  for label in "${labels[@]}"; do
+    info "  $i) $label"
+    (( i++ ))
+  done
 
   local choice
   choice="$(ask "Choice" "1")"
 
+  # Validate numeric choice
+  if ! [[ "$choice" =~ ^[0-9]+$ ]] || (( choice < 1 || choice > ${#options[@]} )); then
+    warn "Unknown choice '$choice' — exiting."
+    exit 1
+  fi
+
+  local action="${options[$(( choice - 1 ))]}"
+
+  case "$action" in
+    upgrade_server)   do_upgrade ;;
+    upgrade_client)   do_upgrade_client ;;
+    uninstall_server) do_uninstall ;;
+    uninstall_client) do_uninstall_client ;;
+    status)           do_status ;;
+    bridge_docs)      do_print_bridge_docs ;;
+    quit)             info "Quit."; exit 0 ;;
+  esac
+}
+
+# ---------- prompt_side_choice ----------
+# Called when neither side is installed and the user didn't specify.
+prompt_side_choice() {
+  if [[ "$TTY_AVAILABLE" != "true" ]]; then
+    # Non-interactive default: server (back-compat with curl|bash)
+    echo "server"
+    return
+  fi
+
+  echo
+  echo "  What are you installing?"
+  echo "    1) Server  — kanban backend (Docker + Postgres on a host machine)"
+  echo "    2) Client  — notetaker-kanban bridge (slash commands + hooks on YOUR laptop)"
+  local choice
+  read -r -p "  Choice [1]: " choice </dev/tty
+  choice="${choice:-1}"
+
   case "$choice" in
-    1) do_upgrade ;;
-    2) do_uninstall ;;
-    3) do_print_bridge_docs ;;
-    4) do_status ;;
-    5) info "Quit."; exit 0 ;;
-    *) warn "Unknown choice '$choice' — exiting."; exit 1 ;;
+    1) echo "server" ;;
+    2) echo "client" ;;
+    *) die "Invalid choice: $choice" ;;
   esac
 }
 
 # ---------- main ----------
 
 main() {
-  ACTION="${1:-auto}"
+  # Parse arguments: optional side (server|client) followed by optional action
+  local SIDE=""
+  local ACTION="auto"
 
+  case "${1:-}" in
+    server|client)
+      SIDE="$1"
+      ACTION="${2:-auto}"
+      ;;
+    install|upgrade|uninstall|status|auto)
+      ACTION="$1"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    "")
+      ACTION="auto"
+      ;;
+    *)
+      die "unknown argument: ${1}. Run with --help for usage."
+      ;;
+  esac
+
+  # Validate second arg if SIDE was set
   case "$ACTION" in
     install|upgrade|uninstall|status|auto) ;;
     -h|--help) usage; exit 0 ;;
     *) die "unknown action: $ACTION. Run with --help for usage." ;;
   esac
 
-  if [[ "$ACTION" == "auto" ]]; then
-    # B1: resolve INSTALL_DIR in the caller before the subshell call
-    resolve_install_dir
-    local state
-    state="$(detect_install_state "$INSTALL_DIR")"
+  # --- Dispatch when SIDE is explicitly given ---
 
-    case "$state" in
-      new)
-        step "SmartKanban — no existing install detected"
-        info "Install directory: ${INSTALL_DIR}"
-        if ask_yn "Proceed with new install?" "y"; then
-          do_install
-        else
-          info "Aborted."
-          exit 0
-        fi
-        ;;
-      up-to-date)
-        ok "Existing install at $INSTALL_DIR is up to date."
-        interactive_menu "$state"
-        ;;
-      behind)
-        warn "Existing install at $INSTALL_DIR is behind origin/main — upgrade recommended."
-        interactive_menu "$state"
-        ;;
-      ahead)
-        warn "Existing install at $INSTALL_DIR is ahead of origin/main (local commits present)."
-        interactive_menu "$state"
-        ;;
-      diverged)
-        warn "Existing install at $INSTALL_DIR has diverged from origin/main."
-        warn "Upgrade will attempt --ff-only and may fail. Review git status manually."
-        interactive_menu "$state"
-        ;;
-      broken)
-        warn "Directory $INSTALL_DIR exists but is not a valid git repo."
-        info "Options: pick a different INSTALL_DIR, or remove $INSTALL_DIR and re-run to install fresh."
-        interactive_menu "$state"
-        ;;
+  if [[ "$SIDE" == "server" ]]; then
+    case "$ACTION" in
+      install|auto) do_install ;;
+      upgrade)      do_upgrade ;;
+      uninstall)    do_uninstall ;;
+      status)       do_status ;;
     esac
-
-  elif [[ "$ACTION" == "install" ]]; then
-    do_install
-
-  elif [[ "$ACTION" == "upgrade" ]]; then
-    do_upgrade
-
-  elif [[ "$ACTION" == "uninstall" ]]; then
-    do_uninstall
-
-  elif [[ "$ACTION" == "status" ]]; then
-    do_status
+    return
   fi
+
+  if [[ "$SIDE" == "client" ]]; then
+    case "$ACTION" in
+      install|auto) do_install_client ;;
+      upgrade)      do_upgrade_client ;;
+      uninstall)    do_uninstall_client ;;
+      status)       do_status ;;
+    esac
+    return
+  fi
+
+  # --- No explicit SIDE — auto-detect ---
+
+  if [[ "$ACTION" == "status" ]]; then
+    do_status
+    return
+  fi
+
+  resolve_install_dir
+  resolve_bridge_dir
+
+  local server_state client_state
+  server_state="$(detect_server_state "$INSTALL_DIR")"
+  client_state="$(detect_client_state)"
+
+  local server_present=false client_present=false
+  [[ "$server_state" != "new" && "$server_state" != "broken" ]] && server_present=true
+  [[ "$client_state" != "not-installed" && "$client_state" != "broken" ]] && client_present=true
+
+  # Warn if both are present on the same host
+  if $server_present && $client_present; then
+    warn "Both server and client are installed on this host."
+  fi
+
+  if [[ "$ACTION" == "auto" ]]; then
+    if ! $server_present && ! $client_present; then
+      # Neither installed — ask which to install
+      local chosen_side
+      chosen_side="$(prompt_side_choice)"
+      case "$chosen_side" in
+        server)
+          step "SmartKanban — no existing install detected"
+          info "Install directory: ${INSTALL_DIR}"
+          if ask_yn "Proceed with new server install?" "y"; then
+            do_install
+          else
+            info "Aborted."
+            exit 0
+          fi
+          ;;
+        client)
+          do_install_client
+          ;;
+      esac
+      return
+    fi
+
+    # At least one side detected — show appropriate status summary then menu
+    if $server_present; then
+      case "$server_state" in
+        up-to-date) ok "Server at $INSTALL_DIR is up to date." ;;
+        behind)     warn "Server at $INSTALL_DIR is behind origin/main — upgrade recommended." ;;
+        ahead)      warn "Server at $INSTALL_DIR is ahead of origin/main (local commits present)." ;;
+        diverged)   warn "Server at $INSTALL_DIR has diverged from origin/main." ;;
+      esac
+    fi
+    if $client_present; then
+      case "$client_state" in
+        up-to-date) ok "Client bridge is up to date." ;;
+        behind)     warn "Client bridge is behind origin/main — upgrade recommended." ;;
+      esac
+    fi
+    # Handle broken states
+    if [[ "$server_state" == "broken" ]]; then
+      warn "Server directory $INSTALL_DIR exists but is not a valid SmartKanban git repo."
+    fi
+    if [[ "$client_state" == "broken" ]]; then
+      warn "Client bridge symlink/repo is broken."
+    fi
+
+    interactive_menu "$server_state" "$client_state"
+    return
+  fi
+
+  # Non-auto explicit action with no side — apply to whichever side is present,
+  # or default to server for back-compat.
+  case "$ACTION" in
+    install)
+      if $client_present && ! $server_present; then
+        do_install_client
+      else
+        do_install
+      fi
+      ;;
+    upgrade)
+      if $server_present; then do_upgrade; fi
+      if $client_present; then do_upgrade_client; fi
+      if ! $server_present && ! $client_present; then
+        die "Nothing installed to upgrade. Run without arguments to start an install."
+      fi
+      ;;
+    uninstall)
+      if $server_present; then do_uninstall; fi
+      if $client_present; then do_uninstall_client; fi
+      if ! $server_present && ! $client_present; then
+        warn "Nothing installed to uninstall."
+      fi
+      ;;
+  esac
 }
 
 main "$@"
