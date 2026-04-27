@@ -450,6 +450,28 @@ safe to re-run on an existing database).
 | GET    | `/attachments/*`                  | Auth-gated file serve                    |
 | GET    | `/health`                         | `{ ok: true }`                           |
 
+### API tokens (for agent integrations)
+
+| Method | Path                              | Notes                                    |
+| ------ | --------------------------------- | ---------------------------------------- |
+| POST   | `/api/tokens`                     | Create api-scope token (cookie auth)     |
+| GET    | `/api/tokens`                     | List own api tokens                      |
+| DELETE | `/api/tokens/:token`              | Revoke                                   |
+
+Endpoints accepting `Authorization: Bearer <api-token>`:
+
+- `POST /api/cards` (cookie or Bearer)
+- `PATCH /api/cards/:id` (cookie or Bearer)
+- `POST /api/cards/:id/activity` (Bearer api-token only)
+
+`POST /api/cards/:id/activity` body:
+
+```json
+{ "type": "session_summary", "body": "edited 3 files", "details": { "files": 3 } }
+```
+
+Cards now carry an optional `project: string` field; the list endpoint accepts `?project=<key>` for filtering.
+
 ### WebSocket events
 
 ```
