@@ -11,7 +11,7 @@ export async function mirrorRoutes(app: FastifyInstance) {
       const token = newToken();
       const label = req.body?.label?.trim() || 'mirror';
       await pool.query(
-        `INSERT INTO mirror_tokens (token, user_id, label) VALUES ($1, $2, $3)`,
+        `INSERT INTO mirror_tokens (token, user_id, label, scope) VALUES ($1, $2, $3, 'mirror')`,
         [token, req.user!.id, label],
       );
       return reply.code(201).send({ token, label, url: `/my-day?token=${token}` });
@@ -20,7 +20,7 @@ export async function mirrorRoutes(app: FastifyInstance) {
 
   app.get('/api/mirror/tokens', { preHandler: requireUser }, async (req) => {
     const { rows } = await pool.query<{ token: string; label: string; created_at: string }>(
-      `SELECT token, label, created_at FROM mirror_tokens WHERE user_id = $1 ORDER BY created_at DESC`,
+      `SELECT token, label, created_at FROM mirror_tokens WHERE user_id = $1 AND scope = 'mirror' ORDER BY created_at DESC`,
       [req.user!.id],
     );
     return rows;
@@ -30,7 +30,7 @@ export async function mirrorRoutes(app: FastifyInstance) {
     '/api/mirror/tokens/:token',
     { preHandler: requireUser },
     async (req, reply) => {
-      await pool.query(`DELETE FROM mirror_tokens WHERE token = $1 AND user_id = $2`, [
+      await pool.query(`DELETE FROM mirror_tokens WHERE token = $1 AND user_id = $2 AND scope = 'mirror'`, [
         req.params.token,
         req.user!.id,
       ]);

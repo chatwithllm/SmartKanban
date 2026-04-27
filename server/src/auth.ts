@@ -54,7 +54,7 @@ export async function userFromMirrorToken(token: string | undefined): Promise<Au
   const { rows } = await pool.query<AuthUser>(
     `SELECT u.id, u.name, COALESCE(u.short_name, u.name) AS short_name, u.email
      FROM mirror_tokens m JOIN users u ON u.id = m.user_id
-     WHERE m.token = $1`,
+     WHERE m.token = $1 AND m.scope = 'mirror'`,
     [token],
   );
   return rows[0] ?? null;

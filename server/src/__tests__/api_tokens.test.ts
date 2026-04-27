@@ -173,3 +173,40 @@ test('PATCH /api/cards/:id with Bearer api token replaces tags', async () => {
   const updated = p.json() as { tags: string[] };
   assert.deepEqual(updated.tags.sort(), ['a', 'b', 'deployed-local'].sort());
 });
+
+test('GET /api/mirror/tokens does not return api-scope tokens', async () => {
+  // mint one of each scope
+  await app.inject({
+    method: 'POST', url: '/api/mirror/tokens', headers: { cookie: cookieA },
+    payload: { label: 'mirror1' },
+  });
+  await app.inject({
+    method: 'POST', url: '/api/tokens', headers: { cookie: cookieA },
+    payload: { label: 'api1' },
+  });
+  const list = await app.inject({
+    method: 'GET', url: '/api/mirror/tokens', headers: { cookie: cookieA },
+  });
+  assert.equal(list.statusCode, 200);
+  const tokens = list.json() as Array<{ label: string }>;
+  assert.equal(tokens.length, 1, 'expected only the mirror-scope token');
+  assert.equal(tokens[0].label, 'mirror1');
+});
+
+test('x-mirror-token header rejects api-scope tokens', async () => {
+  const at = await app.inject({
+    method: 'POST', url: '/api/tokens', headers: { cookie: cookieA },
+    payload: { label: 'api2' },
+  });
+  const { token } = at.json() as { token: string };
+  // GET /api/cards uses requireUserOrMirror — mirror auth via x-mirror-token.
+  // An api-scope token must NOT authenticate this endpoint.
+  const r = await app.inject({
+    method: 'GET',
+    url: '/api/cards?scope=personal',
+    headers: { 'x-mirror-token': token },
+  });
+  // Without a valid cookie or valid mirror token, requireUser falls through.
+  // Expect 401 (auth required) — no cookie + invalid mirror token = unauthorized.
+  assert.equal(r.statusCode, 401);
+});
