@@ -74,7 +74,8 @@ ask_yn() {
   fi
   read -r -p "    $prompt [${default}/$( [[ $default == y ]] && echo n || echo y )]: " answer </dev/tty
   answer="${answer:-$default}"
-  [[ "${answer,,}" == "y" || "${answer,,}" == "yes" ]]
+  answer="$(printf '%s' "$answer" | tr '[:upper:]' '[:lower:]')"
+  [[ "$answer" == "y" || "$answer" == "yes" ]]
 }
 
 need_sudo() {
