@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-INSTALLER_VERSION="2026-04-27.walkthrough-v3"
+INSTALLER_VERSION="2026-04-27.walkthrough-v4"
 
 # ---------- colour / output helpers ----------
 
@@ -1331,38 +1331,55 @@ interactive_menu() {
   local client_state="$2"
 
   echo
-  info "What would you like to do?"
+  info "${C_BOLD}Current state${C_RESET}"
+  case "$server_state" in
+    new|broken) info "  server : ${C_YELLOW}not installed${C_RESET}" ;;
+    *)          info "  server : ${C_GREEN}installed${C_RESET} ($server_state)" ;;
+  esac
+  case "$client_state" in
+    not-installed|broken) info "  client : ${C_YELLOW}not installed${C_RESET}" ;;
+    *)                    info "  client : ${C_GREEN}installed${C_RESET} ($client_state)" ;;
+  esac
+  echo
+  info "${C_BOLD}What would you like to do?${C_RESET}"
 
   # Build menu dynamically based on which sides are installed
   local -a options=()
   local -a labels=()
 
-  if [[ "$server_state" != "new" ]]; then
+  # Install options surface when side absent
+  if [[ "$server_state" == "new" || "$server_state" == "broken" ]]; then
+    options+=("install_server")
+    labels+=("Install server (kanban backend — Docker + Postgres)")
+  else
     options+=("upgrade_server")
     labels+=("Upgrade server")
   fi
 
-  if [[ "$client_state" != "not-installed" ]]; then
+  if [[ "$client_state" == "not-installed" || "$client_state" == "broken" ]]; then
+    options+=("install_client")
+    labels+=("Install client (notetaker-kanban bridge — slash commands + hooks)")
+  else
     options+=("upgrade_client")
     labels+=("Upgrade client (notetaker-kanban bridge)")
   fi
 
-  if [[ "$server_state" != "new" ]]; then
+  if [[ "$server_state" != "new" && "$server_state" != "broken" ]]; then
     options+=("uninstall_server")
     labels+=("Uninstall server")
   fi
 
-  if [[ "$client_state" != "not-installed" ]]; then
+  if [[ "$client_state" != "not-installed" && "$client_state" != "broken" ]]; then
     options+=("uninstall_client")
     labels+=("Uninstall client (notetaker-kanban bridge)")
   fi
 
   # Wiki always shown — falls back to github raw when bridge not installed locally
   options+=("explain_commands")
-  labels+=("Explore slash commands (wiki)")
+  labels+=("Explore slash commands (wiki — guided walkthrough)")
 
   options+=("status")
-  labels+=("Status")
+  labels+=("Status (verbose)")
 
   options+=("bridge_docs")
   labels+=("Re-print developer onboarding (notetaker bridge)")
@@ -1388,6 +1405,8 @@ interactive_menu() {
   local action="${options[$(( choice - 1 ))]}"
 
   case "$action" in
+    install_server)   do_install ;;
+    install_client)   do_install_client ;;
     upgrade_server)   do_upgrade ;;
     upgrade_client)   do_upgrade_client ;;
     uninstall_server) do_uninstall ;;
@@ -1510,25 +1529,13 @@ main() {
   fi
 
   if [[ "$ACTION" == "auto" ]]; then
+    # Always go through interactive_menu — works whether nothing,
+    # one side, or both sides are installed. Menu surfaces install/
+    # upgrade/uninstall/wiki/status options based on detected state.
     if ! $server_present && ! $client_present; then
-      # Neither installed — ask which to install
-      local chosen_side
-      chosen_side="$(prompt_side_choice)"
-      case "$chosen_side" in
-        server)
-          step "SmartKanban — no existing install detected"
-          info "Install directory: ${INSTALL_DIR}"
-          if ask_yn "Proceed with new server install?" "y"; then
-            do_install
-          else
-            info "Aborted."
-            exit 0
-          fi
-          ;;
-        client)
-          do_install_client
-          ;;
-      esac
+      step "SmartKanban installer — nothing detected on this host"
+      info "You can install one or both sides, or just explore the wiki."
+      interactive_menu "$server_state" "$client_state"
       return
     fi
 
