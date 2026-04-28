@@ -15,6 +15,8 @@
 
 set -euo pipefail
 
+INSTALLER_VERSION="2026-04-27.walkthrough-v2"
+
 # ---------- colour / output helpers ----------
 
 # B3: use ANSI-C quoting so variables hold real ESC bytes
@@ -1094,7 +1096,7 @@ EOF
 # ---------- do_explain_commands ----------
 
 do_explain_commands() {
-  step "Slash command reference (notetaker-kanban bridge)"
+  step "Slash command reference (notetaker-kanban bridge) [installer ${INSTALLER_VERSION}]"
 
   # Strategy: fetch WIKI.md (plain-english reference) from bridge repo and
   # render it via less (or cat). WIKI.md has: lifecycle primer, story
