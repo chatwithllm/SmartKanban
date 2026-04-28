@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-INSTALLER_VERSION="2026-04-27.walkthrough-v2"
+INSTALLER_VERSION="2026-04-27.walkthrough-v3"
 
 # ---------- colour / output helpers ----------
 
@@ -1118,8 +1118,9 @@ do_explain_commands() {
   # Fallback: fetch from github raw
   if [[ -z "$wiki_path" ]]; then
     info "Bridge not installed locally — fetching wiki from github…"
-    cleanup_tmp="$(mktemp -t notetaker-wiki.XXXXXX)"
-    trap '[[ -n "${cleanup_tmp:-}" ]] && rm -f "$cleanup_tmp"' RETURN
+    EXPLAIN_CLEANUP_TMP="$(mktemp -t notetaker-wiki.XXXXXX)"
+    cleanup_tmp="$EXPLAIN_CLEANUP_TMP"
+    trap 'rm -f "${EXPLAIN_CLEANUP_TMP:-}"; unset EXPLAIN_CLEANUP_TMP' RETURN
     if curl -fsSL "https://raw.githubusercontent.com/chatwithllm/notetaker-kanban/main/WIKI.md" \
         -o "$cleanup_tmp" 2>/dev/null && [[ -s "$cleanup_tmp" ]]; then
       wiki_path="$cleanup_tmp"
@@ -1181,9 +1182,11 @@ _explain_dump_full() {
 # and show one at a time. User controls advance.
 _explain_walkthrough() {
   local wiki_path="$1"
-  local tmpdir
-  tmpdir="$(mktemp -d -t notetaker-walk.XXXXXX)"
-  trap 'rm -rf "$tmpdir"' RETURN
+  # Use a global so cleanup via trap can see it regardless of locals scope.
+  # `set -u` + RETURN trap referencing a local would fail with "unbound variable".
+  WALKTHROUGH_TMPDIR="$(mktemp -d -t notetaker-walk.XXXXXX)"
+  local tmpdir="$WALKTHROUGH_TMPDIR"
+  trap 'rm -rf "${WALKTHROUGH_TMPDIR:-}"; unset WALKTHROUGH_TMPDIR' RETURN
 
   # Split: every `#### ` heading starts a new section file. Skip preamble.
   awk -v dir="$tmpdir" '
@@ -1243,7 +1246,8 @@ _explain_walkthrough() {
 
   echo
   ok "Done — that's every command."
-  info "Re-run anytime: ${C_BOLD}install.sh explain${C_RESET}"
+  info "Re-run anytime:"
+  info "  ${C_BOLD}curl -fsSL https://raw.githubusercontent.com/chatwithllm/SmartKanban/main/scripts/install.sh | bash -s -- explain${C_RESET}"
 }
 
 # try_install_glow — offer to install the markdown renderer for prettier wiki rendering.
