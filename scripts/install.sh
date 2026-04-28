@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-INSTALLER_VERSION="2026-04-27.wiki-menu-v5"
+INSTALLER_VERSION="2026-04-27.wiki-menu-v6"
 
 # ---------- colour / output helpers ----------
 
@@ -1175,6 +1175,8 @@ _explain_menu() {
   trap 'rm -rf "${WALKTHROUGH_TMPDIR:-}"; unset WALKTHROUGH_TMPDIR' RETURN
 
   # Split per `#### ` heading; capture command name from heading text.
+  # Sections end at the next top-level `## ` heading or horizontal rule
+  # so trailing FAQ / "See also" content doesn't bleed into the last command.
   awk -v dir="$tmpdir" '
     /^#### / {
       n++
@@ -1184,10 +1186,20 @@ _explain_menu() {
       gsub(/`/, "", name)        # strip backticks
       gsub(/[<>]/, "", name)     # strip angle brackets in placeholders
       printf "%s\n", name > sprintf("%s/name_%03d.txt", dir, n)
+      in_cmd = 1
       print > file
       next
     }
-    n > 0 { print > file }
+    /^## / || /^---[[:space:]]*$/ {
+      in_cmd = 0
+      next
+    }
+    /^### / {
+      # H3 separates command groups; do not accumulate it into prior cmd
+      in_cmd = 0
+      next
+    }
+    in_cmd { print > file }
   ' "$wiki_path"
 
   local -a files=() names=()
