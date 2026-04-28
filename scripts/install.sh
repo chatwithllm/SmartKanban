@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-INSTALLER_VERSION="2026-04-27.wiki-menu-v6"
+INSTALLER_VERSION="2026-04-27.upgrade-branch-fix-v7"
 
 # ---------- colour / output helpers ----------
 
@@ -526,7 +526,23 @@ do_upgrade() {
   resolve_docker
 
   step "Pulling latest"
-  git -C "$INSTALL_DIR" pull --ff-only
+  # Repo may be on a feature/fix branch left over from a prior hotfix
+  # (e.g. fix/test-strict-undefined). Force back to main with tracking
+  # set, otherwise `git pull` fails with "no tracking information".
+  local current_branch
+  current_branch="$(git -C "$INSTALL_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")"
+  if [[ "$current_branch" != "main" ]]; then
+    warn "Repo is on '$current_branch' — switching to 'main' for upgrade."
+    git -C "$INSTALL_DIR" fetch origin main
+    # Stash any local changes so checkout doesn't fail
+    if ! git -C "$INSTALL_DIR" diff --quiet || ! git -C "$INSTALL_DIR" diff --cached --quiet; then
+      warn "Local changes detected — stashing before checkout."
+      git -C "$INSTALL_DIR" stash push -u -m "auto-stash before installer upgrade $(date +%s)" >/dev/null
+    fi
+    git -C "$INSTALL_DIR" checkout main 2>/dev/null || git -C "$INSTALL_DIR" checkout -B main origin/main
+    git -C "$INSTALL_DIR" branch --set-upstream-to=origin/main main 2>/dev/null || true
+  fi
+  git -C "$INSTALL_DIR" pull --ff-only origin main
   ok "repo updated to $(git -C "$INSTALL_DIR" rev-parse --short HEAD)"
 
   step "Applying schema (idempotent)"
@@ -560,7 +576,19 @@ do_upgrade_client() {
     die "No bridge repo found at $BRIDGE_DIR — run 'client install' first."
   fi
 
-  git -C "$BRIDGE_DIR" pull --ff-only
+  local current_branch
+  current_branch="$(git -C "$BRIDGE_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")"
+  if [[ "$current_branch" != "main" ]]; then
+    warn "Bridge repo on '$current_branch' — switching to 'main'."
+    git -C "$BRIDGE_DIR" fetch origin main
+    if ! git -C "$BRIDGE_DIR" diff --quiet || ! git -C "$BRIDGE_DIR" diff --cached --quiet; then
+      warn "Local changes detected — stashing."
+      git -C "$BRIDGE_DIR" stash push -u -m "auto-stash before installer upgrade $(date +%s)" >/dev/null
+    fi
+    git -C "$BRIDGE_DIR" checkout main 2>/dev/null || git -C "$BRIDGE_DIR" checkout -B main origin/main
+    git -C "$BRIDGE_DIR" branch --set-upstream-to=origin/main main 2>/dev/null || true
+  fi
+  git -C "$BRIDGE_DIR" pull --ff-only origin main
   ok "bridge repo updated"
   info "re-running bridge install.sh to refresh slash commands + hook"
   bash "$BRIDGE_DIR/install.sh"
