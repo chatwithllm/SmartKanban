@@ -771,11 +771,10 @@ do_install_client() {
   echo "    4. /kanban-start"
   echo
   echo "  Bridge docs: https://github.com/chatwithllm/notetaker-kanban"
-
   echo
-  if ask_yn "Want a tour of the available slash commands?" "y"; then
-    do_explain_commands
-  fi
+  echo "  Browse slash commands later with:"
+  echo "    install.sh explain"
+  echo
 }
 
 # ---------- do_install (server) ----------
