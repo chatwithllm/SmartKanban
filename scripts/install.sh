@@ -1141,6 +1141,11 @@ do_explain_commands() {
   #   3) less   — paged plain text (markdown source visible)
   #   4) cat    — plain dump
   if [[ "$TTY_AVAILABLE" == "true" ]]; then
+    # If glow is missing, offer to install it before falling through
+    if ! command -v glow >/dev/null 2>&1 && ! command -v mdcat >/dev/null 2>&1; then
+      try_install_glow
+    fi
+
     if command -v glow >/dev/null 2>&1; then
       if ! glow -p "$wiki_path" </dev/tty 2>/dev/null; then
         cat "$wiki_path"
@@ -1150,8 +1155,6 @@ do_explain_commands() {
         cat "$wiki_path"
       fi
     elif command -v less >/dev/null 2>&1; then
-      info "${C_YELLOW}Tip:${C_RESET} 'brew install glow' (macOS) or 'sudo apt install glow' (Linux) for prettier rendering."
-      echo
       if ! less -R -F -X -K "$wiki_path" </dev/tty 2>/dev/null; then
         cat "$wiki_path"
       fi
@@ -1162,6 +1165,79 @@ do_explain_commands() {
     cat "$wiki_path"
   fi
   return 0
+}
+
+# try_install_glow — offer to install the markdown renderer for prettier wiki rendering.
+# Best-available method per OS. User declines → silent fallthrough to less/cat.
+try_install_glow() {
+  local os
+  case "$(uname -s)" in
+    Darwin) os=macos ;;
+    Linux)  os=linux ;;
+    *)      return 0 ;;
+  esac
+
+  echo
+  info "Optional: ${C_BOLD}glow${C_RESET} renders this wiki with bold, tables, and code highlighting."
+  if ! ask_yn "Install glow now? (~5MB)" "y"; then
+    info "Skipping — wiki will render as plain markdown source."
+    echo
+    return 0
+  fi
+
+  if [[ "$os" == "macos" ]]; then
+    if command -v brew >/dev/null 2>&1; then
+      info "Running: brew install glow"
+      brew install glow </dev/tty || warn "brew install glow failed"
+    else
+      warn "Homebrew not found. Install glow manually: https://github.com/charmbracelet/glow"
+    fi
+    return 0
+  fi
+
+  # Linux paths in preference order
+  if command -v apt-get >/dev/null 2>&1; then
+    # Try Charm's official apt repo (cleaner than snap, no daemon)
+    info "Adding Charm apt repo + installing glow…"
+    {
+      need_sudo mkdir -p /etc/apt/keyrings
+      curl -fsSL https://repo.charm.sh/apt/gpg.key | need_sudo gpg --dearmor --yes -o /etc/apt/keyrings/charm.gpg
+      echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" \
+        | need_sudo tee /etc/apt/sources.list.d/charm.list >/dev/null
+      need_sudo apt-get update -qq
+      need_sudo apt-get install -y glow
+    } </dev/tty 2>&1 | tail -5
+
+    if ! command -v glow >/dev/null 2>&1; then
+      warn "Charm apt install failed — trying snap"
+      if command -v snap >/dev/null 2>&1; then
+        need_sudo snap install glow </dev/tty 2>&1 | tail -3
+      fi
+    fi
+    return 0
+  fi
+
+  if command -v dnf >/dev/null 2>&1; then
+    info "Adding Charm yum repo + installing glow…"
+    {
+      echo '[charm]
+name=Charm
+baseurl=https://repo.charm.sh/yum/
+enabled=1
+gpgcheck=1
+gpgkey=https://repo.charm.sh/yum/gpg.key' | need_sudo tee /etc/yum.repos.d/charm.repo >/dev/null
+      need_sudo dnf install -y glow
+    } </dev/tty 2>&1 | tail -5
+    return 0
+  fi
+
+  if command -v snap >/dev/null 2>&1; then
+    info "Installing via snap…"
+    need_sudo snap install glow </dev/tty 2>&1 | tail -3
+    return 0
+  fi
+
+  warn "No supported package manager. Install glow manually: https://github.com/charmbracelet/glow"
 }
 
 
