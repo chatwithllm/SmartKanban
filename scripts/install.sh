@@ -109,6 +109,7 @@ ${C_BOLD}SmartKanban installer${C_RESET}
     upgrade     Pull latest, re-apply schema, rebuild server, restart — skips already-configured steps
     uninstall   Stop containers; optionally remove data, install dir, cron, Caddy config
     status      Print install state, container status, version and last upgrade time
+    explain     Browse slash commands (wiki mode — requires client install)
     (no args)   Auto-detect state and show interactive menu
 
   ${C_BOLD}Options:${C_RESET}
@@ -135,6 +136,9 @@ ${C_BOLD}SmartKanban installer${C_RESET}
 
     # Just show what's installed (both sides)
     ./scripts/install.sh status
+
+    # Tour all slash commands
+    ./scripts/install.sh explain
 
     # Via curl (non-interactive fresh server install with defaults)
     curl -fsSL https://raw.githubusercontent.com/chatwithllm/SmartKanban/main/scripts/install.sh | bash
@@ -767,6 +771,11 @@ do_install_client() {
   echo "    4. /kanban-start"
   echo
   echo "  Bridge docs: https://github.com/chatwithllm/notetaker-kanban"
+
+  echo
+  if ask_yn "Want a tour of the available slash commands?" "y"; then
+    do_explain_commands
+  fi
 }
 
 # ---------- do_install (server) ----------
@@ -1082,6 +1091,94 @@ EOF
   echo "  Troubleshooting: $INSTALL_DIR/docs/DEPLOYMENT.md#troubleshooting"
 }
 
+# ---------- do_explain_commands ----------
+
+do_explain_commands() {
+  step "Slash command reference (notetaker-kanban bridge)"
+
+  # Find bridge install
+  local bridge_dir=""
+  if [[ -L "$HOME/.claude/notetaker-kanban" ]]; then
+    bridge_dir="$(readlink "$HOME/.claude/notetaker-kanban" 2>/dev/null || true)"
+  fi
+
+  if [[ -z "$bridge_dir" || ! -d "$bridge_dir/commands" ]]; then
+    warn "Bridge not installed yet."
+    info "Run: install.sh client  to install the bridge first."
+    return 0
+  fi
+
+  echo
+  info "These commands run inside a Claude Code session (run 'claude' in any git repo first)."
+  echo
+
+  # Build list of command files
+  local cmd_files=()
+  while IFS= read -r f; do cmd_files+=("$f"); done < <(ls "$bridge_dir/commands/"*.md 2>/dev/null | sort)
+
+  if [[ ${#cmd_files[@]} -eq 0 ]]; then
+    warn "No commands found in $bridge_dir/commands/"
+    return 0
+  fi
+
+  while true; do
+    echo "${C_BOLD}Available slash commands:${C_RESET}"
+    local i=1
+    for f in "${cmd_files[@]}"; do
+      local base
+      base="$(basename "$f" .md)"
+      # Parse description from frontmatter (between first --- and second ---)
+      local desc
+      desc="$(awk '
+        /^---/ { in_fm = !in_fm; next }
+        in_fm && /^description:/ {
+          sub(/^description:[[:space:]]*"?/, "")
+          sub(/"$/, "")
+          print
+          exit
+        }
+      ' "$f")"
+      printf "  %2d. ${C_GREEN}/%s${C_RESET}  —  %s\n" "$i" "$base" "${desc:-<no description>}"
+      (( i++ ))
+    done
+    echo "   q. Quit tour"
+    echo
+    local choice
+    choice="$(ask "Pick a command to see details" "q")"
+    case "$choice" in
+      q|Q|"") info "Tour ended."; return 0 ;;
+      *[!0-9]*) warn "Not a number"; continue ;;
+      *)
+        if [[ "$choice" -lt 1 || "$choice" -gt ${#cmd_files[@]} ]]; then
+          warn "Out of range"; continue
+        fi
+        local sel="${cmd_files[$((choice - 1))]}"
+        local sel_base
+        sel_base="$(basename "$sel" .md)"
+        echo
+        echo "${C_BOLD}━━━ /$sel_base ━━━${C_RESET}"
+        echo
+        # Print body — everything after second '---' line (skip frontmatter)
+        awk '
+          /^---/ {
+            fm++
+            if (fm == 2) skip = 0
+            else if (fm < 2) skip = 1
+            next
+          }
+          !skip { print }
+        ' "$sel"
+        echo
+        echo "${C_BOLD}━━━ end /$sel_base ━━━${C_RESET}"
+        echo
+        if ! ask_yn "Back to command list?" "y"; then
+          return 0
+        fi
+        ;;
+    esac
+  done
+}
+
 # ---------- interactive menu (both sides) ----------
 
 interactive_menu() {
@@ -1115,6 +1212,11 @@ interactive_menu() {
     labels+=("Uninstall client (notetaker-kanban bridge)")
   fi
 
+  if [[ "$client_state" != "not-installed" ]]; then
+    options+=("explain_commands")
+    labels+=("Explore slash commands (wiki)")
+  fi
+
   options+=("status")
   labels+=("Status")
 
@@ -1146,6 +1248,7 @@ interactive_menu() {
     upgrade_client)   do_upgrade_client ;;
     uninstall_server) do_uninstall ;;
     uninstall_client) do_uninstall_client ;;
+    explain_commands) do_explain_commands ;;
     status)           do_status ;;
     bridge_docs)      do_print_bridge_docs ;;
     quit)             info "Quit."; exit 0 ;;
@@ -1188,7 +1291,7 @@ main() {
       SIDE="$1"
       ACTION="${2:-auto}"
       ;;
-    install|upgrade|uninstall|status|auto)
+    install|upgrade|uninstall|status|explain|auto)
       ACTION="$1"
       ;;
     -h|--help)
@@ -1205,7 +1308,7 @@ main() {
 
   # Validate second arg if SIDE was set
   case "$ACTION" in
-    install|upgrade|uninstall|status|auto) ;;
+    install|upgrade|uninstall|status|explain|auto) ;;
     -h|--help) usage; exit 0 ;;
     *) die "unknown action: $ACTION. Run with --help for usage." ;;
   esac
@@ -1218,6 +1321,7 @@ main() {
       upgrade)      do_upgrade ;;
       uninstall)    do_uninstall ;;
       status)       do_status ;;
+      explain)      do_explain_commands ;;
     esac
     return
   fi
@@ -1228,6 +1332,7 @@ main() {
       upgrade)      do_upgrade_client ;;
       uninstall)    do_uninstall_client ;;
       status)       do_status ;;
+      explain)      do_explain_commands ;;
     esac
     return
   fi
@@ -1236,6 +1341,11 @@ main() {
 
   if [[ "$ACTION" == "status" ]]; then
     do_status
+    return
+  fi
+
+  if [[ "$ACTION" == "explain" ]]; then
+    do_explain_commands
     return
   fi
 
@@ -1328,6 +1438,9 @@ main() {
       if ! $server_present && ! $client_present; then
         warn "Nothing installed to uninstall."
       fi
+      ;;
+    explain)
+      do_explain_commands
       ;;
   esac
 }
