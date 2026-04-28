@@ -268,15 +268,45 @@ cd server && PORT=8010 node --env-file=.env dist/index.js
 Fastify serves the built web SPA, with SPA fallback so `/my-day?token=…`
 resolves correctly.
 
-**Production (one-click install on a VPS):**
+**One-click installer (both server and client)**:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/chatwithllm/SmartKanban/main/scripts/install.sh | bash
 ```
 
-Walks you through Docker install, repo clone, env config (with prompts
+The same script handles two distinct audiences — it asks which you're
+setting up on first run:
+
+- **Server** — kanban backend (Docker + Postgres on a host machine).
+- **Client** — the [notetaker-kanban](https://github.com/chatwithllm/notetaker-kanban)
+  Claude Code bridge on a developer's laptop. Clones the bridge repo,
+  copies slash commands + hook into `~/.claude/`, and writes
+  `KANBAN_URL` + `KANBAN_TOKEN` into your shell rc.
+
+The installer auto-detects existing installs and presents the right options:
+
+| Run with | Behavior |
+|---|---|
+| `install.sh` (no arg) | Auto: prompt server-or-client on a clean machine; show menu when an install (server or client or both) is detected. |
+| `install.sh server` | Force server install. |
+| `install.sh client` | Force client (bridge) install. |
+| `install.sh upgrade` | Detects which side is installed locally, upgrades that. |
+| `install.sh uninstall` | Detects which side, gated step-by-step removal. Safe defaults — no data destroyed without explicit `y`. |
+| `install.sh status` | Non-modifying combined report — server (containers, /health) **and** client (bridge symlink, KANBAN_URL/TOKEN, live token probe). |
+| `install.sh --help` | Synopsis + examples. |
+
+Server side covers Docker install, repo clone, env config (with prompts
 for your domain + Telegram + AI keys), schema init, build, optional
-Caddy auto-HTTPS, and backups. Idempotent — safe to re-run.
+Caddy auto-HTTPS, backups, and a printable onboarding snippet for the
+notetaker-kanban bridge.
+
+Client side detects OS (macOS/Linux), checks deps (`git`, `curl`, `jq`),
+clones the bridge to `$HOME/.notetaker-kanban`, runs the bridge's own
+`install.sh`, prompts for KANBAN_URL + KANBAN_TOKEN, appends to your
+shell rc with `chmod 600`, and validates the token against the live
+server with a non-destructive probe (no kanban cards created).
+
+Idempotent — safe to re-run any of the above on either side.
 
 **Production (manual walkthrough)** — see
 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for a step-by-step guide from
@@ -471,6 +501,48 @@ Endpoints accepting `Authorization: Bearer <api-token>`:
 ```
 
 Cards now carry an optional `project: string` field; the list endpoint accepts `?project=<key>` for filtering.
+
+### notetaker-kanban (optional Claude Code bridge)
+
+If you use [Claude Code](https://claude.ai/code), the **notetaker-kanban**
+bridge auto-records dev work into SmartKanban — cards created from your
+git history, lifecycle tags from slash commands, and per-session activity
+summaries.
+
+**Per developer (one-time setup on each machine):**
+
+```bash
+git clone https://github.com/chatwithllm/notetaker-kanban.git ~/.notetaker-kanban
+cd ~/.notetaker-kanban
+./install.sh
+```
+
+Then in your shell rc (`~/.zshrc` / `~/.bashrc`):
+
+```bash
+export KANBAN_URL=https://your-kanban-host
+export KANBAN_TOKEN=<api-token from Settings → API tokens>
+```
+
+Reload terminal. In any git repo, in a Claude Code session:
+
+```
+/kanban-start              # creates card from branch history
+/kanban-doing              # move card to In Progress
+/kanban-deployed-local     # tag deployed-local
+/kanban-deployed-prod      # tag deployed-prod, status=done
+/kanban-feedback "<text>"  # append feedback
+/kanban-flush              # post session summary as activity entry
+```
+
+Cards land on this kanban tagged `project=<git-remote-or-folder>`. Use
+the SmartMirror `active-work` tile to surface in-flight cards on a wall
+display.
+
+Each user generates their **own** api token; tokens are scoped per user.
+Bridge runs locally — no daemon, no network beyond the kanban API.
+
+Full docs: https://github.com/chatwithllm/notetaker-kanban
 
 ### WebSocket events
 
