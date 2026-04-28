@@ -1135,10 +1135,27 @@ do_explain_commands() {
     echo
   fi
 
-  # Render via less when an interactive terminal is available, else cat.
-  if [[ "$TTY_AVAILABLE" == "true" ]] && command -v less >/dev/null 2>&1; then
-    # -R = render ANSI; -F = quit if fits one screen; -X = don't clear; -K = quit on Ctrl-C
-    if ! less -R -F -X -K "$wiki_path" </dev/tty 2>/dev/null; then
+  # Render order:
+  #   1) glow   — markdown renderer with bold/tables/code highlighting (preferred)
+  #   2) mdcat  — alternate markdown CLI renderer
+  #   3) less   — paged plain text (markdown source visible)
+  #   4) cat    — plain dump
+  if [[ "$TTY_AVAILABLE" == "true" ]]; then
+    if command -v glow >/dev/null 2>&1; then
+      if ! glow -p "$wiki_path" </dev/tty 2>/dev/null; then
+        cat "$wiki_path"
+      fi
+    elif command -v mdcat >/dev/null 2>&1; then
+      if ! mdcat --paginate "$wiki_path" </dev/tty 2>/dev/null; then
+        cat "$wiki_path"
+      fi
+    elif command -v less >/dev/null 2>&1; then
+      info "${C_YELLOW}Tip:${C_RESET} 'brew install glow' (macOS) or 'sudo apt install glow' (Linux) for prettier rendering."
+      echo
+      if ! less -R -F -X -K "$wiki_path" </dev/tty 2>/dev/null; then
+        cat "$wiki_path"
+      fi
+    else
       cat "$wiki_path"
     fi
   else
