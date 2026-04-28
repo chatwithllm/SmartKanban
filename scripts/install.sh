@@ -1096,20 +1096,45 @@ EOF
 do_explain_commands() {
   step "Slash command reference (notetaker-kanban bridge)"
 
-  # Find bridge install
+  # Resolve a directory containing command .md files. Three strategies, in order:
+  #   1) Local bridge install — ~/.claude/notetaker-kanban → cmds dir
+  #   2) Fallback — fetch from github raw to a temp dir
   local bridge_dir=""
+  local tmp_dir=""
   if [[ -L "$HOME/.claude/notetaker-kanban" ]]; then
     bridge_dir="$(readlink "$HOME/.claude/notetaker-kanban" 2>/dev/null || true)"
   fi
 
   if [[ -z "$bridge_dir" || ! -d "$bridge_dir/commands" ]]; then
-    warn "Bridge not installed yet."
-    info "Run: install.sh client  to install the bridge first."
-    return 0
+    info "Bridge not installed locally — fetching command index from github…"
+    tmp_dir="$(mktemp -d -t notetaker-wiki.XXXXXX)"
+    trap '[[ -n "${tmp_dir:-}" ]] && rm -rf "$tmp_dir"' RETURN
+    local raw_base="https://raw.githubusercontent.com/chatwithllm/notetaker-kanban/main"
+    # Fetch directory listing via GitHub API (no auth needed for public repo)
+    local listing
+    listing="$(curl -fsSL "https://api.github.com/repos/chatwithllm/notetaker-kanban/contents/commands" 2>/dev/null || true)"
+    if [[ -z "$listing" ]]; then
+      warn "Could not reach github API. Install the bridge locally for offline browsing:"
+      info "  install.sh client"
+      return 0
+    fi
+    mkdir -p "$tmp_dir/commands"
+    # Parse names ending in .md
+    local names
+    names="$(echo "$listing" | grep -oE '"name":[[:space:]]*"[^"]+\.md"' | cut -d'"' -f4)"
+    while IFS= read -r name; do
+      [[ -z "$name" ]] && continue
+      curl -fsSL "$raw_base/commands/$name" -o "$tmp_dir/commands/$name" 2>/dev/null || true
+    done <<< "$names"
+    bridge_dir="$tmp_dir"
+    info "Fetched $(ls "$tmp_dir/commands/" 2>/dev/null | wc -l | tr -d ' ') commands"
   fi
 
   echo
   info "These commands run inside a Claude Code session (run 'claude' in any git repo first)."
+  if [[ -n "$tmp_dir" ]]; then
+    info "${C_YELLOW}Tip:${C_RESET} install the bridge with 'install.sh client' to run them."
+  fi
   echo
 
   # Build list of command files
@@ -1212,10 +1237,9 @@ interactive_menu() {
     labels+=("Uninstall client (notetaker-kanban bridge)")
   fi
 
-  if [[ "$client_state" != "not-installed" ]]; then
-    options+=("explain_commands")
-    labels+=("Explore slash commands (wiki)")
-  fi
+  # Wiki always shown — falls back to github raw when bridge not installed locally
+  options+=("explain_commands")
+  labels+=("Explore slash commands (wiki)")
 
   options+=("status")
   labels+=("Status")
