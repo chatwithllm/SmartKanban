@@ -1135,36 +1135,113 @@ do_explain_commands() {
     echo
   fi
 
-  # Render order:
-  #   1) glow   — markdown renderer with bold/tables/code highlighting (preferred)
-  #   2) mdcat  — alternate markdown CLI renderer
-  #   3) less   — paged plain text (markdown source visible)
-  #   4) cat    — plain dump
-  if [[ "$TTY_AVAILABLE" == "true" ]]; then
-    # If glow is missing, offer to install it before falling through
-    if ! command -v glow >/dev/null 2>&1 && ! command -v mdcat >/dev/null 2>&1; then
-      try_install_glow
-    fi
+  if [[ "$TTY_AVAILABLE" != "true" ]]; then
+    cat "$wiki_path"
+    return 0
+  fi
 
-    if command -v glow >/dev/null 2>&1; then
-      if ! glow -p "$wiki_path" </dev/tty 2>/dev/null; then
-        cat "$wiki_path"
-      fi
-    elif command -v mdcat >/dev/null 2>&1; then
-      if ! mdcat --paginate "$wiki_path" </dev/tty 2>/dev/null; then
-        cat "$wiki_path"
-      fi
-    elif command -v less >/dev/null 2>&1; then
-      if ! less -R -F -X -K "$wiki_path" </dev/tty 2>/dev/null; then
-        cat "$wiki_path"
-      fi
-    else
-      cat "$wiki_path"
-    fi
+  # Offer renderer install if absent
+  if ! command -v glow >/dev/null 2>&1 && ! command -v mdcat >/dev/null 2>&1; then
+    try_install_glow
+  fi
+
+  echo
+  info "Walkthrough mode: I'll show ${C_BOLD}one command at a time${C_RESET}."
+  info "Press ${C_BOLD}[enter]${C_RESET} for next, ${C_BOLD}a${C_RESET} for all-at-once dump, ${C_BOLD}q${C_RESET} to quit."
+  echo
+  read -r -p "  Press [enter] to start: " _start </dev/tty
+  if [[ "$_start" == "q" ]]; then
+    return 0
+  fi
+  if [[ "$_start" == "a" ]]; then
+    _explain_dump_full "$wiki_path"
+    return 0
+  fi
+
+  _explain_walkthrough "$wiki_path"
+}
+
+# _explain_dump_full — render entire WIKI.md at once (legacy "dump" behavior)
+_explain_dump_full() {
+  local wiki_path="$1"
+  if command -v glow >/dev/null 2>&1; then
+    glow -p "$wiki_path" </dev/tty 2>/dev/null || cat "$wiki_path"
+  elif command -v mdcat >/dev/null 2>&1; then
+    mdcat --paginate "$wiki_path" </dev/tty 2>/dev/null || cat "$wiki_path"
+  elif command -v less >/dev/null 2>&1; then
+    less -R -F -X -K "$wiki_path" </dev/tty 2>/dev/null || cat "$wiki_path"
   else
     cat "$wiki_path"
   fi
-  return 0
+}
+
+# _explain_walkthrough — split WIKI.md by per-command sections (#### `/kanban-…`)
+# and show one at a time. User controls advance.
+_explain_walkthrough() {
+  local wiki_path="$1"
+  local tmpdir
+  tmpdir="$(mktemp -d -t notetaker-walk.XXXXXX)"
+  trap 'rm -rf "$tmpdir"' RETURN
+
+  # Split: every `#### ` heading starts a new section file. Skip preamble.
+  awk -v dir="$tmpdir" '
+    /^#### / {
+      n++
+      file = sprintf("%s/cmd_%03d.md", dir, n)
+      print > file
+      next
+    }
+    n > 0 { print > file }
+  ' "$wiki_path"
+
+  local -a files=()
+  local f
+  for f in "$tmpdir"/cmd_*.md; do
+    [[ -f "$f" ]] && files+=("$f")
+  done
+
+  if (( ${#files[@]} == 0 )); then
+    warn "Could not parse per-command sections — falling back to full dump."
+    _explain_dump_full "$wiki_path"
+    return 0
+  fi
+
+  local total=${#files[@]}
+  local i=0
+  while (( i < total )); do
+    f="${files[$i]}"
+    echo
+    info "── Command $((i+1)) of $total ──"
+    echo
+    if command -v glow >/dev/null 2>&1; then
+      glow "$f" </dev/tty 2>/dev/null || cat "$f"
+    elif command -v mdcat >/dev/null 2>&1; then
+      mdcat "$f" </dev/tty 2>/dev/null || cat "$f"
+    else
+      cat "$f"
+    fi
+    echo
+    local ans
+    read -r -p "  [enter]=next  [b]=back  [a]=dump rest  [q]=quit: " ans </dev/tty
+    case "$ans" in
+      q|Q) info "Exiting walkthrough."; return 0 ;;
+      a|A)
+        local rest_tmp
+        rest_tmp="$(mktemp -t notetaker-rest.XXXXXX)"
+        local j
+        for (( j=i; j<total; j++ )); do cat "${files[$j]}" >> "$rest_tmp"; done
+        _explain_dump_full "$rest_tmp"
+        rm -f "$rest_tmp"
+        return 0
+        ;;
+      b|B) (( i > 0 )) && (( i-- )) || info "Already at first command." ;;
+      *)   (( i++ )) ;;
+    esac
+  done
+
+  echo
+  ok "Done — that's every command."
+  info "Re-run anytime: ${C_BOLD}install.sh explain${C_RESET}"
 }
 
 # try_install_glow — offer to install the markdown renderer for prettier wiki rendering.
