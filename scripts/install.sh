@@ -432,14 +432,16 @@ do_status() {
       if [[ -n "${KANBAN_URL:-}" && -n "${KANBAN_TOKEN:-}" ]]; then
         local code
         code="$(/usr/bin/curl -s -o /dev/null -w "%{http_code}" \
-          -X POST "$KANBAN_URL/api/cards" \
+          -X POST "$KANBAN_URL/api/cards/00000000-0000-0000-0000-000000000000/activity" \
           -H "authorization: Bearer $KANBAN_TOKEN" \
           -H "content-type: application/json" \
-          -d '{"title":"__probe_only__"}' 2>/dev/null || echo "000")"
+          -d '{"type":"probe","body":"probe"}' 2>/dev/null || echo "000")"
         case "$code" in
-          201) ok "  test connection: OK ($code) — token valid" ;;
-          401|403) warn "  test connection: $code — token invalid or wrong scope" ;;
-          *) warn "  test connection: $code — server unreachable or unhealthy" ;;
+          404) ok "  test connection: OK (token valid, api-scope)" ;;
+          401) warn "  test connection: 401 — token invalid" ;;
+          403) warn "  test connection: 403 — token wrong scope" ;;
+          000) warn "  test connection: unreachable — server down or network issue" ;;
+          *)   warn "  test connection: HTTP $code" ;;
         esac
       fi
       ;;
@@ -735,18 +737,25 @@ do_install_client() {
     echo "export KANBAN_TOKEN=$KANBAN_TOKEN"
   } >> "$RC_FILE"
 
+  chmod 600 "$RC_FILE" 2>/dev/null || warn "could not chmod 600 $RC_FILE — token is in a world-readable file"
+
   ok "appended KANBAN_URL + KANBAN_TOKEN to $RC_FILE"
 
   # Verify token
   info "testing token against $KANBAN_URL …"
-  if /usr/bin/curl -sf -X POST "$KANBAN_URL/api/cards" \
-      -H "authorization: Bearer $KANBAN_TOKEN" \
-      -H 'content-type: application/json' \
-      -d '{"title":"__bridge_install_probe__","project":"probe"}' >/dev/null 2>&1; then
-    ok "token works"
-  else
-    warn "token did NOT validate. Check token/URL and try again."
-  fi
+  local code
+  code="$(/usr/bin/curl -s -o /dev/null -w "%{http_code}" \
+    -X POST "$KANBAN_URL/api/cards/00000000-0000-0000-0000-000000000000/activity" \
+    -H "authorization: Bearer $KANBAN_TOKEN" \
+    -H "content-type: application/json" \
+    -d '{"type":"probe","body":"probe"}' 2>/dev/null || echo "000")"
+  case "$code" in
+    404) ok "token works (api-scope, server reachable)" ;;
+    401) warn "token rejected (401) — token invalid" ;;
+    403) warn "token wrong scope (403) — generate api-scope token, not mirror-scope" ;;
+    000) warn "server unreachable at $KANBAN_URL" ;;
+    *)   warn "unexpected probe response: HTTP $code" ;;
+  esac
 
   step "Bridge installed"
   echo "  Next steps:"
