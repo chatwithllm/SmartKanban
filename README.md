@@ -268,29 +268,45 @@ cd server && PORT=8010 node --env-file=.env dist/index.js
 Fastify serves the built web SPA, with SPA fallback so `/my-day?token=…`
 resolves correctly.
 
-**Production (one-click install on a VPS):**
+**One-click installer (both server and client)**:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/chatwithllm/SmartKanban/main/scripts/install.sh | bash
 ```
 
-Walks you through Docker install, repo clone, env config (with prompts
-for your domain + Telegram + AI keys), schema init, build, optional
-Caddy auto-HTTPS, backups, and a printable onboarding snippet for the
-notetaker-kanban Claude Code bridge.
+The same script handles two distinct audiences — it asks which you're
+setting up on first run:
 
-The installer auto-detects state on each invocation:
+- **Server** — kanban backend (Docker + Postgres on a host machine).
+- **Client** — the [notetaker-kanban](https://github.com/chatwithllm/notetaker-kanban)
+  Claude Code bridge on a developer's laptop. Clones the bridge repo,
+  copies slash commands + hook into `~/.claude/`, and writes
+  `KANBAN_URL` + `KANBAN_TOKEN` into your shell rc.
+
+The installer auto-detects existing installs and presents the right options:
 
 | Run with | Behavior |
 |---|---|
-| `install.sh` (no arg) | Auto: `new` → fresh install. Existing → menu (upgrade / uninstall / re-print bridge docs / status). |
-| `install.sh install` | Force fresh install path. |
-| `install.sh upgrade` | Pull latest, re-apply schema, rebuild + restart server. No-op if already up-to-date. |
-| `install.sh uninstall` | Step-by-step gated removal: stop containers, optional db volume, optional install dir, cron entry, Caddy config. Safe defaults — no data destroyed without explicit `y`. |
-| `install.sh status` | Non-modifying state report: install dir, git SHA, container state, `/health` check. |
+| `install.sh` (no arg) | Auto: prompt server-or-client on a clean machine; show menu when an install (server or client or both) is detected. |
+| `install.sh server` | Force server install. |
+| `install.sh client` | Force client (bridge) install. |
+| `install.sh upgrade` | Detects which side is installed locally, upgrades that. |
+| `install.sh uninstall` | Detects which side, gated step-by-step removal. Safe defaults — no data destroyed without explicit `y`. |
+| `install.sh status` | Non-modifying combined report — server (containers, /health) **and** client (bridge symlink, KANBAN_URL/TOKEN, live token probe). |
 | `install.sh --help` | Synopsis + examples. |
 
-Idempotent — safe to re-run any of the above.
+Server side covers Docker install, repo clone, env config (with prompts
+for your domain + Telegram + AI keys), schema init, build, optional
+Caddy auto-HTTPS, backups, and a printable onboarding snippet for the
+notetaker-kanban bridge.
+
+Client side detects OS (macOS/Linux), checks deps (`git`, `curl`, `jq`),
+clones the bridge to `$HOME/.notetaker-kanban`, runs the bridge's own
+`install.sh`, prompts for KANBAN_URL + KANBAN_TOKEN, appends to your
+shell rc with `chmod 600`, and validates the token against the live
+server with a non-destructive probe (no kanban cards created).
+
+Idempotent — safe to re-run any of the above on either side.
 
 **Production (manual walkthrough)** — see
 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for a step-by-step guide from
