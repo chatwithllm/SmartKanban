@@ -33,10 +33,12 @@ die()    { printf "${C_RED}✗ %s${C_RESET}\n" "$*" >&2; exit 1; }
 
 # When run via `curl | bash`, stdin is the script itself — `read` would
 # consume script lines as user input. Always read from /dev/tty.
-if [[ ! -t 0 || ! -e /dev/tty ]]; then
-  TTY_AVAILABLE=false
-else
+# We only need /dev/tty to be readable; stdin being non-TTY (because the
+# script is piped from curl) is expected and not a reason to skip prompts.
+if [[ -e /dev/tty ]] && { : >/dev/tty; } 2>/dev/null; then
   TTY_AVAILABLE=true
+else
+  TTY_AVAILABLE=false
 fi
 
 ask() {
