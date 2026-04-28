@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-INSTALLER_VERSION="2026-04-27.walkthrough-v4"
+INSTALLER_VERSION="2026-04-27.wiki-menu-v5"
 
 # ---------- colour / output helpers ----------
 
@@ -1148,20 +1148,7 @@ do_explain_commands() {
     try_install_glow
   fi
 
-  echo
-  info "Walkthrough mode: I'll show ${C_BOLD}one command at a time${C_RESET}."
-  info "Press ${C_BOLD}[enter]${C_RESET} for next, ${C_BOLD}a${C_RESET} for all-at-once dump, ${C_BOLD}q${C_RESET} to quit."
-  echo
-  read -r -p "  Press [enter] to start: " _start </dev/tty
-  if [[ "$_start" == "q" ]]; then
-    return 0
-  fi
-  if [[ "$_start" == "a" ]]; then
-    _explain_dump_full "$wiki_path"
-    return 0
-  fi
-
-  _explain_walkthrough "$wiki_path"
+  _explain_menu "$wiki_path"
 }
 
 # _explain_dump_full — render entire WIKI.md at once (legacy "dump" behavior)
@@ -1178,28 +1165,32 @@ _explain_dump_full() {
   fi
 }
 
-# _explain_walkthrough — split WIKI.md by per-command sections (#### `/kanban-…`)
-# and show one at a time. User controls advance.
-_explain_walkthrough() {
+# _explain_menu — split WIKI.md per-command (#### `/kanban-…`), show numbered
+# list, user picks one, render it, return to list. Loop until quit.
+_explain_menu() {
   local wiki_path="$1"
-  # Use a global so cleanup via trap can see it regardless of locals scope.
-  # `set -u` + RETURN trap referencing a local would fail with "unbound variable".
+  # Globals so RETURN trap survives `set -u` after locals destroyed.
   WALKTHROUGH_TMPDIR="$(mktemp -d -t notetaker-walk.XXXXXX)"
   local tmpdir="$WALKTHROUGH_TMPDIR"
   trap 'rm -rf "${WALKTHROUGH_TMPDIR:-}"; unset WALKTHROUGH_TMPDIR' RETURN
 
-  # Split: every `#### ` heading starts a new section file. Skip preamble.
+  # Split per `#### ` heading; capture command name from heading text.
   awk -v dir="$tmpdir" '
     /^#### / {
       n++
       file = sprintf("%s/cmd_%03d.md", dir, n)
+      name = $0
+      sub(/^#### +/, "", name)
+      gsub(/`/, "", name)        # strip backticks
+      gsub(/[<>]/, "", name)     # strip angle brackets in placeholders
+      printf "%s\n", name > sprintf("%s/name_%03d.txt", dir, n)
       print > file
       next
     }
     n > 0 { print > file }
   ' "$wiki_path"
 
-  local -a files=()
+  local -a files=() names=()
   local f
   for f in "$tmpdir"/cmd_*.md; do
     [[ -f "$f" ]] && files+=("$f")
@@ -1211,43 +1202,60 @@ _explain_walkthrough() {
     return 0
   fi
 
-  local total=${#files[@]}
-  local i=0
-  while (( i < total )); do
-    f="${files[$i]}"
-    echo
-    info "── Command $((i+1)) of $total ──"
-    echo
-    if command -v glow >/dev/null 2>&1; then
-      glow "$f" </dev/tty 2>/dev/null || cat "$f"
-    elif command -v mdcat >/dev/null 2>&1; then
-      mdcat "$f" </dev/tty 2>/dev/null || cat "$f"
+  local idx
+  for f in "${files[@]}"; do
+    idx="${f##*cmd_}"; idx="${idx%.md}"
+    local name_file="$tmpdir/name_${idx}.txt"
+    if [[ -f "$name_file" ]]; then
+      names+=("$(<"$name_file")")
     else
-      cat "$f"
+      names+=("(unnamed)")
     fi
-    echo
-    local ans
-    read -r -p "  [enter]=next  [b]=back  [a]=dump rest  [q]=quit: " ans </dev/tty
-    case "$ans" in
-      q|Q) info "Exiting walkthrough."; return 0 ;;
-      a|A)
-        local rest_tmp
-        rest_tmp="$(mktemp -t notetaker-rest.XXXXXX)"
-        local j
-        for (( j=i; j<total; j++ )); do cat "${files[$j]}" >> "$rest_tmp"; done
-        _explain_dump_full "$rest_tmp"
-        rm -f "$rest_tmp"
-        return 0
-        ;;
-      b|B) (( i > 0 )) && (( i-- )) || info "Already at first command." ;;
-      *)   (( i++ )) ;;
-    esac
   done
 
-  echo
-  ok "Done — that's every command."
-  info "Re-run anytime:"
-  info "  ${C_BOLD}curl -fsSL https://raw.githubusercontent.com/chatwithllm/SmartKanban/main/scripts/install.sh | bash -s -- explain${C_RESET}"
+  local total=${#files[@]}
+  while true; do
+    echo
+    info "${C_BOLD}Slash command index${C_RESET} ($total commands)"
+    echo
+    local i
+    for (( i=0; i<total; i++ )); do
+      printf "    %2d) %s\n" "$((i+1))" "${names[$i]}"
+    done
+    echo
+    info "    a) Show all (full WIKI.md dump)"
+    info "    q) Quit"
+    echo
+
+    local ans
+    read -r -p "  Pick a command [1-$total / a / q]: " ans </dev/tty
+    case "$ans" in
+      ""|q|Q) info "Exiting wiki."; return 0 ;;
+      a|A)    _explain_dump_full "$wiki_path"; continue ;;
+    esac
+
+    if ! [[ "$ans" =~ ^[0-9]+$ ]] || (( ans < 1 || ans > total )); then
+      warn "Invalid choice: $ans"
+      continue
+    fi
+
+    local sel="${files[$((ans-1))]}"
+    echo
+    info "── ${names[$((ans-1))]} ──"
+    echo
+    if command -v glow >/dev/null 2>&1; then
+      glow "$sel" </dev/tty 2>/dev/null || cat "$sel"
+    elif command -v mdcat >/dev/null 2>&1; then
+      mdcat "$sel" </dev/tty 2>/dev/null || cat "$sel"
+    else
+      cat "$sel"
+    fi
+    echo
+    read -r -p "  [enter]=back to list, [q]=quit: " ans </dev/tty
+    case "$ans" in
+      q|Q) info "Exiting wiki."; return 0 ;;
+    esac
+  done
 }
 
 # try_install_glow — offer to install the markdown renderer for prettier wiki rendering.
