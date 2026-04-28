@@ -1096,113 +1096,57 @@ EOF
 do_explain_commands() {
   step "Slash command reference (notetaker-kanban bridge)"
 
-  # Resolve a directory containing command .md files. Three strategies, in order:
-  #   1) Local bridge install — ~/.claude/notetaker-kanban → cmds dir
-  #   2) Fallback — fetch from github raw to a temp dir
-  local bridge_dir=""
-  local tmp_dir=""
+  # Strategy: fetch WIKI.md (plain-english reference) from bridge repo and
+  # render it via less (or cat). WIKI.md has: lifecycle primer, story
+  # walkthrough, cheatsheet table, per-command reference, FAQ.
+  #
+  # Local bridge first, then github raw fallback.
+  local wiki_path=""
+  local cleanup_tmp=""
+
+  # Try local bridge install
   if [[ -L "$HOME/.claude/notetaker-kanban" ]]; then
+    local bridge_dir
     bridge_dir="$(readlink "$HOME/.claude/notetaker-kanban" 2>/dev/null || true)"
+    if [[ -n "$bridge_dir" && -f "$bridge_dir/WIKI.md" ]]; then
+      wiki_path="$bridge_dir/WIKI.md"
+    fi
   fi
 
-  if [[ -z "$bridge_dir" || ! -d "$bridge_dir/commands" ]]; then
-    info "Bridge not installed locally — fetching command index from github…"
-    tmp_dir="$(mktemp -d -t notetaker-wiki.XXXXXX)"
-    trap '[[ -n "${tmp_dir:-}" ]] && rm -rf "$tmp_dir"' RETURN
-    local raw_base="https://raw.githubusercontent.com/chatwithllm/notetaker-kanban/main"
-    # Fetch directory listing via GitHub API (no auth needed for public repo)
-    local listing
-    listing="$(curl -fsSL "https://api.github.com/repos/chatwithllm/notetaker-kanban/contents/commands" 2>/dev/null || true)"
-    if [[ -z "$listing" ]]; then
-      warn "Could not reach github API. Install the bridge locally for offline browsing:"
+  # Fallback: fetch from github raw
+  if [[ -z "$wiki_path" ]]; then
+    info "Bridge not installed locally — fetching wiki from github…"
+    cleanup_tmp="$(mktemp -t notetaker-wiki.XXXXXX)"
+    trap '[[ -n "${cleanup_tmp:-}" ]] && rm -f "$cleanup_tmp"' RETURN
+    if curl -fsSL "https://raw.githubusercontent.com/chatwithllm/notetaker-kanban/main/WIKI.md" \
+        -o "$cleanup_tmp" 2>/dev/null && [[ -s "$cleanup_tmp" ]]; then
+      wiki_path="$cleanup_tmp"
+    else
+      warn "Could not fetch WIKI.md from github. Install the bridge locally:"
       info "  install.sh client"
       return 0
     fi
-    mkdir -p "$tmp_dir/commands"
-    # Parse names ending in .md
-    local names
-    names="$(echo "$listing" | grep -oE '"name":[[:space:]]*"[^"]+\.md"' | cut -d'"' -f4)"
-    while IFS= read -r name; do
-      [[ -z "$name" ]] && continue
-      curl -fsSL "$raw_base/commands/$name" -o "$tmp_dir/commands/$name" 2>/dev/null || true
-    done <<< "$names"
-    bridge_dir="$tmp_dir"
-    info "Fetched $(ls "$tmp_dir/commands/" 2>/dev/null | wc -l | tr -d ' ') commands"
   fi
 
+  # Render via less if available (search + page navigation), else cat.
   echo
-  info "These commands run inside a Claude Code session (run 'claude' in any git repo first)."
-  if [[ -n "$tmp_dir" ]]; then
-    info "${C_YELLOW}Tip:${C_RESET} install the bridge with 'install.sh client' to run them."
-  fi
-  echo
-
-  # Build list of command files
-  local cmd_files=()
-  while IFS= read -r f; do cmd_files+=("$f"); done < <(ls "$bridge_dir/commands/"*.md 2>/dev/null | sort)
-
-  if [[ ${#cmd_files[@]} -eq 0 ]]; then
-    warn "No commands found in $bridge_dir/commands/"
-    return 0
-  fi
-
-  while true; do
-    echo "${C_BOLD}Available slash commands:${C_RESET}"
-    local i=1
-    for f in "${cmd_files[@]}"; do
-      local base
-      base="$(basename "$f" .md)"
-      # Parse description from frontmatter (between first --- and second ---)
-      local desc
-      desc="$(awk '
-        /^---/ { in_fm = !in_fm; next }
-        in_fm && /^description:/ {
-          sub(/^description:[[:space:]]*"?/, "")
-          sub(/"$/, "")
-          print
-          exit
-        }
-      ' "$f")"
-      printf "  %2d. ${C_GREEN}/%s${C_RESET}  —  %s\n" "$i" "$base" "${desc:-<no description>}"
-      (( i++ ))
-    done
-    echo "   q. Quit tour"
+  if [[ -n "$cleanup_tmp" ]]; then
+    info "${C_YELLOW}Tip:${C_RESET} install the bridge with 'install.sh client' to actually run these commands."
     echo
-    local choice
-    choice="$(ask "Pick a command to see details" "q")"
-    case "$choice" in
-      q|Q|"") info "Tour ended."; return 0 ;;
-      *[!0-9]*) warn "Not a number"; continue ;;
-      *)
-        if [[ "$choice" -lt 1 || "$choice" -gt ${#cmd_files[@]} ]]; then
-          warn "Out of range"; continue
-        fi
-        local sel="${cmd_files[$((choice - 1))]}"
-        local sel_base
-        sel_base="$(basename "$sel" .md)"
-        echo
-        echo "${C_BOLD}━━━ /$sel_base ━━━${C_RESET}"
-        echo
-        # Print body — everything after second '---' line (skip frontmatter)
-        awk '
-          /^---/ {
-            fm++
-            if (fm == 2) skip = 0
-            else if (fm < 2) skip = 1
-            next
-          }
-          !skip { print }
-        ' "$sel"
-        echo
-        echo "${C_BOLD}━━━ end /$sel_base ━━━${C_RESET}"
-        echo
-        if ! ask_yn "Back to command list?" "y"; then
-          return 0
-        fi
-        ;;
-    esac
-  done
+  fi
+
+  # Render via less when an interactive terminal is available, else cat.
+  if [[ "$TTY_AVAILABLE" == "true" ]] && command -v less >/dev/null 2>&1; then
+    # -R = render ANSI; -F = quit if fits one screen; -X = don't clear; -K = quit on Ctrl-C
+    if ! less -R -F -X -K "$wiki_path" </dev/tty 2>/dev/null; then
+      cat "$wiki_path"
+    fi
+  else
+    cat "$wiki_path"
+  fi
+  return 0
 }
+
 
 # ---------- interactive menu (both sides) ----------
 
