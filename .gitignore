@@ -23,3 +23,6 @@ logs/security/
 
 # Superpowers brainstorm session artifacts
 .superpowers/
+
+# notetaker-kanban bridge buffer/state — generated per-clone, never commit
+.kanban/
