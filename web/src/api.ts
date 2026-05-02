@@ -1,4 +1,4 @@
-import type { ActivityEntry, ApiToken, Card, KnowledgeItem, KnowledgeVisibility, MirrorToken, ReviewData, Scope, Status, Template, User } from './types.ts';
+import type { AiSuggestion, ApiToken, Card, CardEvent, KnowledgeItem, KnowledgeVisibility, MirrorToken, ReviewData, Scope, Status, Template, User } from './types.ts';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -118,7 +118,12 @@ export const api = {
   permanentDeleteCard: (id: string) =>
     req<void>(`/api/cards/${id}/permanent`, { method: 'DELETE' }),
   purgeArchived: () => req<{ deleted: number }>('/api/cards/archived/purge', json({})),
-  cardActivity: (id: string) => req<ActivityEntry[]>(`/api/cards/${id}/activity`),
+  cardEvents: (id: string) => req<CardEvent[]>(`/api/cards/${id}/events`),
+  postMessage: (id: string, content: string) =>
+    req<CardEvent>(`/api/cards/${id}/messages`, json({ content })),
+  markRead: (id: string, lastReadId: string) =>
+    req<void>(`/api/cards/${id}/events/read`, { ...json({ last_read_id: parseInt(lastReadId, 10) }), method: 'PUT' }),
+  unreadCounts: () => req<Record<string, number>>('/api/messages/unread'),
 
   moveCard: (id: string, status: Status, position: number) =>
     api.updateCard(id, { status, position } as Partial<Card>),
