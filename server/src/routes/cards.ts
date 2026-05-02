@@ -8,7 +8,7 @@ import {
   type Scope,
   type Status,
   canUserSeeCard,
-  getCardActivity,
+  getCardEvents,
   isStatus,
   listArchivedCards,
   listCards,
@@ -223,7 +223,7 @@ export async function cardRoutes(app: FastifyInstance) {
       if (!(await canUserSeeCard(req.user!.id, id))) {
         return reply.code(404).send({ error: 'not found' });
       }
-      return getCardActivity(id);
+      return getCardEvents(id);
     },
   );
 
