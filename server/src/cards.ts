@@ -124,12 +124,21 @@ export async function listCards(
   return rows;
 }
 
-export type ActivityEntry = {
+export type AiSuggestion = {
+  label: string;
+  action: 'update_status' | 'set_due_date' | 'assign_user' | 'create_card';
+  params: Record<string, unknown>;
+};
+
+export type CardEvent = {
   id: string;
   actor_id: string | null;
   card_id: string | null;
-  action: string;
+  action: string | null;
   details: Record<string, unknown>;
+  entry_type: 'system' | 'message' | 'ai';
+  content: string | null;
+  ai_suggestions: AiSuggestion[] | null;
   created_at: string;
   actor_name: string | null;
 };
@@ -162,16 +171,17 @@ export async function listArchivedCards(userId: string): Promise<Card[]> {
   return rows;
 }
 
-export async function getCardActivity(cardId: string): Promise<ActivityEntry[]> {
-  const { rows } = await pool.query<ActivityEntry>(
+export async function getCardEvents(cardId: string): Promise<CardEvent[]> {
+  const { rows } = await pool.query<CardEvent>(
     `
     SELECT
-      al.id, al.actor_id, al.card_id, al.action, al.details, al.created_at,
+      ce.id::text, ce.actor_id, ce.card_id, ce.action, ce.details, ce.created_at,
+      ce.entry_type, ce.content, ce.ai_suggestions,
       u.name AS actor_name
-    FROM activity_log al
-    LEFT JOIN users u ON u.id = al.actor_id
-    WHERE al.card_id = $1
-    ORDER BY al.created_at DESC
+    FROM card_events ce
+    LEFT JOIN users u ON u.id = ce.actor_id
+    WHERE ce.card_id = $1
+    ORDER BY ce.created_at ASC
     `,
     [cardId],
   );
@@ -185,7 +195,93 @@ export async function logActivity(
   details: Record<string, unknown> = {},
 ): Promise<void> {
   await pool.query(
-    `INSERT INTO activity_log (actor_id, card_id, action, details) VALUES ($1, $2, $3, $4)`,
+    `INSERT INTO card_events (actor_id, card_id, action, details) VALUES ($1, $2, $3, $4)`,
     [actorId, cardId, action, details],
   );
+}
+
+export async function postCardMessage(
+  cardId: string,
+  userId: string,
+  content: string,
+): Promise<CardEvent> {
+  const { rows } = await pool.query<{ id: string }>(
+    `INSERT INTO card_events (actor_id, card_id, entry_type, content)
+     VALUES ($1, $2, 'message', $3)
+     RETURNING id::text`,
+    [userId, cardId, content],
+  );
+  const id = rows[0]!.id;
+  const ev = await pool.query<CardEvent>(
+    `SELECT ce.id::text, ce.actor_id, ce.card_id, ce.action, ce.details, ce.created_at,
+            ce.entry_type, ce.content, ce.ai_suggestions,
+            u.name AS actor_name
+     FROM card_events ce LEFT JOIN users u ON u.id = ce.actor_id
+     WHERE ce.id = $1`,
+    [id],
+  );
+  return ev.rows[0]!;
+}
+
+export async function postAiEvent(
+  cardId: string,
+  content: string,
+  aiSuggestions: AiSuggestion[] | null,
+): Promise<CardEvent> {
+  const { rows } = await pool.query<{ id: string }>(
+    `INSERT INTO card_events (card_id, entry_type, content, ai_suggestions)
+     VALUES ($1, 'ai', $2, $3)
+     RETURNING id::text`,
+    [cardId, content, aiSuggestions ? JSON.stringify(aiSuggestions) : null],
+  );
+  const id = rows[0]!.id;
+  const ev = await pool.query<CardEvent>(
+    `SELECT ce.id::text, ce.actor_id, ce.card_id, ce.action, ce.details, ce.created_at,
+            ce.entry_type, ce.content, ce.ai_suggestions,
+            u.name AS actor_name
+     FROM card_events ce LEFT JOIN users u ON u.id = ce.actor_id
+     WHERE ce.id = $1`,
+    [id],
+  );
+  return ev.rows[0]!;
+}
+
+export async function markCardEventsRead(
+  cardId: string,
+  userId: string,
+  lastReadId: number,
+): Promise<void> {
+  await pool.query(
+    `INSERT INTO card_event_reads (card_id, user_id, last_read_id)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (card_id, user_id) DO UPDATE SET last_read_id = GREATEST(card_event_reads.last_read_id, $3)`,
+    [cardId, userId, lastReadId],
+  );
+}
+
+export async function getUnreadCounts(userId: string): Promise<Record<string, number>> {
+  const { rows } = await pool.query<{ card_id: string; cnt: string }>(
+    `
+    SELECT ce.card_id::text, COUNT(*)::text AS cnt
+    FROM card_events ce
+    WHERE ce.entry_type IN ('message', 'ai')
+      AND (ce.actor_id IS NULL OR ce.actor_id::text != $1)
+      AND ce.id > COALESCE(
+        (SELECT last_read_id FROM card_event_reads
+         WHERE card_id = ce.card_id AND user_id = $1::uuid),
+        0
+      )
+      AND (
+        EXISTS (SELECT 1 FROM card_assignees WHERE card_id = ce.card_id AND user_id = $1::uuid)
+        OR EXISTS (SELECT 1 FROM card_shares    WHERE card_id = ce.card_id AND user_id = $1::uuid)
+        OR EXISTS (SELECT 1 FROM cards WHERE id = ce.card_id AND created_by = $1::uuid)
+        OR NOT EXISTS (SELECT 1 FROM card_assignees WHERE card_id = ce.card_id)
+      )
+    GROUP BY ce.card_id
+    `,
+    [userId],
+  );
+  const result: Record<string, number> = {};
+  for (const r of rows) result[r.card_id] = parseInt(r.cnt, 10);
+  return result;
 }
