@@ -132,16 +132,30 @@ CREATE TABLE IF NOT EXISTS card_attachments (
 );
 CREATE INDEX IF NOT EXISTS idx_attachments_card ON card_attachments(card_id);
 
--- ---------- activity ----------
-CREATE TABLE IF NOT EXISTS activity_log (
-  id         BIGSERIAL PRIMARY KEY,
-  actor_id   UUID REFERENCES users(id) ON DELETE SET NULL,
-  card_id    UUID REFERENCES cards(id) ON DELETE CASCADE,
-  action     TEXT NOT NULL,
-  details    JSONB NOT NULL DEFAULT '{}',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- ---------- card events (activity + chat) ----------
+CREATE TABLE IF NOT EXISTS card_events (
+  id           BIGSERIAL PRIMARY KEY,
+  actor_id     UUID REFERENCES users(id) ON DELETE SET NULL,
+  card_id      UUID REFERENCES cards(id) ON DELETE CASCADE,
+  action       TEXT,
+  details      JSONB NOT NULL DEFAULT '{}',
+  entry_type   TEXT NOT NULL DEFAULT 'system'
+               CHECK (entry_type IN ('system', 'message', 'ai')),
+  content      TEXT,
+  ai_suggestions JSONB,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_card_events_card
+  ON card_events(card_id, created_at ASC);
+CREATE INDEX IF NOT EXISTS idx_activity_created
+  ON card_events(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS card_event_reads (
+  card_id      UUID NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+  user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  last_read_id BIGINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (card_id, user_id)
+);
 
 -- ---------- card templates ----------
 CREATE TABLE IF NOT EXISTS card_templates (
