@@ -50,7 +50,7 @@ export async function chatRoutes(app: FastifyInstance) {
       const event = await postCardMessage(id, req.user!.id, content.trim());
       broadcast({ type: 'card.message', event, card_id: id, card });
 
-      if (/\@ai\b/i.test(content)) {
+      if (/(?:^|\s)@ai(?:\s|$)/i.test(content)) {
         processCardChatAI(id, card, req.user!.id).catch((err) => {
           console.warn('[chat] AI processing failed:', String(err).slice(0, 200));
         });

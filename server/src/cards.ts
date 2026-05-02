@@ -188,6 +188,24 @@ export async function getCardEvents(cardId: string): Promise<CardEvent[]> {
   return rows;
 }
 
+export async function getRecentCardEvents(cardId: string, limit: number): Promise<CardEvent[]> {
+  const { rows } = await pool.query<CardEvent>(
+    `
+    SELECT
+      ce.id::text, ce.actor_id, ce.card_id, ce.action, ce.details, ce.created_at,
+      ce.entry_type, ce.content, ce.ai_suggestions,
+      u.name AS actor_name
+    FROM card_events ce
+    LEFT JOIN users u ON u.id = ce.actor_id
+    WHERE ce.card_id = $1
+    ORDER BY ce.created_at DESC
+    LIMIT $2
+    `,
+    [cardId, limit],
+  );
+  return rows.reverse();
+}
+
 export async function logActivity(
   actorId: string | null,
   cardId: string | null,

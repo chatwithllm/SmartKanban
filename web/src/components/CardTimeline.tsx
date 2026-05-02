@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api.ts';
 import type { AiSuggestion, CardEvent, Status } from '../types.ts';
 import { ChatInput } from './ChatInput.tsx';
+import { useToast } from '../hooks/useToast.ts';
 
 type Props = {
   cardId: string;
@@ -58,11 +59,10 @@ function MessageEntry({ e, meId }: { e: CardEvent; meId: string }) {
 function AiEntry({ e, cardId }: { e: CardEvent; cardId: string }) {
   const [applied, setApplied] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   async function apply(s: AiSuggestion) {
     setBusy(s.label);
-    setErr(null);
     try {
       if (s.action === 'update_status') {
         await api.updateCard(cardId, { status: s.params['status'] as Status });
@@ -77,7 +77,7 @@ function AiEntry({ e, cardId }: { e: CardEvent; cardId: string }) {
       }
       setApplied((prev) => new Set([...prev, s.label]));
     } catch (e) {
-      setErr(String(e));
+      addToast(String(e), 'error');
     } finally {
       setBusy(null);
     }
@@ -92,7 +92,6 @@ function AiEntry({ e, cardId }: { e: CardEvent; cardId: string }) {
         {': '}
         <span>{e.content}</span>
       </p>
-      {err && <p className="text-1 text-red mt-0.5 tracking-tight2">{err}</p>}
       {e.ai_suggestions && e.ai_suggestions.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-1">
           {e.ai_suggestions.map((s) => (

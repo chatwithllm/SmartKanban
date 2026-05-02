@@ -6,6 +6,7 @@ import { pool } from '../db.js';
 import { authRoutes } from '../routes/auth.js';
 import { cardRoutes } from '../routes/cards.js';
 import { chatRoutes } from '../routes/chat.js';
+import { aiHooks } from '../ai/openai.js';
 
 const app = Fastify();
 await app.register(cookie, { secret: 'test-secret' });
@@ -208,4 +209,73 @@ test('GET /api/messages/unread returns count then zero after marking read', asyn
   });
   const afterCounts = after.json() as Record<string, number>;
   assert.equal(afterCounts[sharedCardId] ?? 0, 0);
+});
+
+test('POST with @ai inserts AI event', async () => {
+  const cardId = await createCard(cookieA);
+
+  const fakeClient = {
+    chat: {
+      completions: {
+        create: async () => ({
+          choices: [{ message: { content: 'Here is my reply. <!-- suggestions: [{"label":"Move to done","action":"update_status","params":{"status":"done"}}] -->' } }],
+        }),
+      },
+    },
+  };
+
+  // Mock withChatFallback to return a deterministic AI reply by calling fn with a fake client
+  const originalWithChat = aiHooks.withChatFallback;
+  (aiHooks as unknown as Record<string, unknown>)['withChatFallback'] = async (
+    fn: (t: { client: unknown; model: string; label: string }) => Promise<string>,
+  ) => fn({ client: fakeClient, model: 'test', label: 'test' });
+
+  await app.inject({
+    method: 'POST', url: `/api/cards/${cardId}/messages`,
+    headers: { cookie: cookieA },
+    payload: { content: 'please help @ai' },
+  });
+
+  // Give the async AI processing a moment to complete
+  await new Promise(r => setTimeout(r, 500));
+
+  // Restore mocks
+  (aiHooks as unknown as Record<string, unknown>)['withChatFallback'] = originalWithChat;
+
+  const res = await app.inject({
+    method: 'GET', url: `/api/cards/${cardId}/events`,
+    headers: { cookie: cookieA },
+  });
+  const events = res.json() as Array<{ entry_type: string; content: string; ai_suggestions: unknown[] | null }>;
+  const aiEvent = events.find(e => e.entry_type === 'ai');
+  assert.ok(aiEvent, 'expected an ai event');
+  assert.ok(aiEvent!.content?.includes('Here is my reply'), 'expected AI reply text');
+  assert.ok(Array.isArray(aiEvent!.ai_suggestions) && aiEvent!.ai_suggestions.length > 0, 'expected suggestions');
+});
+
+test('POST with @ai and failing AI inserts error event', async () => {
+  const cardId = await createCard(cookieA);
+
+  const originalWithChat = aiHooks.withChatFallback;
+  (aiHooks as unknown as Record<string, unknown>)['withChatFallback'] = async () => null;
+
+  await app.inject({
+    method: 'POST', url: `/api/cards/${cardId}/messages`,
+    headers: { cookie: cookieA },
+    payload: { content: '@ai what should I do?' },
+  });
+
+  await new Promise(r => setTimeout(r, 300));
+
+  (aiHooks as unknown as Record<string, unknown>)['withChatFallback'] = originalWithChat;
+
+  const res = await app.inject({
+    method: 'GET', url: `/api/cards/${cardId}/events`,
+    headers: { cookie: cookieA },
+  });
+  assert.equal(res.statusCode, 200);
+  const events = res.json() as Array<{ entry_type: string; content: string }>;
+  const aiEvent = events.find(e => e.entry_type === 'ai');
+  assert.ok(aiEvent, 'expected an ai error event');
+  assert.ok(aiEvent!.content?.includes("couldn't reach"), 'expected error message');
 });

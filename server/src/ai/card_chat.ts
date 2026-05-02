@@ -1,9 +1,9 @@
-import { withChatFallback } from './openai.js';
+import { aiHooks } from './openai.js';
 import {
   type AiSuggestion,
   type Card,
   type CardEvent,
-  getCardEvents,
+  getRecentCardEvents,
   postAiEvent,
   loadCard,
 } from '../cards.js';
@@ -81,11 +81,10 @@ export async function processCardChatAI(
   card: Card,
   _triggerUserId: string,
 ): Promise<void> {
-  const recentEvents = await getCardEvents(cardId);
-  const last20 = recentEvents.slice(-20);
+  const last20 = await getRecentCardEvents(cardId, 20);
   const systemPrompt = buildSystemPrompt(card, last20);
 
-  const rawReply = await withChatFallback(async (target) => {
+  const rawReply = await aiHooks.withChatFallback(async (target) => {
     const response = await target.client.chat.completions.create({
       model: target.model,
       messages: [{ role: 'system', content: systemPrompt }],
