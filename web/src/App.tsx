@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api.ts';
 import { useAuth } from './auth.tsx';
-import type { Card, Scope, Status, User } from './types.ts';
+import type { Card, CardEvent, Scope, Status, User } from './types.ts';
 import { Board } from './components/Board.tsx';
 import { EditDialog } from './components/EditDialog.tsx';
 import { LoginView } from './components/LoginView.tsx';
@@ -72,6 +72,9 @@ function Authed({ meId }: { meId: string }) {
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [section, setSection] = useState<'board' | 'knowledge'>('board');
   const [shareInitial, setShareInitial] = useState<{ title?: string; url?: string; body?: string } | null>(null);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [activeChatEvents, setActiveChatEvents] = useState<CardEvent[]>([]);
+  const openCardId = useRef<string | null>(null);
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -119,6 +122,10 @@ function Authed({ meId }: { meId: string }) {
   }, []);
 
   useEffect(() => {
+    api.unreadCounts().then(setUnreadCounts).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     const disconnect = connectWS((ev) => {
       if (ev.type === 'template.created' || ev.type === 'template.updated' || ev.type === 'template.deleted') {
         applyTemplateEvent(ev);
@@ -132,6 +139,14 @@ function Authed({ meId }: { meId: string }) {
         ev.type === 'knowledge.link.deleted'
       ) {
         applyKnowledgeEvent(ev, meId);
+        return;
+      }
+      if (ev.type === 'card.message' || ev.type === 'card.ai_response') {
+        if (openCardId.current === ev.card_id) {
+          setActiveChatEvents((prev) => [...prev, ev.event]);
+        } else {
+          setUnreadCounts((c) => ({ ...c, [ev.card_id]: (c[ev.card_id] ?? 0) + 1 }));
+        }
         return;
       }
       if (ev.type === 'card.created' || ev.type === 'card.updated') {
@@ -250,6 +265,16 @@ function Authed({ meId }: { meId: string }) {
     }
   };
 
+  const handleRead = (cardId: string) => {
+    setUnreadCounts((c) => { const next = { ...c }; delete next[cardId]; return next; });
+    setActiveChatEvents([]);
+  };
+
+  const handleOpenCard = (cardId: string | null) => {
+    openCardId.current = cardId;
+    if (!cardId) setActiveChatEvents([]);
+  };
+
   const handleSaveEdit = async (patch: Partial<Card>) => {
     if (!editing) return;
     const id = editing.id;
@@ -282,6 +307,7 @@ function Authed({ meId }: { meId: string }) {
           cards={cards}
           searchQuery={searchQuery}
           users={users}
+          unreadCounts={unreadCounts}
           onCreate={handleCreate}
           onEdit={setEditing}
           onDelete={handleDelete}
@@ -297,8 +323,12 @@ function Authed({ meId }: { meId: string }) {
         <EditDialog
           card={editing}
           users={users}
+          meId={meId}
+          incomingChatEvents={activeChatEvents}
           onSave={handleSaveEdit}
           onClose={() => setEditing(null)}
+          onRead={handleRead}
+          onOpenCard={handleOpenCard}
         />
       )}
       {reviewOpen && <WeeklyReview onClose={() => setReviewOpen(false)} />}
