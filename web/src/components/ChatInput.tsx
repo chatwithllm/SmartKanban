@@ -30,7 +30,7 @@ export function ChatInput({ cardId, onSent }: Props) {
       {err && <p className="text-1 text-red mb-1 tracking-tight2">{err}</p>}
       <div className="flex gap-2">
         <input
-          className="flex-1 text-2 tracking-tight2 border border-ink/20 rounded px-2 py-1 bg-surface text-ink placeholder:text-ink-soft focus:outline-none focus:border-green-accent"
+          className="flex-1 text-2 tracking-tight2 border border-ink/10 rounded-card px-2 py-1 bg-card text-ink placeholder:text-ink-soft focus:outline-none focus:border-green-accent"
           placeholder="Message… (type @ai to ask the assistant)"
           value={text}
           disabled={busy}

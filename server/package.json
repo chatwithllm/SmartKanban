@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "node --env-file=.env ./node_modules/.bin/tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "db:init": "psql postgresql://kanban:kanban@localhost:5432/kanban -f schema.sql",
