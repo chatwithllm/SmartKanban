@@ -129,6 +129,7 @@ export function CardTimeline({ cardId, meId, incomingEvents, onRead }: Props) {
 
   useEffect(() => {
     if (!open) return;
+    setErr(null);
     api.cardEvents(cardId)
       .then((evs) => {
         setEvents(evs);
