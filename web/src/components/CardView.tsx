@@ -1,85 +1,63 @@
-import { useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { getServerClockSkewMs } from '../api.ts';
 import type { Card, User } from '../types.ts';
+
+const STATUS_ACCENT: Record<string, string> = {
+  backlog:     'backlog',
+  today:       'today',
+  in_progress: 'doing',
+  done:        'done',
+};
+
+function stableHash(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i);
+  return Math.abs(h);
+}
+
+function relTime(iso: string): string {
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  if (diff < 86400 * 30) return Math.floor(diff / 86400) + 'd ago';
+  return Math.floor(diff / 86400 / 30) + 'mo ago';
+}
+
+function formatDue(iso: string | null): { label: string; tone: 'overdue' | 'today' | 'soon' | 'future' } | null {
+  if (!iso) return null;
+  const d = new Date(iso + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((d.getTime() - today.getTime()) / 86400000);
+  if (diff === 0) return { label: 'Today', tone: 'today' };
+  if (diff === 1) return { label: 'Tomorrow', tone: 'soon' };
+  if (diff === -1) return { label: 'Yesterday', tone: 'overdue' };
+  if (diff < 0) return { label: Math.abs(diff) + 'd overdue', tone: 'overdue' };
+  if (diff < 7) return { label: 'In ' + diff + 'd', tone: 'soon' };
+  return { label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), tone: 'future' };
+}
 
 type Props = {
   card: Card;
   users?: User[];
   unreadCount?: number;
   onClick?: () => void;
-  onDelete?: () => void;
+  onDelete?: (id: string) => void;
   dragging?: boolean;
   compact?: boolean;
 };
 
-// Short name falls back to first word of full name for legacy users.
-function displayShort(u: User): string {
-  return (u.short_name?.trim() || u.name.split(/\s+/)[0] || u.name).slice(0, 16);
-}
-
-function relativeTime(iso: string): string {
-  const d = new Date(iso);
-  // Use server time as the reference so local clock drift doesn't show "8h ago"
-  // for a card that's a few minutes old.
-  const nowMs = Date.now() + getServerClockSkewMs();
-  const diff = nowMs - d.getTime();
-  if (diff < 0) return 'just now';
-  const m = Math.round(diff / 60_000);
-  if (m < 1) return 'just now';
-  if (m < 60) return `${m}m ago`;
-  const h = Math.round(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const days = Math.round(h / 24);
-  if (days < 7) return `${days}d ago`;
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
-
-function absoluteTime(iso: string): string {
-  return new Date(iso).toLocaleString();
-}
-
-function dueDateBadge(due: string): { label: string; cls: string } {
-  const nowMs = Date.now() + getServerClockSkewMs();
-  const today = new Date(nowMs);
-  today.setHours(0, 0, 0, 0);
-  const dueDate = new Date(due + 'T00:00:00');
-  const diffDays = Math.round((dueDate.getTime() - today.getTime()) / 86_400_000);
-  const label = dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  if (diffDays < 0) return { label, cls: 'bg-red/5 border border-red text-red' };
-  if (diffDays === 0) return { label: 'Today', cls: 'bg-gold-lightest border border-gold text-gold' };
-  if (diffDays <= 3) return { label, cls: 'bg-yellow/10 border border-yellow text-yellow' };
-  return { label, cls: 'bg-ceramic text-ink-soft' };
-}
-
-export function CardView({ card, users = [], unreadCount = 0, onClick, onDelete, dragging, compact }: Props) {
+export function CardView({ card, users = [], unreadCount = 0, onClick, dragging, compact }: Props) {
   const sortable = useSortable({ id: card.id, data: { status: card.status } });
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = sortable;
 
+  const accent = STATUS_ACCENT[card.status] ?? 'backlog';
+  const rotation = (stableHash(card.id) % 9 - 4) * 0.18;
+  const due = formatDue(card.due_date);
   const assignees = card.assignees
-    .map((id) => users.find((u) => u.id === id))
-    .filter((u): u is User => !!u);
-  const creator = card.created_by ? users.find((u) => u.id === card.created_by) : null;
-  // Fall back to creator if nobody is assigned (e.g. Family Inbox cards captured via Telegram).
-  const avatarPeople: Array<{ user: User; role: 'assignee' | 'creator' }> =
-    assignees.length > 0
-      ? assignees.map((u) => ({ user: u, role: 'assignee' }))
-      : creator
-        ? [{ user: creator, role: 'creator' }]
-        : [];
-  const firstImage = card.attachments.find((a) => a.kind === 'image');
-  const hasAudio = card.attachments.some((a) => a.kind === 'audio');
-
-  useEffect(() => {
-    if (card.source !== 'telegram') return;
-    if (document.getElementById('font-kalam-link')) return;
-    const link = document.createElement('link');
-    link.id = 'font-kalam-link';
-    link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Kalam:wght@400&display=swap';
-    document.head.appendChild(link);
-  }, [card.source]);
+    .map(id => users.find(u => u.id === id))
+    .filter((u): u is NonNullable<typeof u> => !!u);
 
   return (
     <div
@@ -87,122 +65,212 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, onDelete,
       style={{ transform: CSS.Transform.toString(transform), transition }}
       {...attributes}
       {...listeners}
-      onClick={onClick}
-      className={`
-        group relative card-surface cursor-grab active:cursor-grabbing p-3
-        ${isDragging || dragging ? 'opacity-40' : ''}
-        ${card.ai_summarized || card.needs_review ? 'border-l-4 border-l-gold pl-3' : ''}
-      `}
-      data-dragging={isDragging || dragging ? 'true' : undefined}
     >
-      {firstImage && !compact && (
-        <img
-          src={`/attachments/${firstImage.storage_path}`}
-          alt=""
-          className="mb-2 w-full max-h-40 object-cover rounded-card"
-          style={{ transition: 'opacity 0.3s ease-in' }}
-        />
-      )}
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="text-3 text-ink font-semibold break-words tracking-tight2">{card.title}</div>
-          {card.source === 'telegram' && creator && (
-            <div className="font-script text-1 text-ink-soft mt-0.5">
-              from {displayShort(creator)} via bot
+      <div
+        className="note-wrap"
+        style={{ '--pin-color': `var(--pin-${accent})`, transform: `rotate(${rotation}deg)` } as React.CSSProperties}
+        onClick={onClick}
+      >
+        {/* Pushpin */}
+        <span className="pin" aria-hidden="true">
+          <span className="pin-head" />
+          <span className="pin-needle" />
+        </span>
+
+        {/* Card body */}
+        <div className="note" style={{ opacity: isDragging || dragging ? 0.4 : 1 }}>
+          {/* Source row */}
+          {(card.source === 'telegram' || card.ai_summarized || card.needs_review) && (
+            <div className="note-source">
+              {card.source === 'telegram' && <span>⟰ telegram</span>}
+              {card.ai_summarized && <span style={{ color: 'rgb(var(--violet))' }}> · ✦ ai</span>}
+              {card.needs_review && <span style={{ color: 'rgb(var(--danger))' }}> · needs review</span>}
             </div>
           )}
-          {card.description && !compact && (
-            <div className="mt-1 text-1 text-ink-soft line-clamp-2 break-words tracking-tight2">
+
+          {/* Title */}
+          <div className="note-title" style={{ fontSize: compact ? 13 : 15, marginBottom: 8 }}>
+            {card.title}
+          </div>
+
+          {/* Description (non-compact only) */}
+          {!compact && card.description && (
+            <div style={{
+              fontSize: 12.5,
+              color: 'rgb(var(--ink-2))',
+              marginBottom: 10,
+              lineHeight: 1.45,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}>
               {card.description}
             </div>
           )}
-          <div className="mt-2 flex flex-wrap items-center gap-1">
-            {card.tags.map((t) => (
-              <span
-                key={t}
-                className="tag-pill text-1"
-              >
-                #{t}
-              </span>
-            ))}
-            {card.source === 'telegram' && (
-              <span className="tag-pill text-1">
-                telegram
-              </span>
-            )}
-            {card.ai_summarized && (
-              <span className="tag-pill text-1 bg-gold-lightest text-gold">
-                AI
-              </span>
-            )}
-            {hasAudio && (
-              <span className="tag-pill text-1 bg-green-light text-green-accent">
-                voice
-              </span>
-            )}
-            {card.needs_review && (
-              <span className="tag-pill text-1 bg-gold-lightest text-gold">
-                review
-              </span>
-            )}
-            {card.due_date && (() => {
-              const badge = dueDateBadge(card.due_date);
-              return (
-                <span className={`inline-flex items-center rounded-pill px-2 py-0.5 text-1 tracking-tight2 ${badge.cls}`}>
-                  📅 {badge.label}
-                </span>
-              );
-            })()}
-          </div>
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          {unreadCount > 0 && (
-            <span className="inline-flex items-center justify-center h-4 min-w-[1rem] rounded-full bg-green-accent text-white text-1 font-medium px-1">
-              {unreadCount}
-            </span>
-          )}
-          {onDelete && (
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              className="opacity-0 group-hover:opacity-100 text-ink-soft hover:text-red text-2"
-              aria-label="Delete card"
-            >
-              ✕
-            </button>
-          )}
-          {avatarPeople.length > 0 && (
-            <div className="flex flex-wrap justify-end gap-1">
-              {avatarPeople.slice(0, 3).map(({ user, role }) => (
-                <span
-                  key={user.id}
-                  title={role === 'creator' ? `from ${user.name}` : user.name}
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap ${
-                    role === 'creator'
-                      ? 'bg-ceramic text-ink-soft border border-dashed border-ink/20'
-                      : 'bg-green-light text-green-starbucks'
-                  }`}
-                >
-                  {displayShort(user)}
+
+          {/* Tags */}
+          {card.tags.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 10 }}>
+              {card.tags.map(t => (
+                <span key={t} style={{
+                  display: 'inline-flex', alignItems: 'center',
+                  fontSize: 11, fontWeight: 500, lineHeight: 1,
+                  padding: '4px 8px', borderRadius: 999,
+                  background: 'rgb(var(--surface-2, 246 245 242))',
+                  color: 'rgb(var(--ink-2))',
+                  border: '1px solid rgb(var(--hairline) / 0.08)',
+                }}>
+                  {t}
                 </span>
               ))}
             </div>
           )}
+
+          {/* Footer */}
+          <div style={{
+            display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', gap: 8,
+            fontSize: 11.5, color: 'rgb(var(--ink-3))',
+            paddingRight: 22,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {due && (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                  color: due.tone === 'overdue' ? 'rgb(var(--danger))'
+                       : due.tone === 'today' ? 'rgb(var(--violet))'
+                       : 'rgb(var(--ink-3))',
+                  fontWeight: due.tone === 'overdue' || due.tone === 'today' ? 600 : 500,
+                }}>
+                  {due.tone === 'overdue' ? '🔥' : '📅'} {due.label}
+                </span>
+              )}
+              {card.attachments.length > 0 && (
+                <span>📎 {card.attachments.length}</span>
+              )}
+              {unreadCount > 0 && (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                  color: 'rgb(var(--violet))', fontWeight: 600,
+                }}>
+                  💬 {unreadCount}
+                </span>
+              )}
+              {!due && card.attachments.length === 0 && unreadCount === 0 && (
+                <span>{relTime(card.updated_at)}</span>
+              )}
+            </div>
+
+            {/* Assignee initials */}
+            {assignees.length > 0 && (
+              <div style={{ display: 'inline-flex' }}>
+                {assignees.slice(0, 3).map((u, i) => (
+                  <span key={u.id} style={{
+                    width: 22, height: 22, borderRadius: 999,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 10, fontWeight: 600, color: 'white',
+                    background: userColor(u.id),
+                    border: '2px solid rgb(var(--surface))',
+                    marginLeft: i > 0 ? -6 : 0,
+                  }} title={u.name}>
+                    {u.short_name.charAt(0).toUpperCase()}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
+
+        <style>{`
+          .note-wrap {
+            position: relative;
+            cursor: pointer;
+            filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.10)) drop-shadow(0 14px 24px rgb(0 0 0 / 0.06));
+            transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+          }
+          .note-wrap:hover { filter: drop-shadow(0 8px 18px rgb(0 0 0 / 0.16)) drop-shadow(0 16px 28px rgb(0 0 0 / 0.08)); transform: translateY(-2px) rotate(var(--note-rot, 0deg)); }
+          [data-theme="dark"] .note-wrap {
+            filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.45)) drop-shadow(0 14px 24px rgb(0 0 0 / 0.35));
+          }
+          .note-wrap::before {
+            content: "";
+            position: absolute;
+            right: 0; bottom: 0;
+            width: 26px; height: 26px;
+            background: rgb(var(--paper-fold));
+            clip-path: polygon(100% 0, 100% 100%, 0 100%);
+            z-index: 1;
+          }
+          .note {
+            position: relative;
+            background: rgb(var(--paper));
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%);
+            padding: 22px 14px 14px;
+          }
+          .pin {
+            display: block;
+            position: absolute;
+            top: -10px; left: 16px;
+            width: 22px; height: 22px;
+            z-index: 3;
+          }
+          .pin-head {
+            display: block;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: rgb(var(--pin-color));
+            margin: 0 auto;
+            box-shadow:
+              inset -3px -4px 0 rgb(0 0 0 / 0.18),
+              inset 3px 3px 0 rgb(255 255 255 / 0.28),
+              0 2px 4px rgb(0 0 0 / 0.35),
+              0 0 0 1px rgb(0 0 0 / 0.18);
+            position: relative;
+          }
+          .pin-head::after {
+            content: "";
+            position: absolute;
+            top: 3px; left: 4px;
+            width: 6px; height: 5px;
+            border-radius: 50%;
+            background: rgb(255 255 255 / 0.7);
+            filter: blur(0.5px);
+          }
+          .pin-needle {
+            display: block;
+            width: 3px; height: 5px;
+            background: rgb(60 50 40);
+            margin: -3px auto 0;
+            border-radius: 0 0 2px 2px;
+            box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+          }
+          .note-source {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: rgb(var(--ink-3));
+            margin-bottom: 6px;
+            letter-spacing: 0.02em;
+          }
+          .note-title {
+            font-family: 'Spectral', serif;
+            font-weight: 500;
+            line-height: 1.3;
+            color: rgb(var(--ink));
+            letter-spacing: -0.005em;
+            text-wrap: pretty;
+            margin-bottom: 8px;
+          }
+        `}</style>
       </div>
-      {!compact && (
-        <div
-          className="mt-2 text-1 text-ink-soft tracking-tight2"
-          title={`Created ${absoluteTime(card.created_at)}${
-            card.updated_at !== card.created_at ? `\nUpdated ${absoluteTime(card.updated_at)}` : ''
-          }`}
-        >
-          {relativeTime(card.created_at)}
-        </div>
-      )}
     </div>
   );
+}
+
+function userColor(id: string): string {
+  const colors = ['#5B37C4','#c84b31','#2b8a6e','#b07d2a','#2a6ab0','#8b3a8b'];
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = ((h << 5) - h) + id.charCodeAt(i);
+  return colors[Math.abs(h) % colors.length]!;
 }
