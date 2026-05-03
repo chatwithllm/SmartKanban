@@ -265,10 +265,10 @@ function Authed({ meId }: { meId: string }) {
     }
   };
 
-  const handleRead = (cardId: string) => {
+  const handleRead = useCallback((cardId: string) => {
     setUnreadCounts((c) => { const next = { ...c }; delete next[cardId]; return next; });
     setActiveChatEvents([]);
-  };
+  }, []);
 
   const handleOpenCard = (cardId: string | null) => {
     openCardId.current = cardId;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Card, CardEvent, User } from '../types.ts';
 import type { KnowledgeItem } from '../types.ts';
 import { api } from '../api.ts';
@@ -24,6 +24,8 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
   const [dueDate, setDueDate] = useState(card.due_date ?? '');
 
   const [showQr, setShowQr] = useState(false);
+
+  const handleRead = useCallback(() => onRead?.(card.id), [onRead, card.id]);
 
   const [linked, setLinked] = useState<KnowledgeItem[]>([]);
   const [picking, setPicking] = useState(false);
@@ -322,7 +324,7 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
               cardId={card.id}
               meId={meId}
               incomingEvents={incomingChatEvents}
-              onRead={(lastId) => onRead?.(card.id)}
+              onRead={handleRead}
             />
           </div>
         </div>
