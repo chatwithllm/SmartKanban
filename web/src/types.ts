@@ -128,3 +128,8 @@ export type Notification = {
   read: boolean;
   created_at: string;
 };
+
+export type WeatherData = {
+  current: { temp: number; code: number; humidity: number; wind: number };
+  daily: Array<{ date: string; code: number; max: number; min: number }>;
+};
