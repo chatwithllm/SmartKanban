@@ -21,6 +21,8 @@ export function TrashDropZone({ isDragging }: Props) {
     <div
       ref={setNodeRef}
       aria-label="Trash — drop card here to delete"
+      role="button"
+      tabIndex={-1}
       style={{
         position: 'fixed',
         bottom: 88,
@@ -40,7 +42,7 @@ export function TrashDropZone({ isDragging }: Props) {
         userSelect: 'none',
       }}
     >
-      🗑️
+      <span aria-hidden="true">🗑️</span>
     </div>
   );
 }
