@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   closestCorners,
   useSensor,
   useSensors,
@@ -13,6 +14,7 @@ import type { Card, Status, User } from '../types.ts';
 import { STATUSES } from '../types.ts';
 import { Column } from './Column.tsx';
 import { CardView } from './CardView.tsx';
+import { TrashDropZone } from './TrashDropZone.tsx';
 
 type Props = {
   cards: Card[];
@@ -27,7 +29,10 @@ type Props = {
 
 export function Board({ cards, users, searchQuery, unreadCounts, onCreate, onEdit, onDelete, onMove }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+  );
 
   const searchActive = searchQuery.trim().length > 0;
 
@@ -59,6 +64,11 @@ export function Board({ cards, users, searchQuery, unreadCounts, onCreate, onEdi
 
     const activeCard = cards.find((c) => c.id === active.id);
     if (!activeCard) return;
+
+    if (over.id === 'trash') {
+      onDelete(activeCard.id);
+      return;
+    }
 
     const overId = String(over.id);
     let targetStatus: Status;
@@ -116,6 +126,7 @@ export function Board({ cards, users, searchQuery, unreadCounts, onCreate, onEdi
       <DragOverlay>
         {activeCard ? <CardView card={activeCard} users={users} dragging /> : null}
       </DragOverlay>
+      <TrashDropZone isDragging={activeId !== null} />
       <button
         type="button"
         className="fab hidden md:inline-flex"
