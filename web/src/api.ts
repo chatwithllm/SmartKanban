@@ -1,4 +1,4 @@
-import type { AiSuggestion, ApiToken, Card, CardEvent, KnowledgeItem, KnowledgeVisibility, MirrorToken, ReviewData, Scope, Status, Template, User } from './types.ts';
+import type { AiSuggestion, ApiToken, Card, CardEvent, KnowledgeItem, KnowledgeVisibility, MirrorToken, Notification, ReviewData, Scope, Status, Template, User } from './types.ts';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -178,4 +178,15 @@ export const api = {
   deleteTemplate: (id: string) => req<void>(`/api/templates/${id}`, { method: 'DELETE' }),
   instantiateTemplate: (id: string, body?: { status_override?: Status }) =>
     req<Card>(`/api/templates/${id}/instantiate`, json(body ?? {})),
+
+  notifications: () => req<Notification[]>('/api/notifications'),
+  markNotificationsRead: (ids: number[]) =>
+    req<void>('/api/notifications/read', { ...json({ ids }), method: 'PUT' }),
+  markAllNotificationsRead: () =>
+    req<void>('/api/notifications/read-all', { method: 'PUT' }),
+  subscribePush: (sub: { endpoint: string; p256dh: string; auth: string }) =>
+    req<void>('/api/push/subscribe', json(sub)),
+  unsubscribePush: (endpoint: string) =>
+    req<void>('/api/push/subscribe', { ...json({ endpoint }), method: 'DELETE' }),
+  vapidPublicKey: () => req<{ publicKey: string }>('/api/push/vapid-public-key'),
 };

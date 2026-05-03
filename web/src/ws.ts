@@ -13,8 +13,8 @@ export type BroadcastEvent =
   | { type: 'knowledge.deleted'; id: string; owner_id: string; visibility: KnowledgeVisibility; shares: string[] }
   | { type: 'knowledge.link.created'; knowledge_id: string; card_id: string }
   | { type: 'knowledge.link.deleted'; knowledge_id: string; card_id: string }
-  | { type: 'card.message'; event: CardEvent; card_id: string }
-  | { type: 'card.ai_response'; event: CardEvent; card_id: string };
+  | { type: 'card.message'; event: CardEvent; card_id: string; card: Card }
+  | { type: 'card.ai_response'; event: CardEvent; card_id: string; card: Card };
 
 export function connectWS(
   onEvent: (ev: BroadcastEvent) => void,

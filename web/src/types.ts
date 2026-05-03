@@ -117,3 +117,14 @@ export type KnowledgeItem = {
   shares?: string[];
   linked_card_ids?: string[];
 };
+
+export type Notification = {
+  id: number;
+  user_id: string;
+  card_id: string;
+  event_id: number;
+  actor_name: string;
+  preview: string;
+  read: boolean;
+  created_at: string;
+};
