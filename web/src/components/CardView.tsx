@@ -146,8 +146,8 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, dragging,
                   {due.tone === 'overdue' ? '🔥' : '📅'} {due.label}
                 </span>
               )}
-              {card.attachments.length > 0 && (
-                <span>📎 {card.attachments.length}</span>
+              {card.attachments.some(a => a.kind !== 'image') && (
+                <span>📎 {card.attachments.filter(a => a.kind !== 'image').length}</span>
               )}
               {unreadCount > 0 && (
                 <span style={{
@@ -161,6 +161,35 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, dragging,
                 <span>{relTime(card.updated_at)}</span>
               )}
             </div>
+
+            {/* Image thumbnails */}
+            {card.attachments.filter(a => a.kind === 'image').length > 0 && (
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
+                {card.attachments.filter(a => a.kind === 'image').slice(0, 3).map((a, i, arr) => (
+                  <div key={a.id} style={{ position: 'relative', flexShrink: 0 }}>
+                    <img
+                      src={`/attachments/${a.storage_path}`}
+                      alt=""
+                      style={{
+                        width: 48, height: 48, objectFit: 'cover',
+                        borderRadius: 6,
+                        border: '1px solid rgb(var(--hairline) / 0.15)',
+                      }}
+                    />
+                    {i === 2 && card.attachments.filter(a => a.kind === 'image').length > 3 && (
+                      <div style={{
+                        position: 'absolute', inset: 0, borderRadius: 6,
+                        background: 'rgba(0,0,0,0.5)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 11, fontWeight: 700, color: 'white',
+                      }}>
+                        +{card.attachments.filter(a => a.kind === 'image').length - 3}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Assignee initials */}
             {assignees.length > 0 && (

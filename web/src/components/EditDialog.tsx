@@ -309,20 +309,52 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
 
           {card.attachments.length > 0 && (
             <div>
-              <div className="text-1 tracking-tight2 text-ink-soft mb-2">Attachments</div>
-              <div className="flex flex-wrap gap-2">
-                {card.attachments.map((a) => (
-                  <a
-                    key={a.id}
-                    href={`/attachments/${a.storage_path}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-card border border-ink/10 bg-card px-2 py-1 text-1 tracking-tight2 text-ink hover:border-green-accent"
-                  >
-                    {a.kind === 'audio' ? '🎙️ audio' : a.kind === 'image' ? '🖼️ image' : '📎 file'}
-                  </a>
-                ))}
+              <div style={{ fontSize: 11, color: 'rgb(var(--ink-3))', marginBottom: 8, fontFamily: 'JetBrains Mono, monospace' }}>
+                Attachments
               </div>
+              {/* Image previews */}
+              {card.attachments.filter(a => a.kind === 'image').length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
+                  {card.attachments.filter(a => a.kind === 'image').map((a) => (
+                    <a
+                      key={a.id}
+                      href={`/attachments/${a.storage_path}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ display: 'block', borderRadius: 10, overflow: 'hidden', border: '1px solid rgb(var(--hairline) / 0.12)' }}
+                    >
+                      <img
+                        src={`/attachments/${a.storage_path}`}
+                        alt="attachment"
+                        style={{ width: '100%', maxHeight: 240, objectFit: 'cover', display: 'block' }}
+                      />
+                    </a>
+                  ))}
+                </div>
+              )}
+              {/* Non-image attachments */}
+              {card.attachments.filter(a => a.kind !== 'image').length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {card.attachments.filter(a => a.kind !== 'image').map((a) => (
+                    <a
+                      key={a.id}
+                      href={`/attachments/${a.storage_path}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        padding: '5px 12px', borderRadius: 99,
+                        border: '1px solid rgb(var(--hairline) / 0.12)',
+                        background: 'rgb(var(--card))',
+                        fontSize: 12, color: 'rgb(var(--ink))',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      {a.kind === 'audio' ? '🎙️ audio' : '📎 file'}
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
