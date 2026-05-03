@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Scope } from '../types.ts';
 import { useAuth } from '../auth.tsx';
+import { WeatherWidget } from './WeatherWidget.tsx';
 
 const SCOPES: Array<{ id: Scope; label: string; description: string }> = [
   { id: 'personal', label: 'My board',     description: 'Cards you created, assigned, or shared with you.' },
@@ -153,6 +154,8 @@ export function BoardHeader({
         )}
 
         <div style={{ flex: 1, minWidth: 0 }} />
+
+        <WeatherWidget />
 
         {/* Search */}
         <div style={{ position: 'relative', flex: '0 1 220px', minWidth: 140 }}>
