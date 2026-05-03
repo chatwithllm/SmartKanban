@@ -1,8 +1,8 @@
-# Push Notifications Design
+# Push Notifications + UI Redesign
 
 **Date:** 2026-05-03  
 **Status:** Approved  
-**Scope:** In-app bell notifications + browser Web Push for card chat messages
+**Scope:** In-app bell notifications + browser Web Push for card chat messages, plus full UI visual overhaul (sticky-note design system)
 
 ---
 
@@ -177,3 +177,72 @@ Placed in `BoardHeader`:
 | `VAPID_SUBJECT` | No | `mailto:` or URL for VAPID contact |
 
 Generate keys once with: `npx web-push generate-vapid-keys`
+
+---
+
+## Frontend Design Overhaul
+
+Design files sourced from `Smartkanban.zip` (claude.ai/design). All components adopt this design system before the notification bell is added.
+
+### Design System
+
+**Typography** (loaded via Google Fonts):
+- `Spectral` — serif, card titles, lane headings, dialog titles, brand wordmark
+- `Inter` — UI sans, all buttons/labels/body text
+- `JetBrains Mono` — metadata, timestamps, badges, kbd hints
+
+**CSS Variables** (full token set in `theme.css`, light + dark):
+- `--canvas`, `--surface`, `--surface-2/3` — background layers
+- `--ink`, `--ink-2`, `--ink-3` — text hierarchy
+- `--violet` (`#5B37C4`) — primary brand accent
+- `--lane-backlog/today/doing/done` — bold saturated lane colors (tan/persimmon/mustard/teal)
+- `--pin-*` — pushpin colors per lane
+- `--paper`, `--paper-fold` — sticky-note paper tones
+- `--sh-1/2/3`, `--sh-drag` — shadow scale
+
+### Components to Rewrite
+
+| Current file | New design | Key changes |
+|---|---|---|
+| `BoardHeader.tsx` | `topbar.jsx` | Frosted glass, scope switcher, view tabs, weather slot |
+| `Column.tsx` | `column.jsx` | Bold colored lane bg, paper-grain overlay, Spectral heading |
+| `CardView.tsx` | `card.jsx` | Sticky-note with pushpin + folded corner clip-path, slight rotation |
+| *(new)* | `ticker.jsx` | Activity ticker bar — scrolling marquee of hot cards |
+| `Board.tsx` | `app.jsx` (BoardView) | 4-col grid + optional right-side mobile shell panel |
+
+### Sticky-Note Card Design
+
+- `.note-wrap` — outer wrapper with `drop-shadow` filter + hover lift (`translateY(-2px)`)
+- `.note-wrap::before` — folded-corner triangle, `clip-path: polygon(100% 0, 100% 100%, 0 100%)`, colored `--paper-fold`
+- `.note` — card body, `clip-path: polygon(0 0, 100% 0, 100% calc(100%-22px), calc(100%-22px) 100%, 0 100%)` cuts the corner
+- `.pin` / `.pin-head` / `.pin-needle` — pushpin positioned above card, color from `--pin-<lane>`
+- Cards get a deterministic small rotation (±4 × 0.18deg) from stable hash of card ID for natural feel
+
+### Lane Design
+
+- `.lane` — `background: rgb(var(--lane-color))`, `border-radius: 14px`, inset shadow ring
+- `.lane::before` — CSS paper-grain dot pattern overlay at 0.6 opacity
+- `.lane-header` — Spectral 22px white title + JetBrains Mono count badge + circular `+` button
+- `.lane-body` — scrollable, gap 18px between cards
+- Drag-over state: white ring shadow `0 0 0 3px rgb(255 255 255 / 0.6)`
+
+### TopBar Design
+
+- Sticky, frosted glass: `backdrop-filter: saturate(140%) blur(10px)`, `background: rgb(var(--canvas)/0.85)`
+- Left: `K` logo box (violet, Spectral) + "SmartKanban" wordmark
+- Centre-left: view tabs (Board / Knowledge / Archive)
+- Centre: scope dropdown (My board / Family inbox / Everything) with card counts
+- Right: weather widget slot → search (⌘K) → icon actions (review/theme/settings) → **NotificationBell** → divider → profile dropdown
+
+### Activity Ticker
+
+New sticky bar (`position: sticky; top: 65px`) below TopBar:
+- Left label: pulsing green dot + "Active now" + count badge
+- Scrolling marquee: chips showing hot cards (score ≥ 2.5, max 8 cards, duplicated for seamless loop)
+- Activity score: `comments × 3 + attachments × 1.5 + recency_boost`
+- Marquee pauses on hover; mask-image fade on edges
+- Clicking a chip opens that card's thread
+
+### NotificationBell Placement
+
+Sits in TopBar action cluster between settings icon and the divider before the profile dropdown. Consistent with existing icon button style (`.btn.btn-ghost.btn-icon`). Badge uses `--danger` red token.
