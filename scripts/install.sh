@@ -526,11 +526,9 @@ do_upgrade() {
   resolve_docker
 
   step "Pulling latest"
-  # Fetch + hard-reset to origin/main. This handles any local modifications
-  # (e.g. test files edited during debugging) without stash/merge conflicts.
+  # fetch then hard-reset — unconditionally overwrites local changes
   git -C "$INSTALL_DIR" fetch origin main
-  git -C "$INSTALL_DIR" checkout -B main origin/main
-  git -C "$INSTALL_DIR" branch --set-upstream-to=origin/main main 2>/dev/null || true
+  git -C "$INSTALL_DIR" reset --hard origin/main
   ok "repo updated to $(git -C "$INSTALL_DIR" rev-parse --short HEAD)"
 
   step "Applying schema + migrations (idempotent)"
