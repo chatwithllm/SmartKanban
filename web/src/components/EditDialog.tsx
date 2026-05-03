@@ -119,16 +119,25 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
       onClick={onClose}
     >
       <div
-        className="modal-surface w-full max-w-[560px] max-h-[90vh] overflow-y-auto flex flex-col"
+        className="w-full max-w-[560px] max-h-[90vh] overflow-y-auto flex flex-col"
+        style={{
+          background: 'rgb(var(--surface))',
+          borderRadius: 14,
+          boxShadow: 'var(--sh-3)',
+          border: '1px solid rgb(var(--hairline) / 0.08)',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header strip */}
-        <div className="modal-header-strip flex items-center justify-between px-5 py-3 shrink-0">
-          <span className="text-3 font-semibold tracking-tight2 text-white">Edit card</span>
+        <div
+          className="flex items-center justify-between px-5 py-3 shrink-0"
+          style={{ background: 'rgb(var(--violet))', borderRadius: '14px 14px 0 0' }}
+        >
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'white', fontFamily: 'Spectral, serif' }}>Edit card</span>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-2 text-white/80 hover:text-white"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.8)', fontSize: 16 }}
           >
             ✕
           </button>
