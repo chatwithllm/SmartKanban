@@ -53,6 +53,24 @@
   --paper:      255 253 248;
   --paper-fold: 208 200 184;
 
+  /* Surface aliases */
+  --card:    255 255 255;
+  --ceramic: 242 240 236;
+
+  /* Ink aliases */
+  --ink-soft:     130 124 148;
+  --ink-rev-soft: 200 198 212;
+
+  /* Green palette */
+  --green-house:     22 56 42;
+  --green-starbucks: 0 112 74;
+  --green-uplift:    46 139 87;
+  --green-accent:    78 171 115;
+
+  /* Other semantic */
+  --gold: 200 155 40;
+  --red:  178 36 60;
+
   /* Semantic */
   --danger:  178 36 60;
   --success: 30 95 60;
@@ -115,6 +133,20 @@
 
   --paper:      38 36 50;
   --paper-fold: 16 14 22;
+
+  --card:    28 27 38;
+  --ceramic: 36 34 47;
+
+  --ink-soft:     128 122 148;
+  --ink-rev-soft: 60 58 80;
+
+  --green-house:     16 50 36;
+  --green-starbucks: 80 190 140;
+  --green-uplift:    100 165 130;
+  --green-accent:    120 185 150;
+
+  --gold: 238 196 110;
+  --red:  220 80 100;
 
   --sh-1: 0 0 0 1px rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.4);
   --sh-2: 0 0 0 1px rgb(255 255 255 / 0.07), 0 4px 12px rgb(0 0 0 / 0.5);

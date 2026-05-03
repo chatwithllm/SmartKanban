@@ -31,7 +31,7 @@ export function ActivityTicker({ cards, onCardClick }: Props) {
   const hot = useMemo(() => {
     return [...cards]
       .map(c => ({ c, s: activityScore(c) }))
-      .filter(x => x.s >= 1.5)
+      .filter(x => x.s >= 0.1)
       .sort((a, b) => b.s - a.s)
       .slice(0, 8)
       .map(x => x.c);
@@ -39,7 +39,8 @@ export function ActivityTicker({ cards, onCardClick }: Props) {
 
   if (hot.length === 0) return null;
 
-  const items = [...hot, ...hot];
+  const needsScroll = hot.length >= 4;
+  const items = needsScroll ? [...hot, ...hot] : hot;
 
   return (
     <div className="ticker-wrap">
@@ -50,7 +51,7 @@ export function ActivityTicker({ cards, onCardClick }: Props) {
       </div>
 
       <div className="ticker-track">
-        <div className="ticker-row">
+        <div className={needsScroll ? 'ticker-row' : 'ticker-row ticker-row--static'}>
           {items.map((c, i) => {
             const accent = ACCENT[c.status] ?? 'backlog';
             return (
@@ -126,6 +127,9 @@ export function ActivityTicker({ cards, onCardClick }: Props) {
           gap: 10px; padding: 0 14px; height: 100%;
           white-space: nowrap;
           animation: tickerScroll 60s linear infinite;
+        }
+        .ticker-row--static {
+          animation: none;
         }
         .ticker-wrap:hover .ticker-row { animation-play-state: paused; }
         @keyframes tickerScroll {

@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 import type { Card, User } from '../types.ts';
 import { CardView } from './CardView.tsx';
 import type { Status } from '../types.ts';
@@ -43,15 +43,15 @@ type Props = {
 };
 
 export function Column({ status, cards, users, unreadCounts, onCreate, onEdit, onDelete }: Props) {
-  const [dragOver, setDragOver] = useState(false);
   const accent = LANE_ACCENT[status] ?? 'backlog';
+  const { setNodeRef: setDropRef, isOver: isColumnOver } = useDroppable({ id: `column:${status}` });
 
   return (
     <div
       className="lane"
       style={{
         '--lane-color': `var(--lane-${accent})`,
-        boxShadow: dragOver
+        boxShadow: isColumnOver
           ? '0 0 0 3px rgb(255 255 255 / 0.6), inset 0 0 0 1px rgb(0 0 0 / 0.06)'
           : 'inset 0 0 0 1px rgb(0 0 0 / 0.06), inset 0 1px 0 rgb(255 255 255 / 0.18)',
         transition: 'box-shadow 160ms ease',
@@ -74,7 +74,7 @@ export function Column({ status, cards, users, unreadCounts, onCreate, onEdit, o
       </div>
 
       {/* Cards */}
-      <div className="lane-body">
+      <div ref={setDropRef} className="lane-body">
         <SortableContext items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
           {cards.map((card) => (
             <SortableCard

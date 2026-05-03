@@ -9,10 +9,12 @@ import { applyKnowledgeEvent } from './hooks/useKnowledge.ts';
 import { useLongPress } from './hooks/useLongPress.ts';
 import { useInstallPrompt } from './hooks/useInstallPrompt.ts';
 import { MobileCardActions } from './components/MobileCardActions.tsx';
-import { MobileMore } from './MobileMore.tsx';
 import { KnowledgeView } from './KnowledgeView.tsx';
+import { ActivityTicker } from './components/ActivityTicker.tsx';
+import { ArchiveDialog } from './components/ArchiveDialog.tsx';
+import { useWeather, wmoEmoji } from './hooks/useWeather.ts';
 
-type Tab = 'board' | 'knowledge' | 'more';
+type Tab = 'board' | 'knowledge' | 'archive';
 
 const SCOPES: { value: Scope; label: string }[] = [
   { value: 'personal', label: 'My board' },
@@ -20,12 +22,41 @@ const SCOPES: { value: Scope; label: string }[] = [
   { value: 'all', label: 'Everything' },
 ];
 
-const STATUS_BADGE: Record<Status, string> = {
-  backlog: '📥',
-  today: '📅',
-  in_progress: '⚡',
-  done: '✅',
+const LANE_BG: Record<Status, string> = {
+  backlog:     'rgb(var(--lane-backlog))',
+  today:       'rgb(var(--lane-today))',
+  in_progress: 'rgb(var(--lane-doing))',
+  done:        'rgb(var(--lane-done))',
 };
+
+const EMPTY_MSG: Record<Status, string> = {
+  backlog:     'Empty backlog.',
+  today:       'Nothing planned for today.',
+  in_progress: 'Quiet here.',
+  done:        'Nothing finished yet.',
+};
+
+function formatDate(): string {
+  const d = new Date();
+  const day = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  return `${day} · ${mon} ${d.getDate()}`;
+}
+
+function userColor(id: string): string {
+  const colors = ['#5B37C4', '#c84b31', '#2b8a6e', '#b07d2a', '#2a6ab0', '#8b3a8b'];
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = ((h << 5) - h) + id.charCodeAt(i);
+  return colors[Math.abs(h) % colors.length]!;
+}
+
+function relTime(iso: string): string {
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
+}
 
 export function MobileShell({ meId }: { meId: string }) {
   const [tab, setTab] = useState<Tab>('board');
@@ -34,9 +65,7 @@ export function MobileShell({ meId }: { meId: string }) {
   const [cards, setCards] = useState<Card[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [actionsCard, setActionsCard] = useState<Card | null>(null);
-  const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [installDismissed, setInstallDismissed] = useState(
     () => typeof localStorage !== 'undefined' && !!localStorage.getItem('install-dismissed'),
@@ -45,7 +74,17 @@ export function MobileShell({ meId }: { meId: string }) {
   const { templates } = useTemplates();
   const { canInstall, install } = useInstallPrompt();
 
-  // Initial data load
+  const me = users.find((u) => u.id === meId);
+  const { data: weather } = useWeather();
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    const close = () => setProfileOpen(false);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [profileOpen]);
+
   useEffect(() => {
     api.listCards(scope).then(setCards).catch((e) => addToast(`Load failed: ${e}`, 'error'));
   }, [scope]);
@@ -53,22 +92,15 @@ export function MobileShell({ meId }: { meId: string }) {
     api.users().then(setUsers).catch(() => {});
   }, []);
 
-  // WS dispatcher (mirrors Authed's logic)
   useEffect(() => {
     const disconnect = connectWS((ev) => {
-      if (
-        ev.type === 'template.created' ||
-        ev.type === 'template.updated' ||
-        ev.type === 'template.deleted'
-      ) {
+      if (ev.type === 'template.created' || ev.type === 'template.updated' || ev.type === 'template.deleted') {
         applyTemplateEvent(ev);
         return;
       }
       if (
-        ev.type === 'knowledge.created' ||
-        ev.type === 'knowledge.updated' ||
-        ev.type === 'knowledge.deleted' ||
-        ev.type === 'knowledge.link.created' ||
+        ev.type === 'knowledge.created' || ev.type === 'knowledge.updated' ||
+        ev.type === 'knowledge.deleted' || ev.type === 'knowledge.link.created' ||
         ev.type === 'knowledge.link.deleted'
       ) {
         applyKnowledgeEvent(ev, meId);
@@ -80,13 +112,9 @@ export function MobileShell({ meId }: { meId: string }) {
           setCards((prev) => prev.filter((c) => c.id !== incoming.id));
           return;
         }
-        const isMine =
-          incoming.created_by === meId ||
-          incoming.assignees.includes(meId) ||
-          incoming.shares.includes(meId);
+        const isMine = incoming.created_by === meId || incoming.assignees.includes(meId) || incoming.shares.includes(meId);
         const isInbox = incoming.assignees.length === 0;
-        const visible =
-          scope === 'inbox' ? isInbox : scope === 'personal' ? isMine : isMine || isInbox;
+        const visible = scope === 'inbox' ? isInbox : scope === 'personal' ? isMine : isMine || isInbox;
         setCards((prev) => {
           const without = prev.filter((c) => c.id !== incoming.id);
           return visible ? [...without, incoming] : without;
@@ -98,7 +126,6 @@ export function MobileShell({ meId }: { meId: string }) {
     return disconnect;
   }, [scope, meId]);
 
-  // Card-list filters
   const visible = cards.filter((c) => !c.archived);
   const counts: Record<Status, number> = { backlog: 0, today: 0, in_progress: 0, done: 0 };
   for (const c of visible) counts[c.status]++;
@@ -106,39 +133,30 @@ export function MobileShell({ meId }: { meId: string }) {
     .filter((c) => c.status === activeStatus)
     .filter((c) =>
       searchQuery
-        ? (c.title + ' ' + c.description + ' ' + c.tags.join(' '))
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase())
+        ? (c.title + ' ' + (c.description ?? '') + ' ' + c.tags.join(' ')).toLowerCase().includes(searchQuery.toLowerCase())
         : true,
     )
     .sort((a, b) => a.position - b.position);
 
-  // Card creation
   const submitCreate = async () => {
     const t = draft.trim();
     setDraft('');
-    setAdding(false);
     if (!t) return;
     if (t.startsWith('/') && !/\s/.test(t)) {
       const name = t.slice(1);
       const tpl = templates.find((tt) => tt.name.toLowerCase() === name.toLowerCase());
       if (tpl) {
-        try {
-          await api.instantiateTemplate(tpl.id, { status_override: activeStatus });
-        } catch (e) {
-          addToast(`Template failed: ${e instanceof Error ? e.message : 'error'}`, 'error');
-        }
+        try { await api.instantiateTemplate(tpl.id, { status_override: activeStatus }); }
+        catch (e) { addToast(`Template failed: ${e instanceof Error ? e.message : 'error'}`, 'error'); }
         return;
       }
     }
     try {
       const created = await api.createCard({ title: t, status: activeStatus });
-      setCards((prev) =>
-        prev.some((c) => c.id === created.id) ? prev : [...prev, created],
-      );
+      setCards((prev) => prev.some((c) => c.id === created.id) ? prev : [...prev, created]);
       addToast('Card created', 'success');
     } catch (e) {
-      addToast(`Failed to create: ${e instanceof Error ? e.message : 'error'}`, 'error');
+      addToast(`Failed: ${e instanceof Error ? e.message : 'error'}`, 'error');
     }
   };
 
@@ -151,24 +169,21 @@ export function MobileShell({ meId }: { meId: string }) {
       setCards((prev) => prev.map((c) => (c.id === card.id ? updated : c)));
       addToast(`Moved to ${STATUS_LABELS[status]}`, 'success');
     } catch (e) {
-      addToast(`Move failed: ${e instanceof Error ? e.message : 'error'}`, 'error');
+      addToast(`Move failed: ${e}`, 'error');
     }
   };
 
   const handleArchive = async () => {
     if (!actionsCard) return;
     const card = actionsCard;
-    if (!confirm(`Archive "${card.title}"?`)) {
-      setActionsCard(null);
-      return;
-    }
+    if (!confirm(`Archive "${card.title}"?`)) { setActionsCard(null); return; }
     setActionsCard(null);
     try {
       await api.deleteCard(card.id);
       setCards((prev) => prev.filter((c) => c.id !== card.id));
       addToast('Archived', 'success');
     } catch (e) {
-      addToast(`Archive failed: ${e instanceof Error ? e.message : 'error'}`, 'error');
+      addToast(`Archive failed: ${e}`, 'error');
     }
   };
 
@@ -177,94 +192,194 @@ export function MobileShell({ meId }: { meId: string }) {
     addToast(`Restored "${card.title}"`, 'success');
   };
 
+  const NAV_TABS = [
+    { id: 'board' as Tab, label: 'Board', icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="10" rx="1"/><rect x="14" y="17" width="7" height="4" rx="1"/>
+      </svg>
+    )},
+    { id: 'knowledge' as Tab, label: 'Knowledge', icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+    )},
+    { id: 'archive' as Tab, label: 'Archive', icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/>
+      </svg>
+    )},
+  ];
+
   return (
-    <div className="bg-canvas min-h-screen pb-[calc(56px+env(safe-area-inset-bottom))]">
+    <div style={{ background: 'rgb(var(--canvas))', minHeight: '100vh', paddingBottom: 'calc(56px + 60px + env(safe-area-inset-bottom))' }}>
+
       {tab === 'board' && (
         <>
-          <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b border-ink/10 bg-card px-3">
-            <select
-              value={scope}
-              onChange={(e) => setScope(e.target.value as Scope)}
-              className="bg-card text-ink text-sm outline-none"
-            >
-              {SCOPES.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-            <h1 className="flex-1 text-center text-3 font-medium text-ink tracking-tight2">Kanban</h1>
-            <button onClick={() => setSearchOpen((v) => !v)} aria-label="Search" className="text-lg">
-              🔍
-            </button>
+          {/* ── Lane-colored header ── */}
+          <header
+            className="sticky top-0 z-10"
+            style={{ background: LANE_BG[activeStatus], transition: 'background 350ms ease' }}
+          >
+            {/* Top bar: date + scope + avatar */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px 0' }}>
+              <span style={{
+                fontSize: 11, fontWeight: 600, letterSpacing: '0.06em',
+                color: 'rgba(255,255,255,0.7)', fontFamily: 'JetBrains Mono, monospace',
+              }}>
+                {formatDate()}
+              </span>
+              {weather && (
+                <span style={{
+                  fontSize: 12, fontWeight: 500,
+                  color: 'rgba(255,255,255,0.85)',
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                  background: 'rgba(0,0,0,0.15)', borderRadius: 999,
+                  padding: '2px 8px',
+                }}>
+                  {wmoEmoji(weather.current.code)} {Math.round(weather.current.temp)}°
+                </span>
+              )}
+              <div style={{ flex: 1 }} />
+              <select
+                value={scope}
+                onChange={(e) => setScope(e.target.value as Scope)}
+                style={{
+                  background: 'rgba(0,0,0,0.20)', color: 'rgba(255,255,255,0.88)',
+                  border: 'none', borderRadius: 8, padding: '4px 8px',
+                  fontSize: 12, fontWeight: 500, outline: 'none', cursor: 'pointer',
+                }}
+              >
+                {SCOPES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+              {me && (
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setProfileOpen((v) => !v); }}
+                    style={{
+                      width: 34, height: 34, borderRadius: 999,
+                      background: userColor(me.id),
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 14, fontWeight: 700, color: 'white',
+                      border: '2px solid rgba(255,255,255,0.35)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {(me.short_name || me.name).charAt(0).toUpperCase()}
+                  </button>
+                  {profileOpen && (
+                    <div
+                      style={{
+                        position: 'absolute', top: 42, right: 0, zIndex: 100,
+                        background: 'rgb(var(--surface))',
+                        borderRadius: 12, padding: '6px 0',
+                        boxShadow: 'var(--sh-3)',
+                        border: '1px solid rgb(var(--hairline) / 0.1)',
+                        minWidth: 160,
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div style={{ padding: '8px 14px 6px', borderBottom: '1px solid rgb(var(--hairline) / 0.08)', marginBottom: 4 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'rgb(var(--ink))' }}>{me.name}</div>
+                        <div style={{ fontSize: 11, color: 'rgb(var(--ink-3))', marginTop: 1 }}>{me.email}</div>
+                      </div>
+                      <button
+                        onClick={async () => { await api.logout(); location.reload(); }}
+                        style={{
+                          display: 'block', width: '100%', textAlign: 'left',
+                          padding: '8px 14px', background: 'none', border: 'none',
+                          fontSize: 13, color: 'rgb(var(--danger))', cursor: 'pointer',
+                          fontFamily: 'Inter, sans-serif',
+                        }}
+                      >
+                        ↩ Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Large status title */}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: '6px 16px 12px' }}>
+              <h1 style={{
+                fontSize: 42, fontWeight: 700, lineHeight: 1.05,
+                color: 'rgba(255,255,255,0.96)',
+                fontFamily: 'Spectral, serif', letterSpacing: '-0.02em',
+              }}>
+                {STATUS_LABELS[activeStatus]}
+              </h1>
+              <span style={{
+                fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.55)',
+                fontFamily: 'JetBrains Mono, monospace',
+              }}>
+                {counts[activeStatus]}
+              </span>
+            </div>
+
+            {/* Status tabs */}
+            <div style={{
+              display: 'flex', gap: 8, overflowX: 'auto',
+              padding: '0 16px 14px', scrollbarWidth: 'none',
+            }}>
+              {STATUSES.map((s) => {
+                const active = activeStatus === s;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setActiveStatus(s)}
+                    style={{
+                      flexShrink: 0, padding: '6px 14px', borderRadius: 999,
+                      background: active ? 'rgba(255,255,255,0.92)' : 'rgba(0,0,0,0.18)',
+                      color: active ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.82)',
+                      fontWeight: active ? 600 : 400, fontSize: 13,
+                      border: 'none', cursor: 'pointer',
+                      transition: 'background 150ms ease, color 150ms ease',
+                    }}
+                  >
+                    {STATUS_LABELS[s]}
+                  </button>
+                );
+              })}
+            </div>
           </header>
 
-          {searchOpen && (
-            <div className="border-b border-ink/10 bg-card p-2">
-              <input
-                autoFocus
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search cards…"
-                className="input-pill w-full"
-              />
-            </div>
-          )}
+          {/* ── Activity ticker ── */}
+          <ActivityTicker cards={visible} onCardClick={(c) => location.assign(`/m/card/${c.id}`)} />
 
-          <div className="flex gap-2 overflow-x-auto px-4 py-3 bg-canvas">
-            {STATUSES.map((s) => {
-              const active = activeStatus === s;
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setActiveStatus(s)}
-                  className={`relative shrink-0 inline-flex items-center gap-1 rounded-pill px-3.5 py-1.5 text-2 tracking-tight2 transition-colors ${
-                    active ? 'bg-card text-green-starbucks font-semibold' : 'bg-ceramic text-ink-soft'
-                  }`}
-                >
-                  <span aria-hidden>{STATUS_BADGE[s]}</span>
-                  <span>{STATUS_LABELS[s]}</span>
-                  {active && <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-gold" aria-hidden />}
-                </button>
-              );
-            })}
+          {/* ── Search bar (always visible, subtle) ── */}
+          <div style={{ padding: '10px 12px 0', background: 'rgb(var(--canvas))' }}>
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search cards…"
+              style={{
+                width: '100%', background: 'rgb(var(--card))',
+                color: 'rgb(var(--ink))',
+                border: '1px solid rgb(var(--hairline) / 0.10)',
+                borderRadius: 999, padding: '8px 14px',
+                fontSize: 13, outline: 'none', fontFamily: 'Inter, sans-serif',
+              }}
+            />
           </div>
 
-          {adding && (
-            <div className="mx-3 mt-3 rounded-card border border-ink/10 bg-card p-2">
-              <textarea
-                autoFocus
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    submitCreate();
-                  } else if (e.key === 'Escape') {
-                    setDraft('');
-                    setAdding(false);
-                  }
-                }}
-                onBlur={submitCreate}
-                placeholder="New card… (or /template-name)"
-                className="input-pill w-full resize-none bg-transparent outline-none"
-                rows={2}
-              />
-            </div>
-          )}
-
-          <ul className="flex flex-col gap-2 p-3">
+          {/* ── Card list ── */}
+          <ul style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '16px 12px', listStyle: 'none', margin: 0 }}>
             {filtered.length === 0 && (
-              <li className="py-8 text-center text-2 text-ink-soft">
-                {searchQuery ? 'No cards match your search' : `No cards in ${STATUS_LABELS[activeStatus]}`}
+              <li style={{
+                padding: '40px 0', textAlign: 'center',
+                fontSize: 14, color: 'rgba(255,255,255,0.7)',
+                fontStyle: 'italic', fontFamily: 'Spectral, serif',
+              }}>
+                {EMPTY_MSG[activeStatus]}
               </li>
             )}
             {filtered.map((c) => (
-              <MobileCardRow
+              <MobileNoteCard
                 key={c.id}
                 card={c}
                 users={users}
+                accentColor={LANE_BG[c.status]}
                 onLongPress={() => setActionsCard(c)}
               />
             ))}
@@ -279,48 +394,27 @@ export function MobileShell({ meId }: { meId: string }) {
             />
           )}
 
-          {tab === 'board' && (
-            <button
-              type="button"
-              className="fab"
-              style={{
-                width: '56px',
-                height: '56px',
-                right: 'calc(16px + env(safe-area-inset-right))',
-                bottom: 'calc(56px + 16px + env(safe-area-inset-bottom))',
-                opacity: actionsCard ? 0 : 1,
-                pointerEvents: actionsCard ? 'none' : 'auto',
-                transition: 'opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease',
-              }}
-              onClick={() => setAdding(true)}
-              aria-label="Add card"
-            >
-              <span className="text-2xl leading-none" aria-hidden>+</span>
-            </button>
-          )}
-
+          {/* ── Install prompt ── */}
           {canInstall && !installDismissed && (
-            <div className="fixed left-4 right-4 bottom-[calc(56px+16px+env(safe-area-inset-bottom))] z-30 bg-green-house text-ink-rev rounded-card p-4 flex items-center gap-3">
-              <div className="flex-1">
-                <div className="text-3 font-semibold tracking-tight2">Install SmartKanban</div>
-                <div className="text-1 text-ink-rev-soft tracking-tight2">Add to home screen for full-screen access</div>
+            <div style={{
+              position: 'fixed', left: 12, right: 12,
+              bottom: 'calc(56px + 60px + 12px + env(safe-area-inset-bottom))',
+              zIndex: 30,
+              background: 'rgb(var(--green-house))',
+              color: 'white', borderRadius: 14, padding: '14px 16px',
+              display: 'flex', alignItems: 'center', gap: 12,
+              boxShadow: 'var(--sh-3)',
+            }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>Install SmartKanban</div>
+                <div style={{ fontSize: 12, opacity: 0.7, marginTop: 2 }}>Add to home screen for full-screen access</div>
               </div>
-              <button
-                onClick={async () => {
-                  await install();
-                  setInstallDismissed(true);
-                }}
-                className="btn-pill btn-pill-on-dark-filled"
-              >
+              <button onClick={async () => { await install(); setInstallDismissed(true); }}
+                style={{ background: 'white', color: 'rgb(var(--green-house))', border: 'none', borderRadius: 999, padding: '6px 14px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                 Install
               </button>
-              <button
-                onClick={() => {
-                  localStorage.setItem('install-dismissed', '1');
-                  setInstallDismissed(true);
-                }}
-                className="btn-pill btn-pill-on-dark-outlined"
-              >
+              <button onClick={() => { localStorage.setItem('install-dismissed', '1'); setInstallDismissed(true); }}
+                style={{ background: 'rgba(255,255,255,0.15)', color: 'white', border: 'none', borderRadius: 999, padding: '6px 14px', fontSize: 13, cursor: 'pointer' }}>
                 Dismiss
               </button>
             </div>
@@ -329,24 +423,86 @@ export function MobileShell({ meId }: { meId: string }) {
       )}
 
       {tab === 'knowledge' && <KnowledgeView />}
-      {tab === 'more' && <MobileMore onCardRestored={onCardRestored} />}
 
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-30 bg-green-house text-ink-rev grid grid-cols-3"
-        style={{ height: 'calc(56px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)', boxShadow: '0 -1px 3px rgba(0,0,0,0.1)' }}
-      >
-        {(['board', 'knowledge', 'more'] as const).map((t) => {
-          const active = tab === t;
+      {tab === 'archive' && (
+        <ArchiveDialog onClose={() => setTab('board')} onRestore={onCardRestored} />
+      )}
+
+      {/* ── Capture bar (above nav, board only) ── */}
+      {tab === 'board' && (
+        <div style={{
+          position: 'fixed', left: 0, right: 0,
+          bottom: 'calc(56px + env(safe-area-inset-bottom))',
+          zIndex: 30,
+          background: 'rgb(var(--surface))',
+          borderTop: '1px solid rgb(var(--hairline) / 0.08)',
+          padding: '8px 12px',
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <span style={{ fontSize: 18, opacity: 0.45, flexShrink: 0 }}>🤖</span>
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') submitCreate(); }}
+            placeholder="Capture as card…"
+            style={{
+              flex: 1, background: 'transparent', border: 'none', outline: 'none',
+              fontSize: 14, color: 'rgb(var(--ink))', fontFamily: 'Inter, sans-serif',
+            }}
+          />
+          <button
+            aria-label="Voice input"
+            style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', opacity: 0.5, padding: '0 2px', flexShrink: 0 }}
+          >
+            🎙️
+          </button>
+          <button
+            onClick={submitCreate}
+            style={{
+              flexShrink: 0, width: 36, height: 36, borderRadius: 999,
+              background: 'rgb(var(--violet))', color: 'white',
+              border: 'none', cursor: 'pointer', fontSize: 16,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            →
+          </button>
+        </div>
+      )}
+
+      {/* ── Bottom nav ── */}
+      <nav style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40,
+        background: 'rgb(var(--surface))',
+        borderTop: '1px solid rgb(var(--hairline) / 0.08)',
+        height: 'calc(56px + env(safe-area-inset-bottom))',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+      }}>
+        {NAV_TABS.map((t) => {
+          const active = tab === t.id;
           return (
             <button
-              key={t}
+              key={t.id}
               type="button"
-              onClick={() => setTab(t)}
-              className="flex flex-col items-center justify-center gap-1 relative"
+              onClick={() => setTab(t.id)}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: active ? 'rgb(var(--violet))' : 'rgb(var(--ink-3))',
+                position: 'relative',
+              }}
             >
-              <span className="text-xl" aria-hidden>{t === 'board' ? '📋' : t === 'knowledge' ? '📚' : '⋯'}</span>
-              <span className={`text-[12px] tracking-tight2 ${active ? 'font-semibold text-white' : 'text-ink-rev-soft'}`}>{t === 'board' ? 'Board' : t === 'knowledge' ? 'Knowledge' : 'More'}</span>
-              {active && <span className="absolute bottom-1 h-1 w-1 rounded-full bg-gold" aria-hidden />}
+              {t.icon}
+              <span style={{ fontSize: 11, fontWeight: active ? 600 : 400, letterSpacing: '-0.01em' }}>
+                {t.label}
+              </span>
+              {active && (
+                <span style={{
+                  position: 'absolute', bottom: 6, width: 4, height: 4, borderRadius: 999,
+                  background: 'rgb(var(--violet))',
+                }} aria-hidden />
+              )}
             </button>
           );
         })}
@@ -355,21 +511,21 @@ export function MobileShell({ meId }: { meId: string }) {
   );
 }
 
-function MobileCardRow({
-  card,
-  users,
-  onLongPress,
+function MobileNoteCard({
+  card, users, accentColor, onLongPress,
 }: {
-  card: Card;
-  users: User[];
-  onLongPress: () => void;
+  card: Card; users: User[]; accentColor: string; onLongPress: () => void;
 }) {
   const lp = useLongPress(onLongPress, 500);
-  const owner = users.find((u) => u.id === card.created_by);
+  const assignees = card.assignees
+    .map((id) => users.find((u) => u.id === id))
+    .filter((u): u is NonNullable<typeof u> => !!u);
+
   const handleClick = () => {
-    if (lp.didLongPress()) return; // long-press fired; suppress navigation
+    if (lp.didLongPress()) return;
     location.assign(`/m/card/${card.id}`);
   };
+
   return (
     <li
       onClick={handleClick}
@@ -378,22 +534,111 @@ function MobileCardRow({
       onTouchMove={lp.onTouchMove}
       onTouchCancel={lp.onTouchCancel}
       onContextMenu={lp.onContextMenu}
-      className="card-surface px-3 py-2 active:bg-ceramic"
+      style={{ listStyle: 'none', position: 'relative', cursor: 'pointer' }}
     >
-      <div className="flex items-start gap-2">
-        <div className="flex-1 min-w-0">
-          <p className="text-3 text-ink">{card.title || 'Untitled'}</p>
-          {card.tags.length > 0 && (
-            <p className="mt-1 text-1 text-ink-soft truncate">
-              {card.tags.map((t) => `#${t}`).join(' ')}
-            </p>
+      {/* Drop-shadow wrapper */}
+      <div style={{
+        position: 'relative',
+        filter: 'drop-shadow(0 6px 14px rgb(0 0 0 / 0.10)) drop-shadow(0 14px 24px rgb(0 0 0 / 0.06))',
+      }}>
+        {/* Pin */}
+        <span style={{ position: 'absolute', top: -10, left: 16, zIndex: 3 }}>
+          <span style={{
+            display: 'block', width: 20, height: 20, borderRadius: '50%',
+            background: accentColor, margin: '0 auto',
+            boxShadow: 'inset -3px -4px 0 rgba(0,0,0,0.18), inset 3px 3px 0 rgba(255,255,255,0.28), 0 2px 4px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.18)',
+          }} />
+          <span style={{ display: 'block', width: 3, height: 5, background: 'rgb(60,50,40)', margin: '-3px auto 0', borderRadius: '0 0 2px 2px' }} />
+        </span>
+
+        {/* Fold corner */}
+        <div style={{
+          position: 'absolute', right: 0, bottom: 0, width: 26, height: 26,
+          background: 'rgb(var(--paper-fold))',
+          clipPath: 'polygon(100% 0, 100% 100%, 0 100%)',
+          zIndex: 1,
+        }} />
+
+        {/* Card body */}
+        <div style={{
+          background: 'rgb(var(--paper))',
+          clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%)',
+          padding: '22px 14px 14px',
+        }}>
+          {/* Source badge */}
+          {(card.source === 'telegram' || card.ai_summarized || card.needs_review) && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              fontFamily: 'JetBrains Mono, monospace', fontSize: 10,
+              color: 'rgb(var(--ink-3))', marginBottom: 6, letterSpacing: '0.02em',
+            }}>
+              {card.source === 'telegram' && <span>⟰ telegram</span>}
+              {card.ai_summarized && <span style={{ color: 'rgb(var(--violet))' }}> · ✦ ai</span>}
+              {card.needs_review && <span style={{ color: 'rgb(var(--danger))' }}> · needs review</span>}
+            </div>
           )}
+
+          {/* Title */}
+          <div style={{
+            fontFamily: 'Spectral, serif', fontWeight: 500, fontSize: 15,
+            lineHeight: 1.3, color: 'rgb(var(--ink))', letterSpacing: '-0.005em', marginBottom: 8,
+          }}>
+            {card.title}
+          </div>
+
+          {/* Description */}
+          {card.description && (
+            <div style={{
+              fontSize: 12.5, color: 'rgb(var(--ink-2))', marginBottom: 10, lineHeight: 1.45,
+              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+            }}>
+              {card.description}
+            </div>
+          )}
+
+          {/* Tags */}
+          {card.tags.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 10 }}>
+              {card.tags.map((t) => (
+                <span key={t} style={{
+                  fontSize: 11, fontWeight: 500, padding: '4px 8px', borderRadius: 999,
+                  background: 'rgb(var(--surface-2))', color: 'rgb(var(--ink-2))',
+                  border: '1px solid rgb(var(--hairline) / 0.08)',
+                }}>
+                  {t}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Footer */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            fontSize: 11.5, color: 'rgb(var(--ink-3))', paddingRight: 22,
+          }}>
+            <span>{relTime(card.updated_at)}</span>
+            {assignees.length > 0 && (
+              <div style={{ display: 'inline-flex' }}>
+                {assignees.slice(0, 3).map((u, i) => (
+                  <span
+                    key={u.id}
+                    title={u.name}
+                    style={{
+                      width: 22, height: 22, borderRadius: 999,
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 600, color: 'white',
+                      background: userColor(u.id),
+                      border: '2px solid rgb(var(--paper))',
+                      marginLeft: i > 0 ? -6 : 0,
+                    }}
+                  >
+                    {u.short_name.charAt(0).toUpperCase()}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        {owner && (
-          <span className="tag-pill">
-            {owner.short_name || owner.name}
-          </span>
-        )}
       </div>
     </li>
   );

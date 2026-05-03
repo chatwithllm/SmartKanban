@@ -46,38 +46,60 @@ export function useWeather(): { data: WeatherData | null; loading: boolean } {
       }
     } catch { /* ignore */ }
 
+    async function fetchWeather(lat: number, lon: number) {
+      const url =
+        `https://api.open-meteo.com/v1/forecast` +
+        `?latitude=${lat}&longitude=${lon}` +
+        `&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m` +
+        `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
+        `&forecast_days=6&timezone=auto`;
+      const res = await fetch(url);
+      const json = await res.json();
+      return {
+        current: {
+          temp: Math.round(json.current.temperature_2m),
+          code: json.current.weather_code,
+          humidity: json.current.relative_humidity_2m,
+          wind: Math.round(json.current.wind_speed_10m),
+        },
+        daily: (json.daily.time as string[]).slice(1).map((date, i) => ({
+          date,
+          code: json.daily.weather_code[i + 1] as number,
+          max: Math.round(json.daily.temperature_2m_max[i + 1] as number),
+          min: Math.round(json.daily.temperature_2m_min[i + 1] as number),
+        })),
+      } as WeatherData;
+    }
+
+    async function ipFallback() {
+      try {
+        const geo = await fetch('https://ipapi.co/json/');
+        const j = await geo.json();
+        if (j.latitude && j.longitude) {
+          return fetchWeather(j.latitude, j.longitude);
+        }
+      } catch { /* ignore */ }
+      return null;
+    }
+
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const { latitude: lat, longitude: lon } = pos.coords;
-          const url =
-            `https://api.open-meteo.com/v1/forecast` +
-            `?latitude=${lat}&longitude=${lon}` +
-            `&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m` +
-            `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
-            `&forecast_days=6&timezone=auto`;
-          const res = await fetch(url);
-          const json = await res.json();
-          const result: WeatherData = {
-            current: {
-              temp: Math.round(json.current.temperature_2m),
-              code: json.current.weather_code,
-              humidity: json.current.relative_humidity_2m,
-              wind: Math.round(json.current.wind_speed_10m),
-            },
-            daily: (json.daily.time as string[]).slice(1).map((date, i) => ({
-              date,
-              code: json.daily.weather_code[i + 1] as number,
-              max: Math.round(json.daily.temperature_2m_max[i + 1] as number),
-              min: Math.round(json.daily.temperature_2m_min[i + 1] as number),
-            })),
-          };
+          const result = await fetchWeather(pos.coords.latitude, pos.coords.longitude);
           localStorage.setItem(CACHE_KEY, JSON.stringify({ data: result, ts: Date.now() }));
           setData(result);
         } catch { /* ignore */ }
         setLoading(false);
       },
-      () => setLoading(false),
+      async () => {
+        // Geolocation blocked (HTTP/LAN) — fall back to IP-based location
+        const result = await ipFallback();
+        if (result) {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({ data: result, ts: Date.now() }));
+          setData(result);
+        }
+        setLoading(false);
+      },
       { timeout: 5000 },
     );
   }, []);

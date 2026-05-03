@@ -44,3 +44,90 @@ body {
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @keyframes modalIn { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
 @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+@layer components {
+  /* Card surface — list row/panel */
+  .card-surface {
+    background: rgb(var(--card));
+    border-radius: var(--r-card);
+    box-shadow: var(--sh-1);
+    border: 1px solid rgb(var(--hairline) / 0.06);
+  }
+
+  /* Pill buttons */
+  .btn-pill {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 7px 16px;
+    border-radius: var(--r-pill);
+    font-size: 13px; font-weight: 500; font-family: inherit;
+    cursor: pointer; border: none;
+    transition: background 120ms ease, opacity 120ms ease, border-color 120ms ease;
+    white-space: nowrap;
+  }
+  .btn-pill-filled-green {
+    background: rgb(var(--green-starbucks)); color: white;
+  }
+  .btn-pill-filled-green:hover { background: rgb(var(--green-uplift)); }
+  .btn-pill-outlined-green {
+    background: transparent;
+    border: 1px solid rgb(var(--green-starbucks) / 0.5);
+    color: rgb(var(--green-starbucks));
+  }
+  .btn-pill-outlined-green:hover { background: rgb(var(--green-starbucks) / 0.08); }
+  .btn-pill-outlined-dark {
+    background: transparent;
+    border: 1px solid rgb(var(--hairline) / 0.14);
+    color: rgb(var(--ink));
+  }
+  .btn-pill-outlined-dark:hover { background: rgb(var(--hairline) / 0.04); }
+  .btn-pill-on-dark-filled {
+    background: white; color: rgb(var(--green-house));
+    border: none;
+  }
+  .btn-pill-on-dark-outlined {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+  }
+  .btn-pill-destructive {
+    background: rgb(var(--danger)); color: white;
+  }
+  .btn-pill-destructive:hover { opacity: 0.88; }
+
+  /* Tag pill */
+  .tag-pill {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--r-pill);
+    font-size: 11px; font-weight: 500;
+    background: rgb(var(--ceramic));
+    color: rgb(var(--ink-2));
+    border: 1px solid rgb(var(--hairline) / 0.08);
+  }
+
+  /* Input pill */
+  .input-pill {
+    background: rgb(var(--card));
+    color: rgb(var(--ink));
+    border: 1px solid rgb(var(--hairline) / 0.12);
+    border-radius: var(--r-pill);
+    padding: 8px 14px;
+    font-size: 13px; font-family: inherit;
+    outline: none;
+  }
+  .input-pill::placeholder { color: rgb(var(--ink-soft)); }
+
+  /* FAB */
+  .fab {
+    position: fixed;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 999px;
+    background: rgb(var(--violet)); color: white;
+    border: none; cursor: pointer;
+    box-shadow: var(--sh-3);
+    z-index: 40;
+    transition: background 120ms ease, transform 80ms ease, box-shadow 120ms ease;
+  }
+  .fab:hover { background: rgb(var(--violet-deep)); }
+  .fab:active { transform: scale(0.96); }
+}
