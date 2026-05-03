@@ -3,7 +3,6 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
-  TouchSensor,
   closestCorners,
   useSensor,
   useSensors,
@@ -29,10 +28,7 @@ type Props = {
 
 export function Board({ cards, users, searchQuery, unreadCounts, onCreate, onEdit, onDelete, onMove }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   const searchActive = searchQuery.trim().length > 0;
 
