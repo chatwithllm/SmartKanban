@@ -115,6 +115,7 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
+      style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }}
       onClick={onClose}
     >
       <div
