@@ -24,6 +24,7 @@ export function WeatherWidget() {
       {/* Compact chip */}
       <button
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
         style={{
           display: 'flex', alignItems: 'center', gap: 6,
           padding: '4px 8px', borderRadius: 8,
@@ -49,11 +50,12 @@ export function WeatherWidget() {
         <div
           style={{
             position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-            width: 280, borderRadius: 12, zIndex: 200,
+            width: 280, borderRadius: 12, zIndex: 50,
             background: 'rgb(var(--surface))',
             border: '1px solid rgb(var(--hairline) / 0.10)',
             boxShadow: 'var(--sh-2)',
             padding: 16,
+            animation: 'fadeIn 200ms ease both',
           }}
         >
           {/* Today detail row */}
@@ -77,7 +79,7 @@ export function WeatherWidget() {
 
           {/* 5-day forecast */}
           {data.daily.slice(0, 5).map((d) => {
-            const dow = DAY_NAMES[new Date(d.date).getDay()];
+            const dow = DAY_NAMES[new Date(d.date + 'T12:00:00').getDay()];
             return (
               <div
                 key={d.date}
