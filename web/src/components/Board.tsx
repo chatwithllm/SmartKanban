@@ -18,13 +18,14 @@ type Props = {
   cards: Card[];
   users: User[];
   searchQuery: string;
+  unreadCounts?: Record<string, number>;
   onCreate: (title: string, status: Status) => void;
   onEdit: (card: Card) => void;
   onDelete: (id: string) => void;
   onMove: (id: string, status: Status, position: number) => void;
 };
 
-export function Board({ cards, users, searchQuery, onCreate, onEdit, onDelete, onMove }: Props) {
+export function Board({ cards, users, searchQuery, unreadCounts, onCreate, onEdit, onDelete, onMove }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -104,6 +105,7 @@ export function Board({ cards, users, searchQuery, onCreate, onEdit, onDelete, o
             status={status}
             cards={byStatus[status]}
             users={users}
+            unreadCounts={unreadCounts}
             searchActive={searchActive}
             onCreate={(title) => onCreate(title, status)}
             onEdit={onEdit}

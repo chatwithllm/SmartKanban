@@ -53,13 +53,22 @@ export type ReviewData = {
   summary: string | null;
 };
 
-export type ActivityEntry = {
+export type AiSuggestion = {
+  label: string;
+  action: 'update_status' | 'set_due_date' | 'assign_user' | 'create_card';
+  params: Record<string, unknown>;
+};
+
+export type CardEvent = {
   id: string;
   actor_id: string | null;
   actor_name: string | null;
   card_id: string | null;
-  action: string;
+  action: string | null;
   details: Record<string, unknown>;
+  entry_type: 'system' | 'message' | 'ai';
+  content: string | null;
+  ai_suggestions: AiSuggestion[] | null;
   created_at: string;
 };
 

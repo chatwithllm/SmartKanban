@@ -1,17 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { Card, User } from '../types.ts';
+import type { Card, CardEvent, User } from '../types.ts';
 import type { KnowledgeItem } from '../types.ts';
 import { api } from '../api.ts';
-import { ActivityTimeline } from './ActivityTimeline.tsx';
+import { CardTimeline } from './CardTimeline.tsx';
 
 type Props = {
   card: Card;
   users: User[];
+  meId: string;
+  incomingChatEvents?: CardEvent[];
   onSave: (patch: Partial<Card>) => void;
   onClose: () => void;
+  onRead?: (cardId: string) => void;
+  onOpenCard?: (cardId: string | null) => void;
 };
 
-export function EditDialog({ card, users, onSave, onClose }: Props) {
+export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onClose, onRead, onOpenCard }: Props) {
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description);
   const [tags, setTags] = useState(card.tags.join(', '));
@@ -72,6 +76,11 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
     await api.unlinkKnowledge(id, card.id);
     setLinked((prev) => prev.filter((k) => k.id !== id));
   }
+
+  useEffect(() => {
+    onOpenCard?.(card.id);
+    return () => onOpenCard?.(null);
+  }, [card.id, onOpenCard]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -309,7 +318,12 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
 
           <div>
             <div className="text-3 font-semibold text-green-starbucks tracking-tight2 mb-2">Activity</div>
-            <ActivityTimeline cardId={card.id} />
+            <CardTimeline
+              cardId={card.id}
+              meId={meId}
+              incomingEvents={incomingChatEvents}
+              onRead={(lastId) => onRead?.(card.id)}
+            />
           </div>
         </div>
 

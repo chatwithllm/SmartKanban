@@ -13,13 +13,14 @@ type Props = {
   status: Status;
   cards: Card[];
   users: User[];
+  unreadCounts?: Record<string, number>;
   searchActive?: boolean;
   onCreate: (title: string) => void;
   onEdit: (card: Card) => void;
   onDelete: (id: string) => void;
 };
 
-export function Column({ status, cards, users, searchActive, onCreate, onEdit, onDelete }: Props) {
+export function Column({ status, cards, users, unreadCounts, searchActive, onCreate, onEdit, onDelete }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: `column:${status}`, data: { status } });
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
@@ -175,6 +176,7 @@ export function Column({ status, cards, users, searchActive, onCreate, onEdit, o
               key={card.id}
               card={card}
               users={users}
+              unreadCount={unreadCounts?.[card.id] ?? 0}
               onClick={() => onEdit(card)}
               onDelete={() => onDelete(card.id)}
             />

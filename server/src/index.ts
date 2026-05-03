@@ -16,6 +16,7 @@ import { attachmentRoutes } from './routes/attachments.js';
 import { attachmentUploadRoutes } from './routes/attachments_upload.js';
 import { templateRoutes } from './routes/templates.js';
 import { knowledgeRoutes } from './routes/knowledge.js';
+import { chatRoutes } from './routes/chat.js';
 import { qrRoutes } from './routes/qr.js';
 import { wsRoutes } from './ws.js';
 import { startTelegramBot } from './telegram/bot.js';
@@ -48,6 +49,7 @@ fs.mkdirSync(attachmentsDir, { recursive: true });
 
 await app.register(authRoutes);
 await app.register(cardRoutes);
+await app.register(chatRoutes);
 await app.register(mirrorRoutes);
 await app.register(apiTokenRoutes);
 await app.register(reviewRoutes);

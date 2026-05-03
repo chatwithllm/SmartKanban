@@ -73,7 +73,7 @@ test('GET /api/tokens lists user tokens, hides others', async () => {
   assert.equal(res.statusCode, 200);
   const tokens = res.json() as Array<{ label: string; scope: string }>;
   assert.equal(tokens.length, 1);
-  assert.equal(tokens[0].label, 't1');
+  assert.equal(tokens[0]!.label, 't1');
 });
 
 test('DELETE /api/tokens/:token revokes', async () => {
@@ -190,7 +190,7 @@ test('GET /api/mirror/tokens does not return api-scope tokens', async () => {
   assert.equal(list.statusCode, 200);
   const tokens = list.json() as Array<{ label: string }>;
   assert.equal(tokens.length, 1, 'expected only the mirror-scope token');
-  assert.equal(tokens[0].label, 'mirror1');
+  assert.equal(tokens[0]!.label, 'mirror1');
 });
 
 test('x-mirror-token header rejects api-scope tokens', async () => {

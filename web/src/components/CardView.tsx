@@ -7,6 +7,7 @@ import type { Card, User } from '../types.ts';
 type Props = {
   card: Card;
   users?: User[];
+  unreadCount?: number;
   onClick?: () => void;
   onDelete?: () => void;
   dragging?: boolean;
@@ -52,7 +53,7 @@ function dueDateBadge(due: string): { label: string; cls: string } {
   return { label, cls: 'bg-ceramic text-ink-soft' };
 }
 
-export function CardView({ card, users = [], onClick, onDelete, dragging, compact }: Props) {
+export function CardView({ card, users = [], unreadCount = 0, onClick, onDelete, dragging, compact }: Props) {
   const sortable = useSortable({ id: card.id, data: { status: card.status } });
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = sortable;
 
@@ -155,6 +156,11 @@ export function CardView({ card, users = [], onClick, onDelete, dragging, compac
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
+          {unreadCount > 0 && (
+            <span className="inline-flex items-center justify-center h-4 min-w-[1rem] rounded-full bg-green-accent text-white text-1 font-medium px-1">
+              {unreadCount}
+            </span>
+          )}
           {onDelete && (
             <button
               onPointerDown={(e) => e.stopPropagation()}

@@ -91,7 +91,7 @@ export function audioClient(): OpenAI | null {
 
 // Run fn against primary, falling back once on any thrown error. Returns null
 // if both paths fail (or primary is unset).
-export async function withChatFallback<T>(
+async function _withChatFallback<T>(
   fn: (target: ChatTarget) => Promise<T>,
 ): Promise<T | null> {
   const primary = chatPrimary();
@@ -115,6 +115,19 @@ export async function withChatFallback<T>(
       return null;
     }
   }
+}
+
+// Mutable holder so tests can swap the implementation without fighting ESM sealing.
+export const aiHooks: {
+  withChatFallback: typeof _withChatFallback;
+} = {
+  withChatFallback: _withChatFallback,
+};
+
+export async function withChatFallback<T>(
+  fn: (target: ChatTarget) => Promise<T>,
+): Promise<T | null> {
+  return aiHooks.withChatFallback(fn);
 }
 
 export async function withVisionFallback<T>(

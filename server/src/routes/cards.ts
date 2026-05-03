@@ -8,7 +8,6 @@ import {
   type Scope,
   type Status,
   canUserSeeCard,
-  getCardActivity,
   isStatus,
   listArchivedCards,
   listCards,
@@ -209,21 +208,6 @@ export async function cardRoutes(app: FastifyInstance) {
       const card = (await loadCard(id))!;
       broadcast({ type: 'card.updated', card });
       return card;
-    },
-  );
-
-  // GET /api/cards/:id/activity
-  app.get<{ Params: { id: string } }>(
-    '/api/cards/:id/activity',
-    { preHandler: requireUser },
-    async (req, reply) => {
-      const { id } = req.params;
-      const card = await loadCard(id);
-      if (!card) return reply.code(404).send({ error: 'not found' });
-      if (!(await canUserSeeCard(req.user!.id, id))) {
-        return reply.code(404).send({ error: 'not found' });
-      }
-      return getCardActivity(id);
     },
   );
 

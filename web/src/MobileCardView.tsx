@@ -4,10 +4,14 @@ import type { Card, Status, User } from './types.ts';
 import { STATUSES, STATUS_LABELS } from './types.ts';
 import { connectWS } from './ws.ts';
 import { useToast } from './hooks/useToast.ts';
+import { useAuth } from './auth.tsx';
+import { CardTimeline } from './components/CardTimeline.tsx';
 
 type Props = { cardId: string };
 
 export function MobileCardView({ cardId }: Props) {
+  const { user } = useAuth();
+  const meId = user?.id ?? '';
   const [card, setCard] = useState<Card | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [err, setErr] = useState<string | null>(null);
@@ -269,6 +273,8 @@ export function MobileCardView({ cardId }: Props) {
           </label>
         </div>
       </div>
+
+      <CardTimeline cardId={card.id} meId={meId} />
 
       <button
         onClick={archive}
