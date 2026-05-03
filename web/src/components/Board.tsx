@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   DndContext,
   DragOverlay,
-  MouseSensor,
+  PointerSensor,
   TouchSensor,
   closestCorners,
   useSensor,
@@ -30,7 +30,7 @@ type Props = {
 export function Board({ cards, users, searchQuery, unreadCounts, onCreate, onEdit, onDelete, onMove }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
   );
 
