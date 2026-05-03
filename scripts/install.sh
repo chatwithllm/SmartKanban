@@ -545,11 +545,18 @@ do_upgrade() {
   git -C "$INSTALL_DIR" pull --ff-only origin main
   ok "repo updated to $(git -C "$INSTALL_DIR" rev-parse --short HEAD)"
 
-  step "Applying schema (idempotent)"
+  step "Applying schema + migrations (idempotent)"
   cd "$INSTALL_DIR"
   # Ensure db is running
   $DOCKER compose up -d db
   wait_for_pg
+  # Migrations first so renames/alters run before schema's CREATE IF NOT EXISTS
+  if compgen -G "server/migrations/*.sql" >/dev/null 2>&1; then
+    for mig in $(ls server/migrations/*.sql | sort); do
+      $DOCKER compose exec -T db psql -U kanban -d kanban < "$mig" >/dev/null
+    done
+    ok "migrations applied"
+  fi
   $DOCKER compose exec -T db psql -U kanban -d kanban < server/schema.sql >/dev/null
   ok "schema applied"
 
