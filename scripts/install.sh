@@ -526,28 +526,11 @@ do_upgrade() {
   resolve_docker
 
   step "Pulling latest"
-  # Repo may be on a feature/fix branch left over from a prior hotfix
-  # (e.g. fix/test-strict-undefined). Force back to main with tracking
-  # set, otherwise `git pull` fails with "no tracking information".
-  local current_branch
-  current_branch="$(git -C "$INSTALL_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")"
-  if [[ "$current_branch" != "main" ]]; then
-    warn "Repo is on '$current_branch' — switching to 'main' for upgrade."
-    git -C "$INSTALL_DIR" fetch origin main
-    # Stash any local changes so checkout doesn't fail
-    if ! git -C "$INSTALL_DIR" diff --quiet || ! git -C "$INSTALL_DIR" diff --cached --quiet; then
-      warn "Local changes detected — stashing before checkout."
-      git -C "$INSTALL_DIR" stash push -u -m "auto-stash before installer upgrade $(date +%s)" >/dev/null
-    fi
-    git -C "$INSTALL_DIR" checkout main 2>/dev/null || git -C "$INSTALL_DIR" checkout -B main origin/main
-    git -C "$INSTALL_DIR" branch --set-upstream-to=origin/main main 2>/dev/null || true
-  fi
-  # Stash any local changes (e.g. edited test files) so pull doesn't abort
-  if ! git -C "$INSTALL_DIR" diff --quiet || ! git -C "$INSTALL_DIR" diff --cached --quiet; then
-    warn "Local changes detected — stashing before pull."
-    git -C "$INSTALL_DIR" stash push -u -m "auto-stash before installer upgrade $(date +%s)" >/dev/null
-  fi
-  git -C "$INSTALL_DIR" pull --ff-only origin main
+  # Fetch + hard-reset to origin/main. This handles any local modifications
+  # (e.g. test files edited during debugging) without stash/merge conflicts.
+  git -C "$INSTALL_DIR" fetch origin main
+  git -C "$INSTALL_DIR" checkout -B main origin/main
+  git -C "$INSTALL_DIR" branch --set-upstream-to=origin/main main 2>/dev/null || true
   ok "repo updated to $(git -C "$INSTALL_DIR" rev-parse --short HEAD)"
 
   step "Applying schema + migrations (idempotent)"
