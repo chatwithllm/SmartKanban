@@ -70,7 +70,7 @@ function Authed({ meId }: { meId: string }) {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
-  const [section, setSection] = useState<'board' | 'knowledge'>('board');
+  const [section, setSection] = useState<'board' | 'knowledge' | 'archive'>('board');
   const [shareInitial, setShareInitial] = useState<{ title?: string; url?: string; body?: string } | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [activeChatEvents, setActiveChatEvents] = useState<CardEvent[]>([]);
@@ -93,7 +93,7 @@ function Authed({ meId }: { meId: string }) {
 
   const handleCloseDialog = useCallback(() => {
     if (settingsOpen) setSettingsOpen(false);
-    else if (archiveOpen) setArchiveOpen(false);
+    else if (archiveOpen) { setArchiveOpen(false); setSection('board'); }
     else if (reviewOpen) setReviewOpen(false);
     else if (editing) setEditing(null);
   }, [editing, reviewOpen, archiveOpen, settingsOpen]);
@@ -297,10 +297,13 @@ function Authed({ meId }: { meId: string }) {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onOpenReview={() => setReviewOpen(true)}
-        onOpenArchive={() => setArchiveOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         section={section}
-        onSection={setSection}
+        onSection={(s) => {
+          setSection(s);
+          if (s === 'archive') setArchiveOpen(true);
+          else setArchiveOpen(false);
+        }}
       />
       {section === 'board' ? (
         <Board
@@ -313,12 +316,12 @@ function Authed({ meId }: { meId: string }) {
           onDelete={handleDelete}
           onMove={handleMove}
         />
-      ) : (
+      ) : section === 'knowledge' ? (
         <KnowledgeView
           shareInitial={shareInitial}
           onShareConsumed={() => setShareInitial(null)}
         />
-      )}
+      ) : null}
       {editing && (
         <EditDialog
           card={editing}
@@ -334,7 +337,7 @@ function Authed({ meId }: { meId: string }) {
       {reviewOpen && <WeeklyReview onClose={() => setReviewOpen(false)} />}
       {archiveOpen && (
         <ArchiveDialog
-          onClose={() => setArchiveOpen(false)}
+          onClose={() => { setArchiveOpen(false); setSection('board'); }}
           onRestore={(card) => {
             setCards((prev) =>
               prev.some((c) => c.id === card.id) ? prev : [...prev, card],
