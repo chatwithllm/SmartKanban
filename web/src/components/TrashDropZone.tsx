@@ -21,7 +21,6 @@ export function TrashDropZone({ isDragging }: Props) {
     <div
       ref={setNodeRef}
       aria-label="Trash — drop card here to delete"
-      role="region"
       tabIndex={-1}
       style={{
         position: 'fixed',
