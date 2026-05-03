@@ -44,3 +44,41 @@ self.addEventListener('fetch', (event) => {
     ),
   );
 });
+
+// Push notification handler
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch {
+    payload = { title: 'SmartKanban', body: event.data.text(), cardId: null };
+  }
+  event.waitUntil(
+    self.registration.showNotification(payload.title ?? 'SmartKanban', {
+      body: payload.body ?? '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-72.png',
+      data: { cardId: payload.cardId },
+      tag: payload.cardId ?? 'default',
+      renotify: true,
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const cardId = event.notification.data?.cardId;
+  const url = cardId ? `/?card=${encodeURIComponent(cardId)}` : '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.postMessage({ type: 'open-card', cardId });
+          return client.focus();
+        }
+      }
+      return clients.openWindow(url);
+    }),
+  );
+});
