@@ -150,8 +150,12 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="flex-1 bg-transparent text-3 font-medium text-ink tracking-tight2 outline-none placeholder:text-ink-soft"
               placeholder="Title"
+              style={{
+                flex: 1, background: 'transparent', outline: 'none', border: 'none',
+                fontSize: 18, fontWeight: 600, color: 'rgb(var(--ink))',
+                fontFamily: 'Spectral, serif', letterSpacing: '-0.01em',
+              }}
             />
             <button
               onClick={() => setShowQr((v) => !v)}
@@ -180,15 +184,31 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full min-h-[120px] resize-none bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none"
             placeholder="Description"
+            style={{
+              width: '100%', minHeight: 120, resize: 'none',
+              background: 'rgb(var(--card))',
+              color: 'rgb(var(--ink))',
+              border: '1px solid rgb(var(--hairline) / 0.14)',
+              borderRadius: 10, padding: '10px 14px',
+              fontSize: 13, fontFamily: 'Inter, sans-serif',
+              outline: 'none',
+            }}
           />
 
           <input
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full"
             placeholder="tags, comma, separated"
+            style={{
+              width: '100%',
+              background: 'rgb(var(--card))',
+              color: 'rgb(var(--ink))',
+              border: '1px solid rgb(var(--hairline) / 0.14)',
+              borderRadius: 10, padding: '8px 14px',
+              fontSize: 13, fontFamily: 'Inter, sans-serif',
+              outline: 'none',
+            }}
           />
 
           {card?.id && (
@@ -230,10 +250,18 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
               {picking && (
                 <div className="mt-2 rounded-card border border-ink/10 bg-ceramic p-2">
                   <input
-                    className="mb-1 bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full"
                     placeholder="search knowledge..."
                     value={pickerQ}
                     onChange={(e) => setPickerQ(e.target.value)}
+                    style={{
+                      width: '100%', marginBottom: 4,
+                      background: 'rgb(var(--card))',
+                      color: 'rgb(var(--ink))',
+                      border: '1px solid rgb(var(--hairline) / 0.14)',
+                      borderRadius: 8, padding: '7px 12px',
+                      fontSize: 13, fontFamily: 'Inter, sans-serif',
+                      outline: 'none',
+                    }}
                   />
                   <ul className="max-h-48 overflow-auto">
                     {candidates.map((k) => (
@@ -258,7 +286,16 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="flex-1 bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none"
+              style={{
+                flex: 1,
+                background: 'rgb(var(--card))',
+                color: 'rgb(var(--ink))',
+                border: '1px solid rgb(var(--hairline) / 0.14)',
+                borderRadius: 10, padding: '8px 14px',
+                fontSize: 13, fontFamily: 'Inter, sans-serif',
+                outline: 'none',
+                colorScheme: 'inherit',
+              }}
             />
             {dueDate && (
               <button
