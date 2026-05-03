@@ -20,6 +20,8 @@ import { applyKnowledgeEvent } from './hooks/useKnowledge.ts';
 import { MobileCardView } from './MobileCardView.tsx';
 import { MobileShell } from './MobileShell.tsx';
 import { useIsMobile } from './hooks/useIsMobile.ts';
+import { useNotifications } from './hooks/useNotifications.ts';
+import { NotificationBell } from './components/NotificationBell.tsx';
 
 export function App() {
   const { user, loading } = useAuth();
@@ -76,7 +78,10 @@ function Authed({ meId }: { meId: string }) {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [activeChatEvents, setActiveChatEvents] = useState<CardEvent[]>([]);
   const openCardId = useRef<string | null>(null);
+  const [lastWsEvent, setLastWsEvent] = useState<{ type: string } | null>(null);
   const { addToast } = useToast();
+
+  const { notifications, unreadCount: notifUnreadCount, markRead: markNotifRead, markAllRead: markAllNotifsRead } = useNotifications(lastWsEvent, meId);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -143,6 +148,7 @@ function Authed({ meId }: { meId: string }) {
         return;
       }
       if (ev.type === 'card.message' || ev.type === 'card.ai_response') {
+        setLastWsEvent(ev);
         if (openCardId.current === ev.card_id) {
           setActiveChatEvents((prev) => [...prev, ev.event]);
         } else {
@@ -276,6 +282,40 @@ function Authed({ meId }: { meId: string }) {
     if (!cardId) setActiveChatEvents([]);
   };
 
+  const handleCardOpenById = useCallback((cardId: string) => {
+    const card = cards.find(c => c.id === cardId);
+    if (card) {
+      setEditing(card);
+      const cardNotifIds = notifications.filter(n => n.card_id === cardId && !n.read).map(n => n.id);
+      if (cardNotifIds.length > 0) markNotifRead(cardNotifIds);
+    }
+  }, [cards, notifications, markNotifRead]);
+
+  // Service worker message listener (push notification clicks)
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === 'open-card' && e.data.cardId) {
+        handleCardOpenById(e.data.cardId);
+      }
+    };
+    navigator.serviceWorker?.addEventListener('message', handler);
+    return () => navigator.serviceWorker?.removeEventListener('message', handler);
+  }, [handleCardOpenById]);
+
+  // Handle ?card=<id> query param on load (from push notification click → openWindow)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cardId = params.get('card');
+    if (cardId && cards.length > 0) {
+      const card = cards.find(c => c.id === cardId);
+      if (card) {
+        handleCardOpenById(cardId);
+        history.replaceState({}, '', '/');
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cards]);
+
   const handleSaveEdit = async (patch: Partial<Card>) => {
     if (!editing) return;
     const id = editing.id;
@@ -316,6 +356,15 @@ function Authed({ meId }: { meId: string }) {
           if (s === 'archive') setArchiveOpen(true);
           else setArchiveOpen(false);
         }}
+        notificationBell={
+          <NotificationBell
+            notifications={notifications}
+            unreadCount={notifUnreadCount}
+            onMarkRead={markNotifRead}
+            onMarkAllRead={markAllNotifsRead}
+            onCardOpen={handleCardOpenById}
+          />
+        }
       />
       {section === 'board' && (
         <ActivityTicker
