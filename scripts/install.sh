@@ -542,6 +542,11 @@ do_upgrade() {
     git -C "$INSTALL_DIR" checkout main 2>/dev/null || git -C "$INSTALL_DIR" checkout -B main origin/main
     git -C "$INSTALL_DIR" branch --set-upstream-to=origin/main main 2>/dev/null || true
   fi
+  # Stash any local changes (e.g. edited test files) so pull doesn't abort
+  if ! git -C "$INSTALL_DIR" diff --quiet || ! git -C "$INSTALL_DIR" diff --cached --quiet; then
+    warn "Local changes detected — stashing before pull."
+    git -C "$INSTALL_DIR" stash push -u -m "auto-stash before installer upgrade $(date +%s)" >/dev/null
+  fi
   git -C "$INSTALL_DIR" pull --ff-only origin main
   ok "repo updated to $(git -C "$INSTALL_DIR" rev-parse --short HEAD)"
 
