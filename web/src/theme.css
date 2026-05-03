@@ -1,213 +1,122 @@
-/* Self-hosted primary typeface */
-@font-face {
-  font-family: 'Nunito Sans';
-  src: url('/fonts/nunito-sans-400.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Nunito Sans';
-  src: url('/fonts/nunito-sans-600.woff2') format('woff2');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Nunito Sans';
-  src: url('/fonts/nunito-sans-700.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
 :root {
-  /* Surfaces — light theme */
-  --canvas: 242 240 235;          /* #f2f0eb Neutral Warm */
-  --ceramic: 237 235 233;         /* #edebe9 */
-  --card: 255 255 255;            /* #ffffff */
-  --neutral-cool: 249 249 249;    /* #f9f9f9 */
-  --gold-lightest: 250 246 238;   /* #faf6ee */
+  /* Surfaces */
+  --canvas:    250 249 247;
+  --surface:   255 255 255;
+  --surface-2: 246 245 242;
+  --surface-3: 240 238 234;
+  --hairline:  17 17 24;
 
-  /* Brand greens (theme-invariant) */
-  --green-starbucks: 0 98 65;     /* #006241 */
-  --green-accent: 0 117 74;       /* #00754A */
-  --green-house: 30 57 50;        /* #1E3932 */
-  --green-uplift: 43 81 72;       /* #2b5148 */
-  --green-light: 212 233 226;     /* #d4e9e2 */
+  /* Ink */
+  --ink:   24 22 35;
+  --ink-2: 70 65 88;
+  --ink-3: 130 124 148;
+  --ink-rev: 255 255 255;
 
-  /* Gold (ceremony only) */
-  --gold: 203 162 88;             /* #cba258 */
+  /* Brand */
+  --violet:      91 55 196;
+  --violet-deep: 65 38 142;
+  --violet-soft: 234 226 250;
+  --violet-tint: 246 242 254;
+
+  /* Tag palette */
+  --tag-violet-bg: 234 226 250; --tag-violet-fg: 65 38 142;
+  --tag-blue-bg:   222 232 252; --tag-blue-fg:   30 64 152;
+  --tag-teal-bg:   216 238 235; --tag-teal-fg:   17 100 90;
+  --tag-amber-bg:  248 233 207; --tag-amber-fg:  138 88 13;
+  --tag-rose-bg:   250 224 230; --tag-rose-fg:   158 32 70;
+  --tag-stone-bg:  235 232 226; --tag-stone-fg:  76 70 60;
+  --tag-mint-bg:   220 240 226; --tag-mint-fg:   30 95 60;
+
+  /* Status accents */
+  --backlog: 130 124 148;
+  --today:   91 55 196;
+  --doing:   138 88 13;
+  --done:    30 95 60;
+
+  /* Lane backgrounds */
+  --lane-backlog:      188 144 105;
+  --lane-today:        228 130 70;
+  --lane-doing:        233 178 50;
+  --lane-done:         52 158 138;
+  --lane-backlog-soft: 245 235 220;
+  --lane-today-soft:   250 230 210;
+  --lane-doing-soft:   250 240 210;
+  --lane-done-soft:    218 238 232;
+
+  /* Pin colors */
+  --pin-backlog: 130 80 40;
+  --pin-today:   200 60 40;
+  --pin-doing:   210 130 20;
+  --pin-done:    20 110 100;
+
+  /* Card paper */
+  --paper:      255 253 248;
+  --paper-fold: 208 200 184;
 
   /* Semantic */
-  --red: 200 32 20;               /* #c82014 */
-  --yellow: 251 188 5;            /* #fbbc05 */
-
-  /* Text — light theme */
-  --ink: 0 0 0;                   /* used at 0.87 alpha */
-  --ink-soft: 0 0 0;              /* used at 0.58 alpha */
-  --ink-rev: 255 255 255;
-  --ink-rev-soft: 255 255 255;    /* used at 0.70 alpha */
-  --ink-rewards: 51 67 61;        /* #33433d */
+  --danger:  178 36 60;
+  --success: 30 95 60;
 
   /* Geometry */
-  --radius-card: 12px;
-  --radius-pill: 50px;
+  --r-card: 10px;
+  --r-md:   8px;
+  --r-sm:   6px;
+  --r-pill: 999px;
 
   /* Shadows */
-  --shadow-card: 0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24);
-  --shadow-card-hover: 0 0 0.5px rgba(0,0,0,0.14), 0 4px 8px rgba(0,0,0,0.14);
-  --shadow-card-drag: 0 12px 24px rgba(0,0,0,0.18);
-  --shadow-app-bar: 0 1px 3px rgba(0,0,0,0.1), 0 2px 2px rgba(0,0,0,0.06), 0 0 2px rgba(0,0,0,0.07);
-  --shadow-fab-base: 0 0 6px rgba(0,0,0,0.24);
-  --shadow-fab-ambient: 0 8px 12px rgba(0,0,0,0.14);
-  --shadow-toast: 0 0 0.5px rgba(0,0,0,0.14), 0 8px 12px rgba(0,0,0,0.14);
-  --shadow-modal: 0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24), 0 16px 32px rgba(0,0,0,0.18);
-
-  /* Frap touch offset (for FAB) */
-  --frap-touch-offset: -0.8rem;
+  --sh-1: 0 0 0 1px rgb(17 17 24 / 0.04), 0 1px 2px rgb(17 17 24 / 0.04);
+  --sh-2: 0 0 0 1px rgb(17 17 24 / 0.05), 0 4px 12px rgb(17 17 24 / 0.06);
+  --sh-3: 0 0 0 1px rgb(17 17 24 / 0.06), 0 16px 32px rgb(17 17 24 / 0.10);
 }
 
 :root[data-theme="dark"] {
-  --canvas: 10 10 10;             /* #0a0a0a */
-  --ceramic: 23 23 23;             /* #171717 */
-  --card: 26 26 26;                /* #1a1a1a */
-  --neutral-cool: 31 31 31;        /* #1f1f1f */
-  --gold-lightest: 38 33 26;       /* #26211a */
+  --canvas:    14 13 20;
+  --surface:   22 21 30;
+  --surface-2: 28 27 38;
+  --surface-3: 36 34 47;
+  --hairline:  255 255 255;
 
-  --ink: 255 255 255;              /* used at 0.92 alpha in dark */
-  --ink-soft: 255 255 255;         /* used at 0.65 alpha in dark */
-  --ink-rewards: 163 181 173;
+  --ink:   240 237 248;
+  --ink-2: 184 178 204;
+  --ink-3: 128 122 148;
+  --ink-rev: 14 13 20;
 
-  --shadow-card: 0 0 0.5px rgba(0,0,0,0.30), 0 1px 1px rgba(0,0,0,0.50);
-  --shadow-card-hover: 0 0 0.5px rgba(0,0,0,0.30), 0 4px 8px rgba(0,0,0,0.30);
-  --shadow-card-drag: 0 12px 24px rgba(0,0,0,0.40);
-  --shadow-app-bar: 0 1px 3px rgba(0,0,0,0.30), 0 2px 2px rgba(0,0,0,0.18);
-  --shadow-fab-base: 0 0 6px rgba(0,0,0,0.50);
-  --shadow-fab-ambient: 0 8px 12px rgba(0,0,0,0.30);
-  --shadow-toast: 0 0 0.5px rgba(0,0,0,0.30), 0 8px 12px rgba(0,0,0,0.30);
-  --shadow-modal: 0 0 0.5px rgba(0,0,0,0.30), 0 1px 1px rgba(0,0,0,0.40), 0 16px 32px rgba(0,0,0,0.40);
-}
+  --violet:      158 130 248;
+  --violet-deep: 187 165 250;
+  --violet-soft: 50 38 92;
+  --violet-tint: 36 28 62;
 
-/* Anchor 1rem = 10px so design-doc rem values map directly */
-html { font-size: 62.5%; }
-body { font-size: 1.6rem; }
+  --tag-violet-bg: 50 38 92;  --tag-violet-fg: 200 184 252;
+  --tag-blue-bg:   30 44 84;  --tag-blue-fg:   168 195 250;
+  --tag-teal-bg:   20 56 58;  --tag-teal-fg:   136 210 200;
+  --tag-amber-bg:  62 46 18;  --tag-amber-fg:  238 196 110;
+  --tag-rose-bg:   72 28 44;  --tag-rose-fg:   248 176 196;
+  --tag-stone-bg:  50 46 40;  --tag-stone-fg:  198 188 170;
+  --tag-mint-bg:   24 56 38;  --tag-mint-fg:   148 220 178;
 
-/* Pill button utilities */
-.btn-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border-radius: var(--radius-pill);
-  padding: 7px 16px;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-  cursor: pointer;
-  user-select: none;
-}
-.btn-pill:active { transform: scale(0.95); }
-.btn-pill:disabled { opacity: 0.5; cursor: not-allowed; }
+  --backlog: 128 122 148;
+  --today:   158 130 248;
+  --doing:   238 196 110;
+  --done:    148 220 178;
 
-.btn-pill-filled-green   { background: rgb(var(--green-accent)); color: #fff; border-color: rgb(var(--green-accent)); }
-.btn-pill-outlined-green { background: transparent;              color: rgb(var(--green-accent)); border-color: rgb(var(--green-accent)); }
-.btn-pill-filled-black   { background: #000;                     color: #fff; border-color: #000; }
-.btn-pill-outlined-dark  { background: transparent;              color: rgb(var(--ink) / 0.87); border-color: rgb(var(--ink) / 0.87); }
-.btn-pill-on-dark-filled { background: #fff;                     color: rgb(var(--green-accent)); border-color: #fff; }
-.btn-pill-on-dark-outlined { background: transparent;            color: #fff; border-color: #fff; }
-.btn-pill-destructive    { background: rgb(var(--red));          color: #fff; border-color: rgb(var(--red)); }
+  --lane-backlog:      130 95 70;
+  --lane-today:        190 100 55;
+  --lane-doing:        200 145 40;
+  --lane-done:         40 130 115;
+  --lane-backlog-soft: 60 48 38;
+  --lane-today-soft:   70 42 28;
+  --lane-doing-soft:   62 46 18;
+  --lane-done-soft:    24 56 50;
 
-/* Card surface */
-.card-surface {
-  background: rgb(var(--card));
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  transition: box-shadow 0.2s ease;
-}
-.card-surface:hover { box-shadow: var(--shadow-card-hover); }
-.card-surface[data-dragging="true"] { box-shadow: var(--shadow-card-drag); transform: scale(1.02); }
+  --pin-backlog: 188 144 105;
+  --pin-today:   240 100 70;
+  --pin-doing:   240 175 50;
+  --pin-done:    80 180 160;
 
-/* App bar */
-.app-bar {
-  background: rgb(var(--card));
-  box-shadow: var(--shadow-app-bar);
-}
+  --paper:      38 36 50;
+  --paper-fold: 16 14 22;
 
-/* FAB */
-.fab {
-  position: fixed;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgb(var(--green-accent));
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  box-shadow: var(--shadow-fab-base), var(--shadow-fab-ambient);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.fab:active { transform: scale(0.95); box-shadow: var(--shadow-fab-base); }
-
-/* Modal */
-.modal-surface {
-  background: rgb(var(--card));
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-modal);
-  overflow: hidden;
-}
-.modal-header-strip {
-  background: rgb(var(--green-house));
-  color: #fff;
-  height: 48px;
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Pill input (search bar etc.) */
-.input-pill {
-  height: 40px;
-  padding: 8px 16px;
-  border-radius: var(--radius-pill);
-  background: rgb(var(--neutral-cool));
-  border: 1px solid rgb(var(--ink) / 0.06);
-  color: rgb(var(--ink) / 0.87);
-  font: inherit;
-  outline: none;
-  transition: all 0.2s ease;
-}
-.input-pill:focus {
-  background: rgb(var(--card));
-  border-color: rgb(var(--green-accent));
-}
-
-/* Tag pill */
-.tag-pill {
-  display: inline-flex;
-  align-items: center;
-  border-radius: var(--radius-pill);
-  background: rgb(var(--ceramic));
-  color: rgb(var(--ink) / 0.58);
-  padding: 4px 10px;
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
-
-/* Bot-attribution script (Telegram source line) */
-.font-script { font-family: 'Kalam', cursive; }
-
-/* Serif (Weekly Review only) */
-.font-serif-rewards { font-family: 'Iowan Old Style', 'Source Serif Pro', Georgia, serif; }
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  --sh-1: 0 0 0 1px rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.4);
+  --sh-2: 0 0 0 1px rgb(255 255 255 / 0.07), 0 4px 12px rgb(0 0 0 / 0.5);
+  --sh-3: 0 0 0 1px rgb(255 255 255 / 0.08), 0 16px 32px rgb(0 0 0 / 0.6);
 }
