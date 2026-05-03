@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from './api.ts';
 import { useAuth } from './auth.tsx';
 import type { Card, CardEvent, Scope, Status, User } from './types.ts';
@@ -6,6 +6,7 @@ import { Board } from './components/Board.tsx';
 import { EditDialog } from './components/EditDialog.tsx';
 import { LoginView } from './components/LoginView.tsx';
 import { BoardHeader } from './components/BoardHeader.tsx';
+import { ActivityTicker } from './components/ActivityTicker.tsx';
 import { WeeklyReview } from './components/WeeklyReview.tsx';
 import { SettingsDialog } from './components/SettingsDialog.tsx';
 import { ArchiveDialog } from './components/ArchiveDialog.tsx';
@@ -288,6 +289,17 @@ function Authed({ meId }: { meId: string }) {
     }
   };
 
+  const searchActive = searchQuery.trim().length > 0;
+  const filteredCards = useMemo(() => {
+    if (!searchActive) return cards;
+    const q = searchQuery.trim().toLowerCase();
+    return cards.filter(
+      (c) =>
+        c.title.toLowerCase().includes(q) ||
+        (c.description ?? '').toLowerCase().includes(q),
+    );
+  }, [cards, searchQuery, searchActive]);
+
   return (
     <div className="min-h-full p-4">
       <BoardHeader
@@ -305,6 +317,12 @@ function Authed({ meId }: { meId: string }) {
           else setArchiveOpen(false);
         }}
       />
+      {section === 'board' && (
+        <ActivityTicker
+          cards={filteredCards}
+          onCardClick={setEditing}
+        />
+      )}
       {section === 'board' ? (
         <Board
           cards={cards}
