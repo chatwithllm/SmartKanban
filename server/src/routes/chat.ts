@@ -10,6 +10,8 @@ import {
 } from '../cards.js';
 import { broadcast } from '../ws.js';
 import { processCardChatAI } from '../ai/card_chat.js';
+import { fanOutNotification } from '../notifications.js';
+import { pushToUser } from '../push.js';
 
 export async function chatRoutes(app: FastifyInstance) {
   app.get<{ Params: { id: string } }>(
@@ -49,6 +51,16 @@ export async function chatRoutes(app: FastifyInstance) {
 
       const event = await postCardMessage(id, req.user!.id, content.trim());
       broadcast({ type: 'card.message', event, card_id: id, card });
+
+      // Non-blocking: fan out notifications + push
+      const preview = content.trim().slice(0, 120);
+      const actorName = req.user!.name ?? req.user!.short_name ?? 'Someone';
+      fanOutNotification(id, Number(event.id), req.user!.id, actorName, preview)
+        .then(async (recipientIds) => {
+          const pushPayload = { title: card.title, body: `${actorName}: ${preview}`, cardId: id };
+          await Promise.all(recipientIds.map(uid => pushToUser(uid, pushPayload)));
+        })
+        .catch(err => console.warn('[notifications] fan-out error:', String(err).slice(0, 200)));
 
       if (/(?:^|\s)@ai(?:\s|$)/i.test(content)) {
         processCardChatAI(id, card, req.user!.id).catch((err) => {

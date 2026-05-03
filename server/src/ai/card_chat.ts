@@ -8,6 +8,8 @@ import {
   loadCard,
 } from '../cards.js';
 import { broadcast } from '../ws.js';
+import { fanOutNotification } from '../notifications.js';
+import { pushToUser } from '../push.js';
 
 const MAX_SUGGESTION_COUNT = 3;
 
@@ -97,6 +99,13 @@ export async function processCardChatAI(
     const errEvent = await postAiEvent(cardId, "Sorry, I couldn't reach the AI right now.", null);
     const freshCard = await loadCard(cardId);
     if (freshCard) broadcast({ type: 'card.ai_response', event: errEvent, card_id: cardId, card: freshCard });
+    const errPreview = "Sorry, I couldn't reach the AI right now.";
+    fanOutNotification(cardId, Number(errEvent.id), null, 'AI Assistant', errPreview)
+      .then(async (recipientIds) => {
+        const pushPayload = { title: freshCard?.title ?? 'Card update', body: `AI: ${errPreview}`, cardId };
+        await Promise.all(recipientIds.map(uid => pushToUser(uid, pushPayload)));
+      })
+      .catch(err => console.warn('[notifications] AI fan-out error:', String(err).slice(0, 200)));
     return;
   }
 
@@ -104,4 +113,12 @@ export async function processCardChatAI(
   const aiEvent = await postAiEvent(cardId, text || rawReply.trim(), suggestions);
   const freshCard = await loadCard(cardId);
   if (freshCard) broadcast({ type: 'card.ai_response', event: aiEvent, card_id: cardId, card: freshCard });
+
+  const preview = (text || rawReply.trim()).slice(0, 120);
+  fanOutNotification(cardId, Number(aiEvent.id), null, 'AI Assistant', preview)
+    .then(async (recipientIds) => {
+      const pushPayload = { title: freshCard?.title ?? 'Card update', body: `AI: ${preview}`, cardId };
+      await Promise.all(recipientIds.map(uid => pushToUser(uid, pushPayload)));
+    })
+    .catch(err => console.warn('[notifications] AI fan-out error:', String(err).slice(0, 200)));
 }
