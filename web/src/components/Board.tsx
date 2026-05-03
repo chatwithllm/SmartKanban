@@ -126,6 +126,7 @@ export function Board({ cards, users, searchQuery, unreadCounts, onCreate, onEdi
       <DragOverlay>
         {activeCard ? <CardView card={activeCard} users={users} dragging /> : null}
       </DragOverlay>
+      {/* No responsive guard needed — MobileShell renders instead of Board on small phones */}
       <TrashDropZone isDragging={activeId !== null} />
       <button
         type="button"
