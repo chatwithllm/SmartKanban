@@ -198,13 +198,13 @@ export async function cardRoutes(app: FastifyInstance) {
 
     if (newShareRecipients.length > 0) {
       const actor = req.user!;
+      const actorName = actor.short_name || actor.name;
       const { rows: evRows } = await pool.query<{ id: number }>(
-        `INSERT INTO card_events (card_id, entry_type, actor_id, body)
-         VALUES ($1, 'share', $2, $3) RETURNING id`,
-        [id, actor.id, JSON.stringify({ shared_with: newShareRecipients })],
+        `INSERT INTO card_events (card_id, entry_type, actor_id, content, details)
+         VALUES ($1, 'share', $2, $3, $4) RETURNING id`,
+        [id, actor.id, `${actorName} shared this card`, JSON.stringify({ shared_with: newShareRecipients })],
       );
       const eventId = evRows[0]!.id;
-      const actorName = actor.short_name || actor.name;
       const preview = `${actorName} shared "${updated.title}" with you`;
       for (const uid of newShareRecipients) {
         await pool.query(
