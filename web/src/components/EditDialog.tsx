@@ -24,6 +24,8 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
   const [dueDate, setDueDate] = useState(card.due_date ?? '');
 
   const [showQr, setShowQr] = useState(false);
+  const [sharingBusy, setSharingBusy] = useState(false);
+  const [sharesSaved, setSharesSaved] = useState(false);
 
   const handleRead = useCallback(() => onRead?.(card.id), [onRead, card.id]);
 
@@ -94,6 +96,17 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
 
   const toggle = (list: string[], set: (v: string[]) => void, id: string) => {
     set(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
+  };
+
+  const shareNow = async () => {
+    setSharingBusy(true);
+    try {
+      await api.updateCard(card.id, { shares } as Partial<Card>);
+      setSharesSaved(true);
+      setTimeout(() => setSharesSaved(false), 2000);
+    } catch { /* ignore */ } finally {
+      setSharingBusy(false);
+    }
   };
 
   const save = () => {
@@ -378,7 +391,17 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
               </div>
             </div>
             <div>
-              <div className="text-1 tracking-tight2 text-ink-soft mb-2">Shared with</div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="text-1 tracking-tight2 text-ink-soft flex-1">Shared with</div>
+                <button
+                  onClick={shareNow}
+                  disabled={sharingBusy}
+                  className="rounded-pill px-2 py-0.5 text-1 tracking-tight2 border border-violet/30 bg-violet/8 text-violet hover:bg-violet/15 disabled:opacity-50"
+                  style={{ fontSize: 11, color: 'rgb(var(--violet))', background: 'rgb(var(--violet) / 0.08)', borderColor: 'rgb(var(--violet) / 0.25)' }}
+                >
+                  {sharesSaved ? '✓ Shared' : sharingBusy ? '…' : 'Share now'}
+                </button>
+              </div>
               <div className="flex flex-wrap gap-1">
                 {users.map((u) => (
                   <button

@@ -96,15 +96,18 @@ export function MobileCardView({ cardId }: Props) {
     patch({ shares: next });
   };
 
-  const onCameraInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [attachSheet, setAttachSheet] = useState(false);
+
+  const onFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
+    setAttachSheet(false);
     if (!file) return;
     setBusy(true);
     try {
-      const updated = await api.uploadAttachment(card.id, file);
+      const updated = await api.uploadAttachment(card!.id, file);
       setCard(updated);
-      addToast('Photo attached', 'success');
+      addToast('Attached', 'success');
     } catch (err) {
       addToast(`Upload failed: ${err instanceof Error ? err.message : 'error'}`, 'error');
     } finally {
@@ -261,18 +264,62 @@ export function MobileCardView({ cardId }: Props) {
               </a>
             ),
           )}
-          <label className="flex aspect-square cursor-pointer items-center justify-center rounded-card border-2 border-dashed border-ink/20 text-1 text-ink-soft tracking-tight2 hover:border-green-accent transition-colors">
-            + Camera
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={onCameraInput}
-              className="hidden"
-            />
-          </label>
+          <button
+            onClick={() => setAttachSheet(true)}
+            className="flex aspect-square cursor-pointer items-center justify-center rounded-card border-2 border-dashed border-ink/20 text-1 text-ink-soft tracking-tight2 hover:border-green-accent transition-colors bg-transparent"
+          >
+            + Add
+          </button>
         </div>
       </div>
+
+      {/* Attachment bottom sheet */}
+      {attachSheet && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col justify-end"
+          style={{ background: 'rgba(0,0,0,0.4)' }}
+          onClick={() => setAttachSheet(false)}
+        >
+          <div
+            className="rounded-t-2xl bg-surface p-4 pb-8 flex flex-col gap-3"
+            onClick={(e) => e.stopPropagation()}
+            style={{ boxShadow: '0 -4px 24px rgba(0,0,0,0.12)' }}
+          >
+            <div className="w-10 h-1 rounded-full bg-ink/20 mx-auto mb-2" />
+            <p className="text-2 font-semibold text-ink tracking-tight2 text-center mb-1">Add attachment</p>
+            <label className="flex items-center gap-3 p-3 rounded-card bg-card cursor-pointer">
+              <span className="text-xl">📷</span>
+              <div>
+                <div className="text-2 font-semibold text-ink tracking-tight2">Camera</div>
+                <div className="text-1 text-ink-soft tracking-tight2">Take a photo</div>
+              </div>
+              <input type="file" accept="image/*" capture="environment" onChange={onFileInput} className="hidden" />
+            </label>
+            <label className="flex items-center gap-3 p-3 rounded-card bg-card cursor-pointer">
+              <span className="text-xl">🖼️</span>
+              <div>
+                <div className="text-2 font-semibold text-ink tracking-tight2">Photo Library</div>
+                <div className="text-1 text-ink-soft tracking-tight2">Choose from gallery</div>
+              </div>
+              <input type="file" accept="image/*" onChange={onFileInput} className="hidden" />
+            </label>
+            <label className="flex items-center gap-3 p-3 rounded-card bg-card cursor-pointer">
+              <span className="text-xl">📁</span>
+              <div>
+                <div className="text-2 font-semibold text-ink tracking-tight2">Files</div>
+                <div className="text-1 text-ink-soft tracking-tight2">Any document or file</div>
+              </div>
+              <input type="file" accept="*/*" onChange={onFileInput} className="hidden" />
+            </label>
+            <button
+              onClick={() => setAttachSheet(false)}
+              className="mt-1 text-2 text-ink-soft tracking-tight2 text-center w-full py-2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       <CardTimeline cardId={card.id} meId={meId} />
 
