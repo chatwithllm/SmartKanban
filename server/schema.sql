@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS card_events (
   action       TEXT,
   details      JSONB NOT NULL DEFAULT '{}',
   entry_type   TEXT NOT NULL DEFAULT 'system'
-               CHECK (entry_type IN ('system', 'message', 'ai')),
+               CHECK (entry_type IN ('system', 'message', 'ai', 'share')),
   content      TEXT,
   ai_suggestions JSONB,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
