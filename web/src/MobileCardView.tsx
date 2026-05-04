@@ -17,6 +17,7 @@ export function MobileCardView({ cardId }: Props) {
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [attachSheet, setAttachSheet] = useState(false);
   const { addToast } = useToast();
   const debounceRefs = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
 
@@ -95,8 +96,6 @@ export function MobileCardView({ cardId }: Props) {
       : [...card.shares, uid];
     patch({ shares: next });
   };
-
-  const [attachSheet, setAttachSheet] = useState(false);
 
   const onFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
