@@ -20,6 +20,7 @@ const SCOPES: { value: Scope; label: string }[] = [
   { value: 'personal', label: 'My board' },
   { value: 'inbox', label: 'Family Inbox' },
   { value: 'all', label: 'Everything' },
+  { value: 'shared', label: 'Shared with me' },
 ];
 
 const LANE_BG: Record<Status, string> = {
@@ -114,7 +115,8 @@ export function MobileShell({ meId }: { meId: string }) {
         }
         const isMine = incoming.created_by === meId || incoming.assignees.includes(meId) || incoming.shares.includes(meId);
         const isInbox = incoming.assignees.length === 0;
-        const visible = scope === 'inbox' ? isInbox : scope === 'personal' ? isMine : isMine || isInbox;
+        const isSharedWithMe = incoming.shares.includes(meId) && incoming.created_by !== meId;
+        const visible = scope === 'inbox' ? isInbox : scope === 'personal' ? isMine : scope === 'shared' ? isSharedWithMe : isMine || isInbox;
         setCards((prev) => {
           const without = prev.filter((c) => c.id !== incoming.id);
           return visible ? [...without, incoming] : without;

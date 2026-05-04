@@ -167,10 +167,11 @@ function Authed({ meId }: { meId: string }) {
           incoming.assignees.includes(meId) ||
           incoming.shares.includes(meId);
         const isInbox = incoming.assignees.length === 0;
+        const isSharedWithMe = incoming.shares.includes(meId) && incoming.created_by !== meId;
         // Match the server's per-scope visibility rules so broadcasts don't
         // leak cards that belong to a different user's private channel.
         const visible =
-          scope === 'inbox' ? isInbox : scope === 'personal' ? isMine : isMine || isInbox;
+          scope === 'inbox' ? isInbox : scope === 'personal' ? isMine : scope === 'shared' ? isSharedWithMe : isMine || isInbox;
         setCards((prev) => {
           const without = prev.filter((c) => c.id !== incoming.id);
           return visible ? [...without, incoming] : without;

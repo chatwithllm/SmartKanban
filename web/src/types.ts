@@ -40,7 +40,7 @@ export type Card = {
 
 export type User = { id: string; name: string; short_name: string; email: string };
 
-export type Scope = 'personal' | 'inbox' | 'all';
+export type Scope = 'personal' | 'inbox' | 'all' | 'shared';
 
 export type MirrorToken = { token: string; label: string; created_at: string };
 

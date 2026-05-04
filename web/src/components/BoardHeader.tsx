@@ -4,9 +4,10 @@ import { useAuth } from '../auth.tsx';
 import { WeatherWidget } from './WeatherWidget.tsx';
 
 const SCOPES: Array<{ id: Scope; label: string; description: string }> = [
-  { id: 'personal', label: 'My board',     description: 'Cards you created, assigned, or shared with you.' },
-  { id: 'inbox',    label: 'Family inbox', description: 'Unassigned cards from the family group.' },
-  { id: 'all',      label: 'Everything',   description: 'All cards visible to you.' },
+  { id: 'personal', label: 'My board',       description: 'Cards you created, assigned, or shared with you.' },
+  { id: 'inbox',    label: 'Family inbox',   description: 'Unassigned cards from the family group.' },
+  { id: 'all',      label: 'Everything',     description: 'All cards visible to you.' },
+  { id: 'shared',   label: 'Shared with me', description: 'Cards others have explicitly shared with you.' },
 ];
 
 type Section = 'board' | 'knowledge' | 'archive';

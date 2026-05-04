@@ -60,7 +60,7 @@ export async function loadCard(id: string): Promise<Card | null> {
 
 // Cards visible to a given user: created by them, assigned to them, shared with them, OR in Family Inbox (unassigned).
 // `scope` controls which board view the user is requesting.
-export type Scope = 'personal' | 'inbox' | 'all';
+export type Scope = 'personal' | 'inbox' | 'all' | 'shared';
 
 // Shared visibility predicate: a card is visible to a user if they created it,
 // are assigned, it's shared with them, or it's in the unassigned Family Inbox.
@@ -93,7 +93,9 @@ export async function listCards(
              OR EXISTS (SELECT 1 FROM card_assignees WHERE card_id = c.id AND user_id = $1)
              OR EXISTS (SELECT 1 FROM card_shares    WHERE card_id = c.id AND user_id = $1)
            )`
-        : `NOT c.archived AND ${VISIBLE_TO_USER}`;
+        : scope === 'shared'
+          ? `NOT c.archived AND EXISTS (SELECT 1 FROM card_shares WHERE card_id = c.id AND user_id = $1) AND c.created_by != $1`
+          : `NOT c.archived AND ${VISIBLE_TO_USER}`;
 
   const params: unknown[] = scope === 'inbox' ? [] : [userId];
   let where = baseWhere;

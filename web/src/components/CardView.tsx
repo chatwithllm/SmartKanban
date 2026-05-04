@@ -58,6 +58,9 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, dragging,
   const assignees = card.assignees
     .map(id => users.find(u => u.id === id))
     .filter((u): u is NonNullable<typeof u> => !!u);
+  const shares = card.shares
+    .map(id => users.find(u => u.id === id))
+    .filter((u): u is NonNullable<typeof u> => !!u);
 
   return (
     <div
@@ -191,23 +194,41 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, dragging,
               </div>
             )}
 
-            {/* Assignee initials */}
-            {assignees.length > 0 && (
-              <div style={{ display: 'inline-flex' }}>
-                {assignees.slice(0, 3).map((u, i) => (
-                  <span key={u.id} style={{
-                    width: 22, height: 22, borderRadius: 999,
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 10, fontWeight: 600, color: 'white',
-                    background: userColor(u.id),
-                    border: '2px solid rgb(var(--surface))',
-                    marginLeft: i > 0 ? -6 : 0,
-                  }} title={u.name}>
-                    {u.short_name.charAt(0).toUpperCase()}
-                  </span>
-                ))}
-              </div>
-            )}
+            {/* Assignee + share initials */}
+            <div style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+              {assignees.length > 0 && (
+                <div style={{ display: 'inline-flex' }}>
+                  {assignees.slice(0, 3).map((u, i) => (
+                    <span key={u.id} style={{
+                      width: 22, height: 22, borderRadius: 999,
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 600, color: 'white',
+                      background: userColor(u.id),
+                      border: '2px solid rgb(var(--surface))',
+                      marginLeft: i > 0 ? -6 : 0,
+                    }} title={u.name}>
+                      {u.short_name.charAt(0).toUpperCase()}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {shares.length > 0 && (
+                <div style={{ display: 'inline-flex' }}>
+                  {shares.slice(0, 3).map((u, i) => (
+                    <span key={u.id} style={{
+                      width: 22, height: 22, borderRadius: 999,
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 600, color: 'white',
+                      background: 'rgb(var(--violet))',
+                      border: '2px solid rgb(var(--surface))',
+                      marginLeft: i > 0 ? -6 : 0,
+                    }} title={`Shared with ${u.name}`}>
+                      {u.short_name.charAt(0).toUpperCase()}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
