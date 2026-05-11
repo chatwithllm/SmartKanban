@@ -17,9 +17,6 @@ import {
   type KnowledgePatch,
 } from '../knowledge.js';
 import { triggerFetch } from '../knowledge_fetch.js';
-import { enqueueEmbed } from '../ai/embed_queue.js';
-import { pool } from '../db.js';
-import { embedText, embeddingsEnabled } from '../ai/embed.js';
 
 function handleValidation(reply: FastifyReply, err: unknown): boolean {
   if (err instanceof KnowledgeValidationError) {
@@ -100,7 +97,6 @@ export async function knowledgeRoutes(app: FastifyInstance) {
         const k = await createKnowledge(req.user!.id, req.body);
         broadcast({ type: 'knowledge.created', knowledge: k });
         if (k.fetch_status === 'pending') triggerFetch(k.id);
-        enqueueEmbed(k.id);
         return reply.send(k);
       } catch (err) {
         if (handleValidation(reply, err)) return;
@@ -122,7 +118,6 @@ export async function knowledgeRoutes(app: FastifyInstance) {
         const k = await updateKnowledge(req.user!.id, req.params.id, req.body);
         if (!k) return reply.code(404).send({ error: 'not found' });
         broadcast({ type: 'knowledge.updated', knowledge: k });
-        enqueueEmbed(k.id);
         return reply.send(k);
       } catch (err) {
         if (handleValidation(reply, err)) return;
@@ -227,49 +222,4 @@ export async function knowledgeRoutes(app: FastifyInstance) {
     },
   );
 
-  // POST /api/knowledge/search/semantic
-  app.post<{
-    Body: { q: string; limit?: number; scope?: 'mine' | 'inbox' | 'all' };
-  }>(
-    '/api/knowledge/search/semantic',
-    { preHandler: requireUser },
-    async (req, reply) => {
-      if (!embeddingsEnabled()) {
-        return reply.code(501).send({ error: 'semantic search disabled' });
-      }
-      const { q, limit = 10, scope = 'all' } = req.body ?? ({} as any);
-      if (!q || typeof q !== 'string') {
-        return reply.code(400).send({ error: 'q required' });
-      }
-      const vec = await embedText(q);
-      if (!vec) return reply.code(501).send({ error: 'embed failed' });
-
-      const params: unknown[] = [JSON.stringify(vec), req.user!.id];
-      const where: string[] = ['NOT k.archived'];
-      where.push(`(
-        k.owner_id = $2
-        OR k.visibility = 'inbox'
-        OR (k.visibility = 'shared'
-            AND EXISTS (SELECT 1 FROM knowledge_shares ks
-                        WHERE ks.knowledge_id = k.id AND ks.user_id = $2))
-      )`);
-      if (scope === 'mine') where.push(`k.owner_id = $2`);
-      if (scope === 'inbox') where.push(`k.visibility = 'inbox'`);
-      params.push(Math.min(Math.max(Number(limit), 1), 20));
-
-      const sql = `
-        SELECT k.*, (e.embedding <=> $1::vector) AS dist
-        FROM knowledge_items k
-        JOIN knowledge_embeddings e ON e.knowledge_id = k.id
-        WHERE ${where.join(' AND ')}
-        ORDER BY dist ASC
-        LIMIT $${params.length}`;
-      const r = await pool.query(sql, params);
-      const items = r.rows.map((row: { dist: number; [k: string]: unknown }) => ({
-        ...row,
-        score: 1 - row.dist,
-      }));
-      return reply.send({ items });
-    },
-  );
 }
