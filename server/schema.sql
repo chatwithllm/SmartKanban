@@ -223,4 +223,15 @@ CREATE TABLE IF NOT EXISTS knowledge_card_links (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (knowledge_id, card_id)
 );
+
+-- Structured Telegram capture (2026-05-11): cards FTS for duplicate detection
+ALTER TABLE cards
+  ADD COLUMN IF NOT EXISTS fts tsvector
+  GENERATED ALWAYS AS (
+    to_tsvector('english',
+      coalesce(title, '') || ' ' || coalesce(description, '')
+    )
+  ) STORED;
+
+CREATE INDEX IF NOT EXISTS cards_fts_idx ON cards USING GIN (fts);
 CREATE INDEX IF NOT EXISTS idx_klc_card ON knowledge_card_links(card_id);

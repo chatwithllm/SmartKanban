@@ -418,6 +418,45 @@ export async function listKnowledgeForCard(
   return rows;
 }
 
+export type KnowledgeFtsHit = {
+  id: string;
+  title: string;
+  snippet: string;
+  url: string | null;
+  updated_at: string;
+  rank: number;
+};
+
+export async function searchKnowledgeFts(
+  userId: string,
+  query: string,
+  limit = 10,
+): Promise<KnowledgeFtsHit[]> {
+  const q = query.trim();
+  if (!q) return [];
+  const { rows } = await pool.query<KnowledgeFtsHit>(
+    `SELECT DISTINCT k.id,
+            COALESCE(NULLIF(k.title, ''), '(untitled)') AS title,
+            LEFT(COALESCE(k.body, ''), 160) AS snippet,
+            k.url,
+            k.updated_at,
+            ts_rank(k.fts, websearch_to_tsquery('english', $2)) AS rank
+     FROM knowledge_items k
+     LEFT JOIN knowledge_shares ks ON ks.knowledge_id = k.id
+     WHERE NOT k.archived
+       AND k.fts @@ websearch_to_tsquery('english', $2)
+       AND (
+         k.owner_id = $1
+         OR k.visibility = 'inbox'
+         OR (k.visibility = 'shared' AND ks.user_id = $1)
+       )
+     ORDER BY rank DESC, k.updated_at DESC
+     LIMIT $3`,
+    [userId, q, limit],
+  );
+  return rows;
+}
+
 export async function createFromCard(
   userId: string,
   cardId: string,
