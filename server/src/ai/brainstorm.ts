@@ -40,8 +40,8 @@ export function buildBrainstormPrompt(
   web: WebContext,
 ): string {
   const localLines = [
-    ...local.cards.map((c, i) => `  C${i + 1}. [card] '${c.title}' — ${c.snippet}`),
-    ...local.knowledge.map((k, i) => `  K${i + 1}. [knowledge] '${k.title}' — ${k.snippet}`),
+    ...local.cards.map((c) => `  - kind=card id=${c.id} title=${JSON.stringify(c.title)} snippet=${JSON.stringify(c.snippet)}`),
+    ...local.knowledge.map((k) => `  - kind=knowledge id=${k.id} title=${JSON.stringify(k.title)} snippet=${JSON.stringify(k.snippet)}`),
   ].join('\n') || '  (none)';
   const webLines = web.results
     .map((r, i) => `  W${i + 1}. '${r.title}' (${r.url}) — ${r.content.slice(0, 200)}`)
@@ -73,10 +73,8 @@ export function buildBrainstormPrompt(
     '  - Same for related_items: drop ones that just share a keyword but offer no actionable value.',
     '  - The "why" field must explain HOW the item helps the user. Never include items whose only "why" is that they are not relevant.',
     '',
-    'For related_items, the id field must match exactly one of the local ids:',
-    `    cards: ${local.cards.map((c) => c.id).join(', ') || 'none'}`,
-    `    knowledge: ${local.knowledge.map((k) => k.id).join(', ') || 'none'}`,
-    'Skip ids you do not recognize.',
+    'For related_items, copy the id field verbatim from the list above (UUID-style strings).',
+    'Never invent ids. If no items above genuinely help, return an empty related_items array.',
   ].join('\n');
 }
 
@@ -206,14 +204,47 @@ export async function runBrainstorm(insightId: string): Promise<void> {
   // Hydrate related_items with the source URL (knowledge items have urls;
   // cards don't but we still know their kanban location). This lets the
   // web UI render proper <a href> links with right-click "open in new tab".
+  //
+  // Belt-and-suspenders: some LLM responses come back with "K1" / "C1"
+  // (the prompt label) instead of the actual UUID. Build resolver maps
+  // by both UUID and by label position so either form works.
   const kUrlById = new Map<string, string | null>(kHits.map((k) => [k.id, k.url]));
+  const kIdsByLabel = new Map<string, string>(kHits.map((k, i) => [`K${i + 1}`, k.id]));
+  const cIdsByLabel = new Map<string, string>(
+    cardHits.filter((c) => c.id !== card.id).map((c, i) => [`C${i + 1}`, c.id]),
+  );
+  const kTitleToId = new Map<string, string>(kHits.map((k) => [k.title, k.id]));
+  const cTitleToId = new Map<string, string>(cardHits.map((c) => [c.title, c.id]));
   if (parsed.body.related_items) {
-    parsed.body.related_items = parsed.body.related_items.map((r) => {
-      if (r.kind === 'knowledge') {
-        return { ...r, url: kUrlById.get(r.id) ?? null };
-      }
-      return r;
-    });
+    parsed.body.related_items = parsed.body.related_items
+      .map((r) => {
+        let resolvedId = r.id;
+        if (r.kind === 'knowledge') {
+          if (!kUrlById.has(resolvedId)) {
+            resolvedId =
+              kIdsByLabel.get(resolvedId) ??
+              kTitleToId.get(r.title) ??
+              resolvedId;
+          }
+          return { ...r, id: resolvedId, url: kUrlById.get(resolvedId) ?? null };
+        }
+        if (r.kind === 'card') {
+          if (!cardHits.some((c) => c.id === resolvedId)) {
+            resolvedId =
+              cIdsByLabel.get(resolvedId) ??
+              cTitleToId.get(r.title) ??
+              resolvedId;
+          }
+          return { ...r, id: resolvedId };
+        }
+        return r;
+      })
+      // Drop any item whose id we couldn't resolve to a real UUID — better to
+      // omit than show a broken link.
+      .filter((r) => {
+        if (r.kind === 'knowledge') return kUrlById.has(r.id);
+        return cardHits.some((c) => c.id === r.id);
+      });
   }
 
   await markOk(insightId, parsed.summary, parsed.body, degraded);
