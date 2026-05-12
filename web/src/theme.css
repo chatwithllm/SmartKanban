@@ -152,3 +152,155 @@
   --sh-2: 0 0 0 1px rgb(255 255 255 / 0.07), 0 4px 12px rgb(0 0 0 / 0.5);
   --sh-3: 0 0 0 1px rgb(255 255 255 / 0.08), 0 16px 32px rgb(0 0 0 / 0.6);
 }
+
+/* ============================================================
+ * Utility classes — referenced from components.
+ * Keep these aligned with the CSS vars above so the dark theme works too.
+ * ============================================================ */
+
+/* Modal surface: white/dark card with shadow + hairline border. */
+.modal-surface {
+  background: rgb(var(--surface));
+  border-radius: 14px;
+  box-shadow: var(--sh-3);
+  border: 1px solid rgb(var(--hairline) / 0.08);
+  overflow: hidden;
+}
+
+/* Header strip inside a modal — violet band, white text. */
+.modal-header-strip {
+  background: rgb(var(--violet));
+  color: rgb(var(--ink-rev));
+  border-radius: 14px 14px 0 0;
+}
+
+/* Card surface (board cards, AI panels). Softer than modal. */
+.card-surface {
+  background: rgb(var(--card));
+  border-radius: 12px;
+  box-shadow: var(--sh-1);
+  border: 1px solid rgb(var(--hairline) / 0.08);
+}
+
+/* Top app bar */
+.app-bar {
+  background: rgb(var(--surface));
+  border-bottom: 1px solid rgb(var(--hairline) / 0.08);
+}
+
+/* Pill buttons — base + colored variants */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+.btn-pill:active { transform: scale(0.97); }
+.btn-pill:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-pill-filled-green {
+  background: rgb(var(--green-accent));
+  color: rgb(var(--ink-rev));
+  border-color: rgb(var(--green-accent));
+}
+.btn-pill-filled-green:hover:not(:disabled) {
+  background: rgb(var(--green-starbucks));
+  border-color: rgb(var(--green-starbucks));
+}
+
+.btn-pill-outlined-green {
+  background: transparent;
+  color: rgb(var(--green-accent));
+  border-color: rgb(var(--green-accent));
+}
+.btn-pill-outlined-green:hover:not(:disabled) {
+  background: rgb(var(--green-accent) / 0.08);
+}
+
+.btn-pill-filled-black {
+  background: rgb(var(--ink));
+  color: rgb(var(--ink-rev));
+  border-color: rgb(var(--ink));
+}
+
+.btn-pill-outlined-dark {
+  background: transparent;
+  color: rgb(var(--ink));
+  border-color: rgb(var(--hairline) / 0.2);
+}
+.btn-pill-outlined-dark:hover:not(:disabled) {
+  background: rgb(var(--ink) / 0.06);
+}
+
+.btn-pill-destructive {
+  background: rgb(var(--red));
+  color: rgb(var(--ink-rev));
+  border-color: rgb(var(--red));
+}
+
+/* Floating Action Button */
+.fab {
+  position: fixed;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(var(--green-accent));
+  color: rgb(var(--ink-rev));
+  border-radius: 999px;
+  border: none;
+  box-shadow: var(--sh-2);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.fab:hover { box-shadow: var(--sh-3); }
+.fab:active { transform: scale(0.95); }
+
+/* Pill-shaped input (search bars, etc.) */
+.input-pill {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgb(var(--surface-2));
+  border: 1px solid rgb(var(--hairline) / 0.1);
+  color: rgb(var(--ink));
+  font: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.input-pill:focus {
+  background: rgb(var(--surface));
+  border-color: rgb(var(--green-accent));
+}
+
+/* Tag chip */
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(var(--surface-3));
+  color: rgb(var(--ink-2));
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* Telegram bot-attribution script */
+.font-script { font-family: 'Kalam', cursive; }
+
+/* Weekly Review serif moment */
+.font-serif-rewards {
+  font-family: 'Iowan Old Style', 'Source Serif Pro', Georgia, serif;
+}
