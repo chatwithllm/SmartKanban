@@ -1,4 +1,4 @@
-import type { Card, KnowledgeItem, KnowledgeVisibility, Template, TemplateVisibility } from './types.ts';
+import type { Card, CardEvent, Insight, KnowledgeItem, KnowledgeVisibility, Template, TemplateVisibility } from './types.ts';
 
 export type BroadcastEvent =
   | { type: 'hello'; user_id: string }
@@ -12,7 +12,12 @@ export type BroadcastEvent =
   | { type: 'knowledge.updated'; knowledge: KnowledgeItem }
   | { type: 'knowledge.deleted'; id: string; owner_id: string; visibility: KnowledgeVisibility; shares: string[] }
   | { type: 'knowledge.link.created'; knowledge_id: string; card_id: string }
-  | { type: 'knowledge.link.deleted'; knowledge_id: string; card_id: string };
+  | { type: 'knowledge.link.deleted'; knowledge_id: string; card_id: string }
+  | { type: 'card.message'; event: CardEvent; card_id: string; card: Card }
+  | { type: 'card.ai_response'; event: CardEvent; card_id: string; card: Card }
+  | { type: 'insight.queued';  insight: Insight; card_id: string; owner_id: string }
+  | { type: 'insight.updated'; insight: Insight; card_id: string; owner_id: string }
+  | { type: 'insight.failed';  insight: Insight; card_id: string; owner_id: string };
 
 export function connectWS(
   onEvent: (ev: BroadcastEvent) => void,

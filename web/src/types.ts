@@ -40,7 +40,7 @@ export type Card = {
 
 export type User = { id: string; name: string; short_name: string; email: string };
 
-export type Scope = 'personal' | 'inbox' | 'all';
+export type Scope = 'personal' | 'inbox' | 'all' | 'shared';
 
 export type MirrorToken = { token: string; label: string; created_at: string };
 
@@ -53,13 +53,22 @@ export type ReviewData = {
   summary: string | null;
 };
 
-export type ActivityEntry = {
+export type AiSuggestion = {
+  label: string;
+  action: 'update_status' | 'set_due_date' | 'assign_user' | 'create_card';
+  params: Record<string, unknown>;
+};
+
+export type CardEvent = {
   id: string;
   actor_id: string | null;
   actor_name: string | null;
   card_id: string | null;
-  action: string;
+  action: string | null;
   details: Record<string, unknown>;
+  entry_type: 'system' | 'message' | 'ai';
+  content: string | null;
+  ai_suggestions: AiSuggestion[] | null;
   created_at: string;
 };
 
@@ -107,4 +116,41 @@ export type KnowledgeItem = {
   updated_at: string;
   shares?: string[];
   linked_card_ids?: string[];
+};
+
+export type Notification = {
+  id: number;
+  user_id: string;
+  card_id: string;
+  event_id: number;
+  actor_name: string;
+  preview: string;
+  read: boolean;
+  created_at: string;
+};
+
+export type WeatherData = {
+  current: { temp: number; code: number; humidity: number; wind: number };
+  daily: Array<{ date: string; code: number; max: number; min: number }>;
+};
+
+export type InsightStatus = 'pending' | 'ok' | 'failed';
+
+export type InsightBody = {
+  related_items?: Array<{ kind: 'card' | 'knowledge'; id: string; title: string; why: string; url?: string | null }>;
+  web_findings?: Array<{ title: string; url: string; why: string }>;
+  next_steps?: string[];
+};
+
+export type Insight = {
+  id: string;
+  card_id: string;
+  requested_by: string;
+  status: InsightStatus;
+  summary: string | null;
+  body: InsightBody | null;
+  error: string | null;
+  degraded: boolean;
+  created_at: string;
+  completed_at: string | null;
 };

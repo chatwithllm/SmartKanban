@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from './api.ts';
 import { useAuth } from './auth.tsx';
-import type { Card, Scope, Status, User } from './types.ts';
+import type { Card, CardEvent, Scope, Status, User } from './types.ts';
 import { Board } from './components/Board.tsx';
 import { EditDialog } from './components/EditDialog.tsx';
 import { LoginView } from './components/LoginView.tsx';
 import { BoardHeader } from './components/BoardHeader.tsx';
+import { ActivityTicker } from './components/ActivityTicker.tsx';
 import { WeeklyReview } from './components/WeeklyReview.tsx';
 import { SettingsDialog } from './components/SettingsDialog.tsx';
 import { ArchiveDialog } from './components/ArchiveDialog.tsx';
@@ -16,9 +17,12 @@ import { connectWS } from './ws.ts';
 import { applyTemplateEvent } from './hooks/useTemplates.ts';
 import { KnowledgeView } from './KnowledgeView.tsx';
 import { applyKnowledgeEvent } from './hooks/useKnowledge.ts';
+import { applyInsightEvent } from './hooks/useInsights.ts';
 import { MobileCardView } from './MobileCardView.tsx';
 import { MobileShell } from './MobileShell.tsx';
 import { useIsMobile } from './hooks/useIsMobile.ts';
+import { useNotifications } from './hooks/useNotifications.ts';
+import { NotificationBell } from './components/NotificationBell.tsx';
 
 export function App() {
   const { user, loading } = useAuth();
@@ -70,9 +74,15 @@ function Authed({ meId }: { meId: string }) {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
-  const [section, setSection] = useState<'board' | 'knowledge'>('board');
+  const [section, setSection] = useState<'board' | 'knowledge' | 'archive'>('board');
   const [shareInitial, setShareInitial] = useState<{ title?: string; url?: string; body?: string } | null>(null);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [activeChatEvents, setActiveChatEvents] = useState<CardEvent[]>([]);
+  const openCardId = useRef<string | null>(null);
+  const [lastWsEvent, setLastWsEvent] = useState<{ type: string } | null>(null);
   const { addToast } = useToast();
+
+  const { notifications, unreadCount: notifUnreadCount, markRead: markNotifRead, markAllRead: markAllNotifsRead } = useNotifications(lastWsEvent, meId);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -90,7 +100,7 @@ function Authed({ meId }: { meId: string }) {
 
   const handleCloseDialog = useCallback(() => {
     if (settingsOpen) setSettingsOpen(false);
-    else if (archiveOpen) setArchiveOpen(false);
+    else if (archiveOpen) { setArchiveOpen(false); setSection('board'); }
     else if (reviewOpen) setReviewOpen(false);
     else if (editing) setEditing(null);
   }, [editing, reviewOpen, archiveOpen, settingsOpen]);
@@ -119,6 +129,10 @@ function Authed({ meId }: { meId: string }) {
   }, []);
 
   useEffect(() => {
+    api.unreadCounts().then(setUnreadCounts).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     const disconnect = connectWS((ev) => {
       if (ev.type === 'template.created' || ev.type === 'template.updated' || ev.type === 'template.deleted') {
         applyTemplateEvent(ev);
@@ -134,6 +148,23 @@ function Authed({ meId }: { meId: string }) {
         applyKnowledgeEvent(ev, meId);
         return;
       }
+      if (
+        ev.type === 'insight.queued' ||
+        ev.type === 'insight.updated' ||
+        ev.type === 'insight.failed'
+      ) {
+        applyInsightEvent(ev);
+        return;
+      }
+      if (ev.type === 'card.message' || ev.type === 'card.ai_response') {
+        setLastWsEvent(ev);
+        if (openCardId.current === ev.card_id) {
+          setActiveChatEvents((prev) => [...prev, ev.event]);
+        } else {
+          setUnreadCounts((c) => ({ ...c, [ev.card_id]: (c[ev.card_id] ?? 0) + 1 }));
+        }
+        return;
+      }
       if (ev.type === 'card.created' || ev.type === 'card.updated') {
         const incoming = ev.card;
         if (incoming.archived) {
@@ -145,10 +176,11 @@ function Authed({ meId }: { meId: string }) {
           incoming.assignees.includes(meId) ||
           incoming.shares.includes(meId);
         const isInbox = incoming.assignees.length === 0;
+        const isSharedWithMe = incoming.shares.includes(meId) && incoming.created_by !== meId;
         // Match the server's per-scope visibility rules so broadcasts don't
         // leak cards that belong to a different user's private channel.
         const visible =
-          scope === 'inbox' ? isInbox : scope === 'personal' ? isMine : isMine || isInbox;
+          scope === 'inbox' ? isInbox : scope === 'personal' ? isMine : scope === 'shared' ? isSharedWithMe : isMine || isInbox;
         setCards((prev) => {
           const without = prev.filter((c) => c.id !== incoming.id);
           return visible ? [...without, incoming] : without;
@@ -250,6 +282,50 @@ function Authed({ meId }: { meId: string }) {
     }
   };
 
+  const handleRead = useCallback((cardId: string) => {
+    setUnreadCounts((c) => { const next = { ...c }; delete next[cardId]; return next; });
+    setActiveChatEvents([]);
+  }, []);
+
+  const handleOpenCard = (cardId: string | null) => {
+    openCardId.current = cardId;
+    if (!cardId) setActiveChatEvents([]);
+  };
+
+  const handleCardOpenById = useCallback((cardId: string) => {
+    const card = cards.find(c => c.id === cardId);
+    if (card) {
+      setEditing(card);
+      const cardNotifIds = notifications.filter(n => n.card_id === cardId && !n.read).map(n => n.id);
+      if (cardNotifIds.length > 0) markNotifRead(cardNotifIds);
+    }
+  }, [cards, notifications, markNotifRead]);
+
+  // Service worker message listener (push notification clicks)
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === 'open-card' && e.data.cardId) {
+        handleCardOpenById(e.data.cardId);
+      }
+    };
+    navigator.serviceWorker?.addEventListener('message', handler);
+    return () => navigator.serviceWorker?.removeEventListener('message', handler);
+  }, [handleCardOpenById]);
+
+  // Handle ?card=<id> query param on load (from push notification click → openWindow)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cardId = params.get('card');
+    if (cardId && cards.length > 0) {
+      const card = cards.find(c => c.id === cardId);
+      if (card) {
+        handleCardOpenById(cardId);
+        history.replaceState({}, '', '/');
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cards]);
+
   const handleSaveEdit = async (patch: Partial<Card>) => {
     if (!editing) return;
     const id = editing.id;
@@ -263,6 +339,17 @@ function Authed({ meId }: { meId: string }) {
     }
   };
 
+  const searchActive = searchQuery.trim().length > 0;
+  const filteredCards = useMemo(() => {
+    if (!searchActive) return cards;
+    const q = searchQuery.trim().toLowerCase();
+    return cards.filter(
+      (c) =>
+        c.title.toLowerCase().includes(q) ||
+        (c.description ?? '').toLowerCase().includes(q),
+    );
+  }, [cards, searchQuery, searchActive]);
+
   return (
     <div className="min-h-full p-4">
       <BoardHeader
@@ -272,39 +359,62 @@ function Authed({ meId }: { meId: string }) {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onOpenReview={() => setReviewOpen(true)}
-        onOpenArchive={() => setArchiveOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         section={section}
-        onSection={setSection}
+        onSection={(s) => {
+          setSection(s);
+          if (s === 'archive') setArchiveOpen(true);
+          else setArchiveOpen(false);
+        }}
+        notificationBell={
+          <NotificationBell
+            notifications={notifications}
+            unreadCount={notifUnreadCount}
+            onMarkRead={markNotifRead}
+            onMarkAllRead={markAllNotifsRead}
+            onCardOpen={handleCardOpenById}
+          />
+        }
       />
+      {section === 'board' && (
+        <ActivityTicker
+          cards={filteredCards}
+          onCardClick={setEditing}
+        />
+      )}
       {section === 'board' ? (
         <Board
           cards={cards}
           searchQuery={searchQuery}
           users={users}
+          unreadCounts={unreadCounts}
           onCreate={handleCreate}
           onEdit={setEditing}
           onDelete={handleDelete}
           onMove={handleMove}
         />
-      ) : (
+      ) : section === 'knowledge' ? (
         <KnowledgeView
           shareInitial={shareInitial}
           onShareConsumed={() => setShareInitial(null)}
         />
-      )}
+      ) : null}
       {editing && (
         <EditDialog
           card={editing}
           users={users}
+          meId={meId}
+          incomingChatEvents={activeChatEvents}
           onSave={handleSaveEdit}
           onClose={() => setEditing(null)}
+          onRead={handleRead}
+          onOpenCard={handleOpenCard}
         />
       )}
       {reviewOpen && <WeeklyReview onClose={() => setReviewOpen(false)} />}
       {archiveOpen && (
         <ArchiveDialog
-          onClose={() => setArchiveOpen(false)}
+          onClose={() => { setArchiveOpen(false); setSection('board'); }}
           onRestore={(card) => {
             setCards((prev) =>
               prev.some((c) => c.id === card.id) ? prev : [...prev, card],

@@ -13,18 +13,20 @@ import type { Card, Status, User } from '../types.ts';
 import { STATUSES } from '../types.ts';
 import { Column } from './Column.tsx';
 import { CardView } from './CardView.tsx';
+import { TrashDropZone } from './TrashDropZone.tsx';
 
 type Props = {
   cards: Card[];
   users: User[];
   searchQuery: string;
+  unreadCounts?: Record<string, number>;
   onCreate: (title: string, status: Status) => void;
   onEdit: (card: Card) => void;
   onDelete: (id: string) => void;
   onMove: (id: string, status: Status, position: number) => void;
 };
 
-export function Board({ cards, users, searchQuery, onCreate, onEdit, onDelete, onMove }: Props) {
+export function Board({ cards, users, searchQuery, unreadCounts, onCreate, onEdit, onDelete, onMove }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -58,6 +60,11 @@ export function Board({ cards, users, searchQuery, onCreate, onEdit, onDelete, o
 
     const activeCard = cards.find((c) => c.id === active.id);
     if (!activeCard) return;
+
+    if (over.id === 'trash') {
+      onDelete(activeCard.id);
+      return;
+    }
 
     const overId = String(over.id);
     let targetStatus: Status;
@@ -104,6 +111,7 @@ export function Board({ cards, users, searchQuery, onCreate, onEdit, onDelete, o
             status={status}
             cards={byStatus[status]}
             users={users}
+            unreadCounts={unreadCounts}
             searchActive={searchActive}
             onCreate={(title) => onCreate(title, status)}
             onEdit={onEdit}
@@ -114,6 +122,8 @@ export function Board({ cards, users, searchQuery, onCreate, onEdit, onDelete, o
       <DragOverlay>
         {activeCard ? <CardView card={activeCard} users={users} dragging /> : null}
       </DragOverlay>
+      {/* No responsive guard needed — MobileShell renders instead of Board on small phones */}
+      <TrashDropZone isDragging={activeId !== null} />
       <button
         type="button"
         className="fab hidden md:inline-flex"

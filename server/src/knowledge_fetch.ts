@@ -3,7 +3,6 @@ import { JSDOM } from 'jsdom';
 import { Readability } from '@mozilla/readability';
 import { setFetchResult, loadKnowledge } from './knowledge.js';
 import { broadcast } from './ws.js';
-import { enqueueEmbed } from './ai/embed_queue.js';
 
 const TIMEOUT_MS = Number(process.env.KNOWLEDGE_FETCH_TIMEOUT_MS ?? 10_000);
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -116,7 +115,6 @@ export function triggerFetch(id: string): void {
         });
         if (updated) {
           broadcast({ type: 'knowledge.updated', knowledge: updated });
-          enqueueEmbed(id);
         }
       } catch (err) {
         const updated = await setFetchResult(id, {

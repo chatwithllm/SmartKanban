@@ -82,5 +82,5 @@ test('POST /api/cards accepts project field; GET /api/cards?project=<key> filter
   assert.equal(filtered.statusCode, 200);
   const cards = filtered.json() as Array<{ title: string; project: string | null }>;
   assert.equal(cards.length, 1);
-  assert.equal(cards[0].title, 'A in proj-x');
+  assert.equal(cards[0]!.title, 'A in proj-x');
 });

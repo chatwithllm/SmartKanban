@@ -8,7 +8,6 @@ import {
   type Scope,
   type Status,
   canUserSeeCard,
-  getCardActivity,
   isStatus,
   listArchivedCards,
   listCards,
@@ -17,6 +16,7 @@ import {
 } from '../cards.js';
 import { broadcast } from '../ws.js';
 import { listKnowledgeForCard } from '../knowledge.js';
+import { fanOutNotification } from '../notifications.js';
 
 const ATTACHMENTS_DIR = path.resolve(process.env.ATTACHMENTS_DIR ?? 'data/attachments');
 
@@ -175,7 +175,15 @@ export async function cardRoutes(app: FastifyInstance) {
         );
       }
     }
+    let newShareRecipients: string[] = [];
     if (body.shares !== undefined) {
+      const { rows: prevShares } = await pool.query<{ user_id: string }>(
+        `SELECT user_id::text FROM card_shares WHERE card_id = $1`,
+        [id],
+      );
+      const prevSet = new Set(prevShares.map((r) => r.user_id));
+      newShareRecipients = body.shares.filter((uid) => !prevSet.has(uid));
+
       await pool.query(`DELETE FROM card_shares WHERE card_id = $1`, [id]);
       if (body.shares.length > 0) {
         await pool.query(
@@ -187,6 +195,26 @@ export async function cardRoutes(app: FastifyInstance) {
 
     const updated = (await loadCard(id))!;
     await logActivity(req.user!.id, id, 'update', { changed: Object.keys(body) });
+
+    if (newShareRecipients.length > 0) {
+      const actor = req.user!;
+      const actorName = actor.short_name || actor.name;
+      const { rows: evRows } = await pool.query<{ id: number }>(
+        `INSERT INTO card_events (card_id, entry_type, actor_id, content, details)
+         VALUES ($1, 'share', $2, $3, $4) RETURNING id`,
+        [id, actor.id, `${actorName} shared this card`, JSON.stringify({ shared_with: newShareRecipients })],
+      );
+      const eventId = evRows[0]!.id;
+      const preview = `${actorName} shared "${updated.title}" with you`;
+      for (const uid of newShareRecipients) {
+        await pool.query(
+          `INSERT INTO notifications (user_id, card_id, event_id, actor_name, preview)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [uid, id, eventId, actorName, preview],
+        );
+      }
+    }
+
     broadcast({ type: 'card.updated', card: updated });
     return updated;
   });
@@ -209,21 +237,6 @@ export async function cardRoutes(app: FastifyInstance) {
       const card = (await loadCard(id))!;
       broadcast({ type: 'card.updated', card });
       return card;
-    },
-  );
-
-  // GET /api/cards/:id/activity
-  app.get<{ Params: { id: string } }>(
-    '/api/cards/:id/activity',
-    { preHandler: requireUser },
-    async (req, reply) => {
-      const { id } = req.params;
-      const card = await loadCard(id);
-      if (!card) return reply.code(404).send({ error: 'not found' });
-      if (!(await canUserSeeCard(req.user!.id, id))) {
-        return reply.code(404).send({ error: 'not found' });
-      }
-      return getCardActivity(id);
     },
   );
 

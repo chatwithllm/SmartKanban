@@ -1,17 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { Card, User } from '../types.ts';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { Card, CardEvent, User } from '../types.ts';
 import type { KnowledgeItem } from '../types.ts';
 import { api } from '../api.ts';
-import { ActivityTimeline } from './ActivityTimeline.tsx';
+import { CardTimeline } from './CardTimeline.tsx';
+import { AiInsightsPanel } from './AiInsightsPanel.tsx';
 
 type Props = {
   card: Card;
   users: User[];
+  meId: string;
+  incomingChatEvents?: CardEvent[];
   onSave: (patch: Partial<Card>) => void;
   onClose: () => void;
+  onRead?: (cardId: string) => void;
+  onOpenCard?: (cardId: string | null) => void;
 };
 
-export function EditDialog({ card, users, onSave, onClose }: Props) {
+export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onClose, onRead, onOpenCard }: Props) {
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description);
   const [tags, setTags] = useState(card.tags.join(', '));
@@ -20,6 +25,10 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
   const [dueDate, setDueDate] = useState(card.due_date ?? '');
 
   const [showQr, setShowQr] = useState(false);
+  const [sharingBusy, setSharingBusy] = useState(false);
+  const [sharesSaved, setSharesSaved] = useState(false);
+
+  const handleRead = useCallback(() => onRead?.(card.id), [onRead, card.id]);
 
   const [linked, setLinked] = useState<KnowledgeItem[]>([]);
   const [picking, setPicking] = useState(false);
@@ -74,6 +83,11 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
   }
 
   useEffect(() => {
+    onOpenCard?.(card.id);
+    return () => onOpenCard?.(null);
+  }, [card.id, onOpenCard]);
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -83,6 +97,17 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
 
   const toggle = (list: string[], set: (v: string[]) => void, id: string) => {
     set(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
+  };
+
+  const shareNow = async () => {
+    setSharingBusy(true);
+    try {
+      await api.updateCard(card.id, { shares } as Partial<Card>);
+      setSharesSaved(true);
+      setTimeout(() => setSharesSaved(false), 2000);
+    } catch { /* ignore */ } finally {
+      setSharingBusy(false);
+    }
   };
 
   const save = () => {
@@ -104,19 +129,29 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
+      style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }}
       onClick={onClose}
     >
       <div
-        className="modal-surface w-full max-w-[560px] max-h-[90vh] overflow-y-auto flex flex-col"
+        className="w-full max-w-[560px] max-h-[90vh] overflow-y-auto flex flex-col"
+        style={{
+          background: 'rgb(var(--surface))',
+          borderRadius: 14,
+          boxShadow: 'var(--sh-3)',
+          border: '1px solid rgb(var(--hairline) / 0.08)',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header strip */}
-        <div className="modal-header-strip flex items-center justify-between px-5 py-3 shrink-0">
-          <span className="text-3 font-semibold tracking-tight2 text-white">Edit card</span>
+        <div
+          className="flex items-center justify-between px-5 py-3 shrink-0"
+          style={{ background: 'rgb(var(--violet))', borderRadius: '14px 14px 0 0' }}
+        >
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'white', fontFamily: 'Spectral, serif' }}>Edit card</span>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-2 text-white/80 hover:text-white"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.8)', fontSize: 16 }}
           >
             ✕
           </button>
@@ -129,8 +164,12 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="flex-1 bg-transparent text-3 font-medium text-ink tracking-tight2 outline-none placeholder:text-ink-soft"
               placeholder="Title"
+              style={{
+                flex: 1, background: 'transparent', outline: 'none', border: 'none',
+                fontSize: 18, fontWeight: 600, color: 'rgb(var(--ink))',
+                fontFamily: 'Spectral, serif', letterSpacing: '-0.01em',
+              }}
             />
             <button
               onClick={() => setShowQr((v) => !v)}
@@ -159,16 +198,41 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full min-h-[120px] resize-none bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none"
             placeholder="Description"
+            style={{
+              width: '100%', minHeight: 120, resize: 'none',
+              background: 'rgb(var(--card))',
+              color: 'rgb(var(--ink))',
+              border: '1px solid rgb(var(--hairline) / 0.14)',
+              borderRadius: 10, padding: '10px 14px',
+              fontSize: 13, fontFamily: 'Inter, sans-serif',
+              outline: 'none',
+            }}
           />
 
           <input
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full"
             placeholder="tags, comma, separated"
+            style={{
+              width: '100%',
+              background: 'rgb(var(--card))',
+              color: 'rgb(var(--ink))',
+              border: '1px solid rgb(var(--hairline) / 0.14)',
+              borderRadius: 10, padding: '8px 14px',
+              fontSize: 13, fontFamily: 'Inter, sans-serif',
+              outline: 'none',
+            }}
           />
+
+          {card?.id && (
+            <AiInsightsPanel
+              cardId={card.id}
+              onOpenKnowledge={(id) => {
+                window.location.href = `/knowledge/${encodeURIComponent(id)}`;
+              }}
+            />
+          )}
 
           {card?.id && (
             <section>
@@ -209,10 +273,18 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
               {picking && (
                 <div className="mt-2 rounded-card border border-ink/10 bg-ceramic p-2">
                   <input
-                    className="mb-1 bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full"
                     placeholder="search knowledge..."
                     value={pickerQ}
                     onChange={(e) => setPickerQ(e.target.value)}
+                    style={{
+                      width: '100%', marginBottom: 4,
+                      background: 'rgb(var(--card))',
+                      color: 'rgb(var(--ink))',
+                      border: '1px solid rgb(var(--hairline) / 0.14)',
+                      borderRadius: 8, padding: '7px 12px',
+                      fontSize: 13, fontFamily: 'Inter, sans-serif',
+                      outline: 'none',
+                    }}
                   />
                   <ul className="max-h-48 overflow-auto">
                     {candidates.map((k) => (
@@ -237,7 +309,16 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="flex-1 bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none"
+              style={{
+                flex: 1,
+                background: 'rgb(var(--card))',
+                color: 'rgb(var(--ink))',
+                border: '1px solid rgb(var(--hairline) / 0.14)',
+                borderRadius: 10, padding: '8px 14px',
+                fontSize: 13, fontFamily: 'Inter, sans-serif',
+                outline: 'none',
+                colorScheme: 'inherit',
+              }}
             />
             {dueDate && (
               <button
@@ -251,20 +332,52 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
 
           {card.attachments.length > 0 && (
             <div>
-              <div className="text-1 tracking-tight2 text-ink-soft mb-2">Attachments</div>
-              <div className="flex flex-wrap gap-2">
-                {card.attachments.map((a) => (
-                  <a
-                    key={a.id}
-                    href={`/attachments/${a.storage_path}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-card border border-ink/10 bg-card px-2 py-1 text-1 tracking-tight2 text-ink hover:border-green-accent"
-                  >
-                    {a.kind === 'audio' ? '🎙️ audio' : a.kind === 'image' ? '🖼️ image' : '📎 file'}
-                  </a>
-                ))}
+              <div style={{ fontSize: 11, color: 'rgb(var(--ink-3))', marginBottom: 8, fontFamily: 'JetBrains Mono, monospace' }}>
+                Attachments
               </div>
+              {/* Image previews */}
+              {card.attachments.filter(a => a.kind === 'image').length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
+                  {card.attachments.filter(a => a.kind === 'image').map((a) => (
+                    <a
+                      key={a.id}
+                      href={`/attachments/${a.storage_path}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ display: 'block', borderRadius: 10, overflow: 'hidden', border: '1px solid rgb(var(--hairline) / 0.12)' }}
+                    >
+                      <img
+                        src={`/attachments/${a.storage_path}`}
+                        alt="attachment"
+                        style={{ width: '100%', maxHeight: 240, objectFit: 'cover', display: 'block' }}
+                      />
+                    </a>
+                  ))}
+                </div>
+              )}
+              {/* Non-image attachments */}
+              {card.attachments.filter(a => a.kind !== 'image').length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {card.attachments.filter(a => a.kind !== 'image').map((a) => (
+                    <a
+                      key={a.id}
+                      href={`/attachments/${a.storage_path}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        padding: '5px 12px', borderRadius: 99,
+                        border: '1px solid rgb(var(--hairline) / 0.12)',
+                        background: 'rgb(var(--card))',
+                        fontSize: 12, color: 'rgb(var(--ink))',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      {a.kind === 'audio' ? '🎙️ audio' : '📎 file'}
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -288,7 +401,17 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
               </div>
             </div>
             <div>
-              <div className="text-1 tracking-tight2 text-ink-soft mb-2">Shared with</div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="text-1 tracking-tight2 text-ink-soft flex-1">Shared with</div>
+                <button
+                  onClick={shareNow}
+                  disabled={sharingBusy}
+                  className="rounded-pill px-2 py-0.5 text-1 tracking-tight2 border border-violet/30 bg-violet/8 text-violet hover:bg-violet/15 disabled:opacity-50"
+                  style={{ fontSize: 11, color: 'rgb(var(--violet))', background: 'rgb(var(--violet) / 0.08)', borderColor: 'rgb(var(--violet) / 0.25)' }}
+                >
+                  {sharesSaved ? '✓ Shared' : sharingBusy ? '…' : 'Share now'}
+                </button>
+              </div>
               <div className="flex flex-wrap gap-1">
                 {users.map((u) => (
                   <button
@@ -309,7 +432,12 @@ export function EditDialog({ card, users, onSave, onClose }: Props) {
 
           <div>
             <div className="text-3 font-semibold text-green-starbucks tracking-tight2 mb-2">Activity</div>
-            <ActivityTimeline cardId={card.id} />
+            <CardTimeline
+              cardId={card.id}
+              meId={meId}
+              incomingEvents={incomingChatEvents}
+              onRead={handleRead}
+            />
           </div>
         </div>
 

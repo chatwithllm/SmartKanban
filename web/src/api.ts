@@ -1,4 +1,4 @@
-import type { ActivityEntry, ApiToken, Card, KnowledgeItem, KnowledgeVisibility, MirrorToken, ReviewData, Scope, Status, Template, User } from './types.ts';
+import type { AiSuggestion, ApiToken, Card, CardEvent, Insight, KnowledgeItem, KnowledgeVisibility, MirrorToken, Notification, ReviewData, Scope, Status, Template, User } from './types.ts';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -118,7 +118,12 @@ export const api = {
   permanentDeleteCard: (id: string) =>
     req<void>(`/api/cards/${id}/permanent`, { method: 'DELETE' }),
   purgeArchived: () => req<{ deleted: number }>('/api/cards/archived/purge', json({})),
-  cardActivity: (id: string) => req<ActivityEntry[]>(`/api/cards/${id}/activity`),
+  cardEvents: (id: string) => req<CardEvent[]>(`/api/cards/${id}/events`),
+  postMessage: (id: string, content: string) =>
+    req<CardEvent>(`/api/cards/${id}/messages`, json({ content })),
+  markRead: (id: string, lastReadId: string) =>
+    req<void>(`/api/cards/${id}/events/read`, { ...json({ last_read_id: parseInt(lastReadId, 10) }), method: 'PUT' }),
+  unreadCounts: () => req<Record<string, number>>('/api/messages/unread'),
 
   moveCard: (id: string, status: Status, position: number) =>
     api.updateCard(id, { status, position } as Partial<Card>),
@@ -173,4 +178,25 @@ export const api = {
   deleteTemplate: (id: string) => req<void>(`/api/templates/${id}`, { method: 'DELETE' }),
   instantiateTemplate: (id: string, body?: { status_override?: Status }) =>
     req<Card>(`/api/templates/${id}/instantiate`, json(body ?? {})),
+
+  notifications: () => req<Notification[]>('/api/notifications'),
+  markNotificationsRead: (ids: number[]) =>
+    req<void>('/api/notifications/read', { ...json({ ids }), method: 'PUT' }),
+  markAllNotificationsRead: () =>
+    req<void>('/api/notifications/read-all', { method: 'PUT' }),
+  subscribePush: (sub: { endpoint: string; p256dh: string; auth: string }) =>
+    req<void>('/api/push/subscribe', json(sub)),
+  unsubscribePush: (endpoint: string) =>
+    req<void>('/api/push/subscribe', { ...json({ endpoint }), method: 'DELETE' }),
+  vapidPublicKey: () => req<{ publicKey: string }>('/api/push/vapid-public-key'),
+
+  brainstormCard: (cardId: string) =>
+    req<{ id: string; status: 'pending' }>(`/api/cards/${cardId}/insights/brainstorm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    }),
+
+  listInsights: (cardId: string) =>
+    req<{ insights: Insight[] }>(`/api/cards/${cardId}/insights`),
 };

@@ -132,16 +132,30 @@ CREATE TABLE IF NOT EXISTS card_attachments (
 );
 CREATE INDEX IF NOT EXISTS idx_attachments_card ON card_attachments(card_id);
 
--- ---------- activity ----------
-CREATE TABLE IF NOT EXISTS activity_log (
-  id         BIGSERIAL PRIMARY KEY,
-  actor_id   UUID REFERENCES users(id) ON DELETE SET NULL,
-  card_id    UUID REFERENCES cards(id) ON DELETE CASCADE,
-  action     TEXT NOT NULL,
-  details    JSONB NOT NULL DEFAULT '{}',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- ---------- card events (activity + chat) ----------
+CREATE TABLE IF NOT EXISTS card_events (
+  id           BIGSERIAL PRIMARY KEY,
+  actor_id     UUID REFERENCES users(id) ON DELETE SET NULL,
+  card_id      UUID REFERENCES cards(id) ON DELETE CASCADE,
+  action       TEXT,
+  details      JSONB NOT NULL DEFAULT '{}',
+  entry_type   TEXT NOT NULL DEFAULT 'system'
+               CHECK (entry_type IN ('system', 'message', 'ai', 'share')),
+  content      TEXT,
+  ai_suggestions JSONB,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_card_events_card
+  ON card_events(card_id, created_at ASC);
+CREATE INDEX IF NOT EXISTS idx_activity_created
+  ON card_events(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS card_event_reads (
+  card_id      UUID NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+  user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  last_read_id BIGINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (card_id, user_id)
+);
 
 -- ---------- card templates ----------
 CREATE TABLE IF NOT EXISTS card_templates (
@@ -209,4 +223,32 @@ CREATE TABLE IF NOT EXISTS knowledge_card_links (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (knowledge_id, card_id)
 );
+
+-- Structured Telegram capture (2026-05-11): cards FTS for duplicate detection
+ALTER TABLE cards
+  ADD COLUMN IF NOT EXISTS fts tsvector
+  GENERATED ALWAYS AS (
+    to_tsvector('english',
+      coalesce(title, '') || ' ' || coalesce(description, '')
+    )
+  ) STORED;
+
+CREATE INDEX IF NOT EXISTS cards_fts_idx ON cards USING GIN (fts);
 CREATE INDEX IF NOT EXISTS idx_klc_card ON knowledge_card_links(card_id);
+
+-- AI brainstorm research (2026-05-12): per-card insight rows
+CREATE TABLE IF NOT EXISTS ai_insights (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  card_id       UUID NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+  requested_by  UUID NOT NULL REFERENCES users(id),
+  status        TEXT NOT NULL CHECK (status IN ('pending','ok','failed')) DEFAULT 'pending',
+  summary       TEXT,
+  body          JSONB,
+  error         TEXT,
+  degraded      BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  completed_at  TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS ai_insights_card_idx
+  ON ai_insights (card_id, created_at DESC);

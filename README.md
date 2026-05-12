@@ -32,35 +32,55 @@ seconds; sending a message to a bot is instant, and works from any phone.
 
 ### Capture (Telegram)
 
-- **DM the bot** — any message becomes a private card on your board
-- **Post to the family group** — lands in **Family Inbox** with a Private /
-  Public privacy prompt
-- **Voice notes** → Whisper transcription, original audio attached
-- **Photos** → gpt-4o-mini vision summary, original image attached
-- **URLs auto-detected** — `github.com/...` and other links preserved as
-  markdown link list in the description
+- **DM the bot** — kicks off the structured two-step flow below
+- **Post to the family group** — same flow, with Family Inbox as the
+  auto-suggested destination
+- **Voice notes** → Whisper transcribe → New-vs-Attach prompt → flow
+- **Photos** → vision summary → New-vs-Attach prompt → flow
+- **URLs auto-detected** — destination defaults to Knowledge
 
 ### Interactive proposal flow (text messages)
 
-Instead of blindly saving every message as a card, the bot runs your text
-through an LLM (gemini-2.0-flash-001 by default, via OpenRouter) and replies:
+The bot runs your text through an LLM (gemini-2.0-flash-001 by default, via
+OpenRouter) and replies with a destination chooser:
 
 ```
 📝 Buy eggs
 Tags: #groceries
 
-[🔒 Private] [👥 Public]
-[📅 Today]   [⚡ Doing]
-[🔗 Add link] [✏️ Edit] [❌ Cancel]
+[✓ 🔒 Private] [👥 Public] [📚 Knowledge]
+[🔍 Check duplicates?]
+[✏️ Edit] [❌ Cancel]
 ```
 
-- **Save / Today / Doing** — create the card in that column
-- **Add link** — paste URLs, attached to the description
-- **Edit** — tell the bot "change tags to home" and it re-proposes
-- **Cancel** — discard, no card
+- **🔒 Private / 👥 Public** — opens a column picker:
+  `[📥 Backlog] [📅 Today] [⚡ In Progress] [✅ Done]`
+- **📚 Knowledge** — saves directly (URL auto-fetch if present, otherwise
+  saved as a note)
+- **🔍 Check duplicates?** — runs Postgres FTS + Gemini Flash re-rank
+  across your visible cards + knowledge and offers
+  `[🔗 Link to existing] [+ Save anyway] [❌ Cancel]`
+- **✏️ Edit** — send replacement text; bot re-proposes
+- **❌ Cancel** — discard, no save
 
-Non-task messages ("lol") are flagged with "Doesn't look like a task — save
-anyway if you want." so you're never surprised by spurious cards.
+Non-task messages ("lol") are still flagged with "Doesn't look like a task —
+save anyway if you want." so you're never surprised by spurious cards.
+
+### Attaching photos or voice to existing items
+
+After vision / Whisper extracts text, the bot asks:
+
+```
+📷 Receipt from grocery run     (or 🎙 for voice)
+
+[✨ New] [🔗 Attach to existing] [❌ Cancel]
+```
+
+**Attach** shows the top 5 recent cards + top 3 recent knowledge items
+visible to you, with a `[Pick]` row per item and a "reply with text to
+filter" hint. A reply re-renders the picker filtered by FTS. Picking a
+card attaches the photo / audio to it; picking a knowledge item falls
+back to a new private card (knowledge attachments are web-only for now).
 
 ### After save
 
@@ -126,6 +146,26 @@ A lightweight inbox for URLs, snippets, and notes that link to cards.
 - PWA manifest + service worker for install-to-home-screen
 - Live sync via WebSocket (cards, templates, knowledge, links)
 - Keyboard shortcut hints + toast notifications on CRUD actions
+
+### AI Brainstorm research
+
+Tap **🤔 Brainstorm** on any card (via the Telegram post-save keyboard
+or the AI Insights panel in the card edit dialog) to run a hybrid
+research pipeline:
+
+- **Local context** — full-text search across your visible cards and
+  knowledge items for things you've already captured on related
+  topics.
+- **Web search** — fresh results via [Tavily](https://tavily.com/)
+  (free tier 1000/mo; set `TAVILY_API_KEY` in `server/.env`).
+- **LLM synthesis** — Gemini Flash composes a structured response:
+  summary + related items + web findings + suggested next steps.
+
+Results appear as a dedicated panel in the card edit dialog and a
+✨ snippet on the board card. Async — research takes ~10s; a Telegram
+nudge fires when it's done. Per-user rate limits (5 pending, 50/day,
+1 per card) keep cost bounded. Without `TAVILY_API_KEY` the pipeline
+runs in "degraded" mode (local context only).
 
 ### Privacy model
 
@@ -268,15 +308,45 @@ cd server && PORT=8010 node --env-file=.env dist/index.js
 Fastify serves the built web SPA, with SPA fallback so `/my-day?token=…`
 resolves correctly.
 
-**Production (one-click install on a VPS):**
+**One-click installer (both server and client)**:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/chatwithllm/SmartKanban/main/scripts/install.sh | bash
 ```
 
-Walks you through Docker install, repo clone, env config (with prompts
+The same script handles two distinct audiences — it asks which you're
+setting up on first run:
+
+- **Server** — kanban backend (Docker + Postgres on a host machine).
+- **Client** — the [notetaker-kanban](https://github.com/chatwithllm/notetaker-kanban)
+  Claude Code bridge on a developer's laptop. Clones the bridge repo,
+  copies slash commands + hook into `~/.claude/`, and writes
+  `KANBAN_URL` + `KANBAN_TOKEN` into your shell rc.
+
+The installer auto-detects existing installs and presents the right options:
+
+| Run with | Behavior |
+|---|---|
+| `install.sh` (no arg) | Auto: prompt server-or-client on a clean machine; show menu when an install (server or client or both) is detected. |
+| `install.sh server` | Force server install. |
+| `install.sh client` | Force client (bridge) install. |
+| `install.sh upgrade` | Detects which side is installed locally, upgrades that. |
+| `install.sh uninstall` | Detects which side, gated step-by-step removal. Safe defaults — no data destroyed without explicit `y`. |
+| `install.sh status` | Non-modifying combined report — server (containers, /health) **and** client (bridge symlink, KANBAN_URL/TOKEN, live token probe). |
+| `install.sh --help` | Synopsis + examples. |
+
+Server side covers Docker install, repo clone, env config (with prompts
 for your domain + Telegram + AI keys), schema init, build, optional
-Caddy auto-HTTPS, and backups. Idempotent — safe to re-run.
+Caddy auto-HTTPS, backups, and a printable onboarding snippet for the
+notetaker-kanban bridge.
+
+Client side detects OS (macOS/Linux), checks deps (`git`, `curl`, `jq`),
+clones the bridge to `$HOME/.notetaker-kanban`, runs the bridge's own
+`install.sh`, prompts for KANBAN_URL + KANBAN_TOKEN, appends to your
+shell rc with `chmod 600`, and validates the token against the live
+server with a non-destructive probe (no kanban cards created).
+
+Idempotent — safe to re-run any of the above on either side.
 
 **Production (manual walkthrough)** — see
 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for a step-by-step guide from
@@ -338,6 +408,7 @@ See [`.env.example`](.env.example) for the full list. Highlights:
 | `KNOWLEDGE_FETCH_TIMEOUT_MS` | URL fetch timeout                                   | `10000`                         |
 | `KNOWLEDGE_BODY_MAX_CHARS`   | Knowledge body cap                                  | `200000`                        |
 | `KNOWLEDGE_EMBEDDINGS`       | Enable pgvector semantic search                     | *(unset)*                       |
+| `TAVILY_API_KEY`             | Web search for AI Brainstorm                        | *(optional)*                    |
 
 ---
 
