@@ -226,7 +226,12 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
           />
 
           {card?.id && (
-            <AiInsightsPanel cardId={card.id} />
+            <AiInsightsPanel
+              cardId={card.id}
+              onOpenKnowledge={(id) => {
+                window.location.href = `/knowledge/${encodeURIComponent(id)}`;
+              }}
+            />
           )}
 
           {card?.id && (
