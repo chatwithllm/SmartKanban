@@ -3,6 +3,7 @@ import { searchTavily, type TavilyResult } from './tavily.js';
 import { searchCardsFts, loadCard } from '../cards.js';
 import { searchKnowledgeFts } from '../knowledge.js';
 import { getInsight, markOk, markFailed, type InsightBody } from '../insights.js';
+import { broadcast } from '../ws.js';
 
 const STOPWORDS = new Set([
   'the', 'a', 'an', 'of', 'on', 'in', 'and', 'or', 'to', 'for', 'with',
@@ -181,17 +182,15 @@ export async function runBrainstorm(insightId: string): Promise<void> {
 
   await markOk(insightId, parsed.summary, parsed.body, degraded);
 
-  // TODO(Task 6): broadcast insight.updated once ws.ts knows about the event
-  // const final = await getInsight(insightId);
-  // if (final) broadcast({ type: 'insight.updated', insight: final, card_id: insight.card_id, owner_id: card.created_by ?? '' });
+  const final = await getInsight(insightId);
+  if (final) broadcast({ type: 'insight.updated', insight: final, card_id: insight.card_id, owner_id: card.created_by ?? '' });
 }
 
 export async function failBrainstorm(insightId: string, error: string): Promise<void> {
   await markFailed(insightId, error);
-  // TODO(Task 6): broadcast insight.failed once ws.ts knows about the event
-  // const final = await getInsight(insightId);
-  // if (final) {
-  //   const card = await loadCard(final.card_id);
-  //   broadcast({ type: 'insight.failed', insight: final, card_id: final.card_id, owner_id: card?.created_by ?? '' });
-  // }
+  const final = await getInsight(insightId);
+  if (final) {
+    const card = await loadCard(final.card_id);
+    broadcast({ type: 'insight.failed', insight: final, card_id: final.card_id, owner_id: card?.created_by ?? '' });
+  }
 }
