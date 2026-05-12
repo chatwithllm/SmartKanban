@@ -318,7 +318,8 @@ export type CardFtsHit = {
 // Visibility predicate: card visible to user iff
 //   - user is creator, OR
 //   - user is an assignee, OR
-//   - user is a sharer
+//   - user is a sharer, OR
+//   - card is unassigned (Family Inbox — visible to everyone)
 // Matches existing visibility semantics in listCards().
 export async function searchCardsFts(
   userId: string,
@@ -339,6 +340,7 @@ export async function searchCardsFts(
          c.created_by = $1
          OR ca.user_id = $1
          OR cs.user_id = $1
+         OR NOT EXISTS (SELECT 1 FROM card_assignees ca2 WHERE ca2.card_id = c.id)
        )
      ORDER BY rank DESC, c.updated_at DESC
      LIMIT $3`,

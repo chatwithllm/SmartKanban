@@ -44,6 +44,23 @@ test('searchCardsFts hides user A private card from user B', async () => {
   assert.ok(!hits.some((h) => h.id === cardOfA), 'user B must not see user A private card');
 });
 
+test('searchCardsFts returns unassigned Family Inbox card to other users', async () => {
+  // Create an unassigned card created by userA (no card_assignees row).
+  // userB should be able to find it because Family Inbox cards are public.
+  const inbox = await pool.query<{ id: string }>(
+    `INSERT INTO cards (title, description, status, source, created_by, position)
+     VALUES ('Family inbox topic widgets', 'shared concern', 'today', 'manual', $1, 2) RETURNING id`,
+    [userA],
+  );
+  const inboxId = inbox.rows[0]!.id;
+  try {
+    const hits = await searchCardsFts(userB, 'widgets', 10);
+    assert.ok(hits.some((h) => h.id === inboxId), 'unassigned card should be visible to user B');
+  } finally {
+    await pool.query(`DELETE FROM cards WHERE id = $1`, [inboxId]);
+  }
+});
+
 test('searchCardsFts returns [] for empty query', async () => {
   const hits = await searchCardsFts(userA, '   ', 10);
   assert.deepEqual(hits, []);
