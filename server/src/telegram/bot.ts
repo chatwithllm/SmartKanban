@@ -900,6 +900,8 @@ async function attachToTarget(
       }
       const card = await loadCard(targetId);
       if (card) broadcast({ type: 'card.updated', card });
+      const actionLabel = pending.pendingPhotoFileId ? 'telegram.photo.attach' : 'telegram.voice.attach';
+      await logActivity(pending.appUserId, targetId, actionLabel);
       await ctx.reply('📎 Attached to card.');
     } catch (e) {
       await ctx.reply(`Attach failed: ${e instanceof Error ? e.message : 'error'}`);
