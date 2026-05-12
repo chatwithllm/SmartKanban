@@ -78,3 +78,36 @@ test('parseBrainstormResponse caps arrays', () => {
 test('parseBrainstormResponse throws on bad JSON', () => {
   assert.throws(() => parseBrainstormResponse('not json{'));
 });
+
+test('parseBrainstormResponse filters web findings whose why is self-labeled irrelevant', () => {
+  const raw = JSON.stringify({
+    summary: 's',
+    related_items: [],
+    web_findings: [
+      { title: 'Good source', url: 'https://good.example', why: 'directly addresses the topic' },
+      { title: 'Off-topic', url: 'https://bad.example', why: 'This search result is not relevant to the user\'s request.' },
+      { title: 'Unrelated', url: 'https://unrelated.example', why: 'completely unrelated to streaming cameras' },
+      { title: 'Irrelevant', url: 'https://irrelevant.example', why: 'irrelevant noise from search' },
+    ],
+    next_steps: [],
+  });
+  const r = parseBrainstormResponse(raw);
+  assert.equal(r.body.web_findings?.length, 1);
+  assert.equal(r.body.web_findings?.[0]?.url, 'https://good.example');
+});
+
+test('parseBrainstormResponse filters related items whose why is self-labeled irrelevant', () => {
+  const raw = JSON.stringify({
+    summary: 's',
+    related_items: [
+      { kind: 'card', id: 'c1', title: 'Buy eggs', why: 'shares the grocery context' },
+      { kind: 'card', id: 'c2', title: 'Random card', why: 'no relevance to the request' },
+      { kind: 'knowledge', id: 'k1', title: 'Off-topic note', why: 'not useful here' },
+    ],
+    web_findings: [],
+    next_steps: [],
+  });
+  const r = parseBrainstormResponse(raw);
+  assert.equal(r.body.related_items?.length, 1);
+  assert.equal(r.body.related_items?.[0]?.id, 'c1');
+});

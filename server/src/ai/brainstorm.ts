@@ -67,6 +67,12 @@ export function buildBrainstormPrompt(
     '  web_findings  — up to 3 items from web list ({title,url,why})',
     '  next_steps    — up to 4 short imperative steps for the user',
     '',
+    'CRITICAL RELEVANCE RULES — omit anything that is not directly useful:',
+    '  - Drop web results that are off-topic, spam, irrelevant, or only superficially related.',
+    '  - If NO web result genuinely helps the user, return an empty web_findings array. Do not include filler.',
+    '  - Same for related_items: drop ones that just share a keyword but offer no actionable value.',
+    '  - The "why" field must explain HOW the item helps the user. Never include items whose only "why" is that they are not relevant.',
+    '',
     'For related_items, the id field must match exactly one of the local ids:',
     `    cards: ${local.cards.map((c) => c.id).join(', ') || 'none'}`,
     `    knowledge: ${local.knowledge.map((k) => k.id).join(', ') || 'none'}`,
@@ -85,6 +91,20 @@ export function parseBrainstormResponse(raw: string): BrainstormParsed {
 
   const summary = typeof obj.summary === 'string' ? obj.summary.slice(0, 600) : '';
 
+  // Safety filter: drop self-labeled irrelevant items even if the LLM ignored
+  // the "omit irrelevant" instruction in the prompt.
+  const IRRELEVANT_PATTERNS = [
+    /\b(not|isn['’]?t|aren['’]?t|no)\s+relevant\b/i,
+    /\birrelevant\b/i,
+    /\bunrelated\b/i,
+    /\bnot\s+useful\b/i,
+    /\bnot\s+applicable\b/i,
+    /\bno\s+relevance\b/i,
+    /\boff[-\s]?topic\b/i,
+  ];
+  const isIrrelevantWhy = (why: string): boolean =>
+    IRRELEVANT_PATTERNS.some((re) => re.test(why));
+
   const related_items = (obj.related_items ?? [])
     .filter(
       (r) =>
@@ -94,7 +114,8 @@ export function parseBrainstormResponse(raw: string): BrainstormParsed {
         typeof r.why === 'string',
     )
     .slice(0, 8)
-    .map((r) => ({ kind: r.kind as 'card' | 'knowledge', id: r.id, title: r.title.slice(0, 200), why: r.why.slice(0, 200) }));
+    .map((r) => ({ kind: r.kind as 'card' | 'knowledge', id: r.id, title: r.title.slice(0, 200), why: r.why.slice(0, 200) }))
+    .filter((r) => !isIrrelevantWhy(r.why));
 
   const web_findings = (obj.web_findings ?? [])
     .filter(
@@ -102,7 +123,8 @@ export function parseBrainstormResponse(raw: string): BrainstormParsed {
         typeof w.title === 'string' &&
         typeof w.url === 'string' &&
         typeof w.why === 'string' &&
-        /^https?:\/\//.test(w.url),
+        /^https?:\/\//.test(w.url) &&
+        !isIrrelevantWhy(w.why),
     )
     .slice(0, 3)
     .map((w) => ({ title: w.title.slice(0, 200), url: w.url, why: w.why.slice(0, 200) }));
