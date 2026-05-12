@@ -728,6 +728,7 @@ async function finalizeKnowledge(ctx: Context, pending: PendingProposal): Promis
       visibility: 'private',
       source: 'telegram',
     });
+    broadcast({ type: 'knowledge.created', knowledge: created });
     if (url) {
       try { triggerFetch(created.id); } catch { /* non-fatal */ }
     }
@@ -771,6 +772,11 @@ async function finalizeCard(
       const localPath = await downloadTelegramFile(botInstance, pending.pendingAudioFileId, cardId, '.ogg');
       await attachFile(cardId, 'audio', localPath);
     } catch { /* non-fatal */ }
+  }
+
+  const card = await loadCard(cardId);
+  if (card) {
+    broadcast({ type: 'card.created', card });
   }
 
   await logActivity(pending.appUserId, cardId, isPrivate ? 'telegram.text.private' : 'telegram.text');
@@ -1042,14 +1048,16 @@ async function handleKnowledgeCommand(
 export function buildBot(token: string): Bot {
   const bot = new Bot(token);
 
-  bot.on('callback_query:data', async (ctx) => {
+  bot.on('callback_query:data', async (ctx, next) => {
     try {
       if (await handlePostSaveCallback(ctx)) return;
     } catch {
       try {
         await ctx.answerCallbackQuery({ text: 'error' });
       } catch {}
+      return;
     }
+    return next();
   });
 
   bot.callbackQuery(/^kshow:/, async (ctx) => {
