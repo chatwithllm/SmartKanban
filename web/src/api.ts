@@ -1,4 +1,4 @@
-import type { AiSuggestion, ApiToken, Card, CardEvent, Insight, KnowledgeItem, KnowledgeVisibility, MirrorToken, Notification, ReviewData, Scope, Status, Template, User } from './types.ts';
+import type { AiSuggestion, ApiToken, Card, CardEvent, CardLink, CardLinkLabel, Insight, KnowledgeItem, KnowledgeVisibility, MirrorToken, Notification, ReviewData, Scope, Status, Template, User } from './types.ts';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -199,4 +199,18 @@ export const api = {
 
   listInsights: (cardId: string) =>
     req<{ insights: Insight[] }>(`/api/cards/${cardId}/insights`),
+
+  linkCards: (fromCardId: string, b: { to_card_id: string; label: CardLinkLabel; note?: string }) =>
+    req<{ link: CardLink }>(`/api/cards/${fromCardId}/links`, json(b)),
+
+  unlinkCard: (fromCardId: string, linkId: string) =>
+    req<void>(`/api/cards/${fromCardId}/links/${linkId}`, { method: 'DELETE' }),
+
+  cardLinks: (cardId: string) =>
+    req<{ links: CardLink[]; related_cards: Card[] }>(`/api/cards/${cardId}/links`),
+
+  cardChain: (cardId: string, depth = 2) =>
+    req<{ nodes: Card[]; edges: CardLink[]; insights: Insight[] }>(
+      `/api/cards/${cardId}/chain?depth=${depth}`,
+    ),
 };
