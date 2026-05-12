@@ -9,6 +9,44 @@ type Props = {
   onOpenKnowledge?: (id: string) => void;
 };
 
+function LinkActions({ url, label }: { url: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch {
+      // ignore — clipboard may be denied
+    }
+  };
+  return (
+    <span className="inline-flex items-center gap-1 ml-2 align-middle">
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={`Open ${label}: ${url}`}
+        aria-label={`Open ${label} in new tab`}
+        className="btn-pill btn-pill-outlined-green text-1 px-2 py-0 inline-flex items-center gap-0.5"
+        style={{ paddingTop: 1, paddingBottom: 1 }}
+      >
+        Open ↗
+      </a>
+      <button
+        type="button"
+        onClick={copy}
+        title={`Copy URL: ${url}`}
+        aria-label={`Copy ${label} URL`}
+        className="btn-pill btn-pill-outlined-green text-1 px-2 py-0 inline-flex items-center gap-0.5"
+        style={{ paddingTop: 1, paddingBottom: 1 }}
+      >
+        {copied ? '✓ Copied' : 'Copy 📋'}
+      </button>
+    </span>
+  );
+}
+
 export function AiInsightsPanel({ cardId, onOpenCard, onOpenKnowledge }: Props) {
   const { insights, loading } = useInsights(cardId);
   const latest: Insight | undefined = insights[0];
@@ -92,47 +130,25 @@ export function AiInsightsPanel({ cardId, onOpenCard, onOpenKnowledge }: Props) 
               <ul className="flex flex-col gap-1">
                 {latest.body.related_items!.map((r) => (
                   <li key={r.id} className="text-2 text-ink tracking-tight2">
-                    {r.kind === 'card' ? (
-                      <a
-                        href={`/?card=${encodeURIComponent(r.id)}`}
-                        onClick={(e) => {
-                          if (onOpenCard && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) {
-                            e.preventDefault();
-                            onOpenCard(r.id);
-                          }
-                        }}
-                        className="text-green-accent underline hover:no-underline"
-                        title="Open card"
-                      >
-                        [card] {r.title}
-                      </a>
-                    ) : r.url ? (
-                      <a
-                        href={r.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-green-accent underline hover:no-underline inline-flex items-center gap-1"
-                        title={r.url}
-                      >
-                        [knowledge] {r.title}
-                        <span aria-hidden>↗</span>
-                      </a>
+                    <span className="text-ink-soft">[{r.kind}]</span>{' '}
+                    <span className="font-medium text-ink">{r.title}</span>
+                    {r.kind === 'knowledge' && r.url ? (
+                      <LinkActions url={r.url} label="knowledge" />
                     ) : (
-                      <a
-                        href={`/knowledge/${encodeURIComponent(r.id)}`}
-                        onClick={(e) => {
-                          if (onOpenKnowledge && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) {
-                            e.preventDefault();
-                            onOpenKnowledge(r.id);
-                          }
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (r.kind === 'card') onOpenCard?.(r.id);
+                          else onOpenKnowledge?.(r.id);
                         }}
-                        className="text-green-accent underline hover:no-underline"
-                        title="Open knowledge item"
+                        className="btn-pill btn-pill-outlined-green text-1 px-2 py-0 ml-2 inline-flex items-center gap-0.5 align-middle"
+                        style={{ paddingTop: 1, paddingBottom: 1 }}
+                        title={`Open this ${r.kind}`}
                       >
-                        [knowledge] {r.title}
-                      </a>
+                        Open
+                      </button>
                     )}
-                    <span className="text-ink-soft"> — {r.why}</span>
+                    <div className="text-1 text-ink-soft mt-0.5">{r.why}</div>
                   </li>
                 ))}
               </ul>
@@ -145,15 +161,9 @@ export function AiInsightsPanel({ cardId, onOpenCard, onOpenKnowledge }: Props) 
               <ul className="flex flex-col gap-1">
                 {latest.body.web_findings!.map((w, i) => (
                   <li key={i} className="text-2 text-ink tracking-tight2">
-                    <a
-                      href={w.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-green-accent hover:underline"
-                    >
-                      {w.title}
-                    </a>
-                    <span className="text-ink-soft"> — {w.why}</span>
+                    <span className="font-medium text-ink">{w.title}</span>
+                    <LinkActions url={w.url} label="web result" />
+                    <div className="text-1 text-ink-soft mt-0.5">{w.why}</div>
                   </li>
                 ))}
               </ul>
