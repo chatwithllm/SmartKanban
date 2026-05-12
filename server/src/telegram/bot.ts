@@ -604,14 +604,20 @@ async function handleText(
   await reactOk(ctx);
 }
 
-async function handleVoice(ctx: Context, createdBy: string, isPrivate = false): Promise<void> {
+async function handleVoice(ctx: Context, appUserId: string, isPrivate = false): Promise<void> {
   const voice = ctx.msg?.voice ?? ctx.msg?.audio;
   if (!voice) return;
+  const voiceFileId = voice.file_id;
   const tmpCardId = crypto.randomUUID();
   const bot = getBot()!;
-  const audioPath = await downloadTelegramFile(bot, voice.file_id, tmpCardId, '.ogg');
+  const audioPath = await downloadTelegramFile(bot, voiceFileId, tmpCardId, '.ogg');
 
   const transcript = await transcribeAudio(audioPath);
+
+  // Clean up temp file — it will be re-downloaded when attached to a card.
+  await fs.unlink(audioPath).catch(() => {});
+  await fs.rmdir(path.dirname(audioPath)).catch(() => {});
+
   let title: string;
   let description = '';
   let needsReview = false;
@@ -625,29 +631,36 @@ async function handleVoice(ctx: Context, createdBy: string, isPrivate = false): 
     needsReview = true;
   }
 
-  const cardId = await createCard({
+  const proposal: AIProposal = {
+    is_actionable: !needsReview,
     title,
-    description,
-    createdBy,
-    source: 'telegram',
+    description: description || '',
     tags: transcript ? extractHashtags(transcript).tags : [],
-    needsReview,
-    telegramChatId: ctx.chat?.id,
-    telegramMessageId: ctx.msg?.message_id,
-    assignees: isPrivate ? [createdBy] : undefined,
-  });
-  // Move the attachment from temp dir to the real card dir.
-  const finalDir = path.join(ATTACHMENTS_DIR, cardId);
-  await fs.mkdir(finalDir, { recursive: true });
-  const finalPath = path.join(finalDir, path.basename(audioPath));
-  await fs.rename(audioPath, finalPath);
-  await fs.rmdir(path.dirname(audioPath)).catch(() => {});
-  await attachFile(cardId, 'audio', finalPath);
+    reason: needsReview ? 'voice note without transcript' : 'voice note with Whisper transcript',
+  };
 
-  await logActivity(createdBy, cardId, 'telegram.voice');
-  const card = (await loadCard(cardId))!;
-  broadcast({ type: 'card.created', card });
+  const chatId = ctx.chat!.id;
+  const pending = createPending({
+    tgUserId: ctx.from!.id,
+    appUserId,
+    chatId,
+    isPrivateChat: isPrivate,
+    original: transcript || title,
+    proposal,
+  });
+  updatePending(pending.id, {
+    pendingAudioFileId: voiceFileId,
+    attachMode: 'new',
+  });
+
   await reactOk(ctx, transcript ? '👍' : '🤔');
+  await ctx.reply(
+    `🎙 ${title}${description ? '\n\n' + description.slice(0, 300) : ''}\n\nIs this new, or attaching to existing?`,
+    {
+      reply_markup: attachmentKindKeyboard(pending.id),
+      reply_parameters: { message_id: ctx.msg!.message_id, allow_sending_without_reply: true },
+    },
+  );
 }
 
 async function handlePhoto(ctx: Context, appUserId: string, isPrivate = false): Promise<void> {
