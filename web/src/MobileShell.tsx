@@ -6,6 +6,7 @@ import { connectWS } from './ws.ts';
 import { useToast } from './hooks/useToast.ts';
 import { useTemplates, applyTemplateEvent } from './hooks/useTemplates.ts';
 import { applyKnowledgeEvent } from './hooks/useKnowledge.ts';
+import { applyInsightEvent } from './hooks/useInsights.ts';
 import { useLongPress } from './hooks/useLongPress.ts';
 import { useInstallPrompt } from './hooks/useInstallPrompt.ts';
 import { MobileCardActions } from './components/MobileCardActions.tsx';
@@ -105,6 +106,14 @@ export function MobileShell({ meId }: { meId: string }) {
         ev.type === 'knowledge.link.deleted'
       ) {
         applyKnowledgeEvent(ev, meId);
+        return;
+      }
+      if (
+        ev.type === 'insight.queued' ||
+        ev.type === 'insight.updated' ||
+        ev.type === 'insight.failed'
+      ) {
+        applyInsightEvent(ev);
         return;
       }
       if (ev.type === 'card.created' || ev.type === 'card.updated') {
