@@ -203,6 +203,19 @@ export async function runBrainstorm(insightId: string): Promise<void> {
     clearTimeout(timer);
   }
 
+  // Hydrate related_items with the source URL (knowledge items have urls;
+  // cards don't but we still know their kanban location). This lets the
+  // web UI render proper <a href> links with right-click "open in new tab".
+  const kUrlById = new Map<string, string | null>(kHits.map((k) => [k.id, k.url]));
+  if (parsed.body.related_items) {
+    parsed.body.related_items = parsed.body.related_items.map((r) => {
+      if (r.kind === 'knowledge') {
+        return { ...r, url: kUrlById.get(r.id) ?? null };
+      }
+      return r;
+    });
+  }
+
   await markOk(insightId, parsed.summary, parsed.body, degraded);
 
   const final = await getInsight(insightId);

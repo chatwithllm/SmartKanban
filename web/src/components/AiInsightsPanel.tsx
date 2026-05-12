@@ -93,40 +93,43 @@ export function AiInsightsPanel({ cardId, onOpenCard, onOpenKnowledge }: Props) 
                 {latest.body.related_items!.map((r) => (
                   <li key={r.id} className="text-2 text-ink tracking-tight2">
                     {r.kind === 'card' ? (
-                      onOpenCard ? (
-                        <button
-                          type="button"
-                          onClick={() => onOpenCard(r.id)}
-                          className="text-green-accent underline hover:no-underline cursor-pointer"
-                          title="Open card"
-                        >
-                          [card] {r.title}
-                        </button>
-                      ) : (
-                        <a
-                          href={`/?card=${encodeURIComponent(r.id)}`}
-                          className="text-green-accent underline hover:no-underline"
-                          title="Open card"
-                        >
-                          [card] {r.title} ↗
-                        </a>
-                      )
-                    ) : onOpenKnowledge ? (
-                      <button
-                        type="button"
-                        onClick={() => onOpenKnowledge(r.id)}
-                        className="text-green-accent underline hover:no-underline cursor-pointer"
-                        title="Open knowledge item"
+                      <a
+                        href={`/?card=${encodeURIComponent(r.id)}`}
+                        onClick={(e) => {
+                          if (onOpenCard && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) {
+                            e.preventDefault();
+                            onOpenCard(r.id);
+                          }
+                        }}
+                        className="text-green-accent underline hover:no-underline"
+                        title="Open card"
+                      >
+                        [card] {r.title}
+                      </a>
+                    ) : r.url ? (
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-green-accent underline hover:no-underline inline-flex items-center gap-1"
+                        title={r.url}
                       >
                         [knowledge] {r.title}
-                      </button>
+                        <span aria-hidden>↗</span>
+                      </a>
                     ) : (
                       <a
                         href={`/knowledge/${encodeURIComponent(r.id)}`}
+                        onClick={(e) => {
+                          if (onOpenKnowledge && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) {
+                            e.preventDefault();
+                            onOpenKnowledge(r.id);
+                          }
+                        }}
                         className="text-green-accent underline hover:no-underline"
                         title="Open knowledge item"
                       >
-                        [knowledge] {r.title} ↗
+                        [knowledge] {r.title}
                       </a>
                     )}
                     <span className="text-ink-soft"> — {r.why}</span>
@@ -146,11 +149,9 @@ export function AiInsightsPanel({ cardId, onOpenCard, onOpenKnowledge }: Props) 
                       href={w.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-green-accent underline hover:no-underline inline-flex items-center gap-1"
-                      title={w.url}
+                      className="text-green-accent hover:underline"
                     >
                       {w.title}
-                      <span aria-hidden>↗</span>
                     </a>
                     <span className="text-ink-soft"> — {w.why}</span>
                   </li>

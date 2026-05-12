@@ -3,7 +3,7 @@ import { pool } from './db.js';
 export type InsightStatus = 'pending' | 'ok' | 'failed';
 
 export type InsightBody = {
-  related_items?: Array<{ kind: 'card' | 'knowledge'; id: string; title: string; why: string }>;
+  related_items?: Array<{ kind: 'card' | 'knowledge'; id: string; title: string; why: string; url?: string | null }>;
   web_findings?: Array<{ title: string; url: string; why: string }>;
   next_steps?: string[];
 };
