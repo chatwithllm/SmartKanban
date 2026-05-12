@@ -6,6 +6,7 @@ import { connectWS } from './ws.ts';
 import { useToast } from './hooks/useToast.ts';
 import { useAuth } from './auth.tsx';
 import { CardTimeline } from './components/CardTimeline.tsx';
+import { AiInsightsPanel } from './components/AiInsightsPanel.tsx';
 
 type Props = { cardId: string };
 
@@ -190,6 +191,8 @@ export function MobileCardView({ cardId }: Props) {
           className={fieldInputCls}
         />
       </label>
+
+      <AiInsightsPanel cardId={card.id} />
 
       <label className={labelCls}>
         Due date
