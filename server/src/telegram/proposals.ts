@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import type { Proposal as AIProposal } from '../ai/propose.js';
+import type { CardLinkLabel } from '../card_links.js';
 
 export type Destination = 'private_card' | 'public_card' | 'knowledge';
 export type AttachState = 'new' | 'pickRecent' | 'pickFiltered';
@@ -35,6 +36,10 @@ export type PendingProposal = {
   dupCandidates?: DupCandidate[];
   pendingPhotoFileId?: string;
   pendingAudioFileId?: string;
+  // Card-chain link flow
+  pendingLinkTargetId?: string;
+  pendingLinkLabel?: CardLinkLabel;
+  awaitingLinkNote?: boolean;
 };
 
 const TTL_MS = 15 * 60 * 1000;
@@ -68,6 +73,9 @@ export function createPending(
     | 'dupCandidates'
     | 'pendingPhotoFileId'
     | 'pendingAudioFileId'
+    | 'pendingLinkTargetId'
+    | 'pendingLinkLabel'
+    | 'awaitingLinkNote'
   >,
 ): PendingProposal {
   prune();
