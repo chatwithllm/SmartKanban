@@ -429,6 +429,10 @@ async function handleText(
       updatePending(existing.id, { promptMessageId: msgId });
       return;
     }
+    if (existing && (existing.attachMode === 'pickRecent' || existing.attachMode === 'pickFiltered')) {
+      await showAttachPicker(ctx, existing, text);
+      return;
+    }
   }
 
   // Reply-based commands: /assign, /share, /today operate on the referenced card.
@@ -646,13 +650,14 @@ async function handleVoice(ctx: Context, createdBy: string, isPrivate = false): 
   await reactOk(ctx, transcript ? '👍' : '🤔');
 }
 
-async function handlePhoto(ctx: Context, createdBy: string, isPrivate = false): Promise<void> {
+async function handlePhoto(ctx: Context, appUserId: string, isPrivate = false): Promise<void> {
   const photos = ctx.msg?.photo;
   if (!photos || photos.length === 0) return;
   const largest = photos[photos.length - 1]!;
+  const photoFileId = largest.file_id;
   const tmpCardId = crypto.randomUUID();
   const bot = getBot()!;
-  const imagePath = await downloadTelegramFile(bot, largest.file_id, tmpCardId, '.jpg');
+  const imagePath = await downloadTelegramFile(bot, photoFileId, tmpCardId, '.jpg');
 
   const caption = ctx.msg?.caption ?? '';
   const captionTags = extractHashtags(caption).tags;
@@ -660,13 +665,11 @@ async function handlePhoto(ctx: Context, createdBy: string, isPrivate = false): 
   const vision = await summarizeImage(imagePath);
   let title: string;
   let description = '';
-  let aiSummarized = false;
   let needsReview = false;
 
   if (vision) {
     title = vision.title;
-    description = vision.description + (caption ? (description ? '\n\n' : '') + caption : '');
-    aiSummarized = true;
+    description = vision.description + (caption ? '\n\n' + caption : '');
   } else if (caption.trim()) {
     const split = splitTitleDesc(extractHashtags(caption).text);
     title = split.title;
@@ -676,29 +679,39 @@ async function handlePhoto(ctx: Context, createdBy: string, isPrivate = false): 
     needsReview = true;
   }
 
-  const cardId = await createCard({
-    title,
-    description,
-    createdBy,
-    source: 'telegram',
-    tags: captionTags,
-    aiSummarized,
-    needsReview,
-    telegramChatId: ctx.chat?.id,
-    telegramMessageId: ctx.msg?.message_id,
-    assignees: isPrivate ? [createdBy] : undefined,
-  });
-  const finalDir = path.join(ATTACHMENTS_DIR, cardId);
-  await fs.mkdir(finalDir, { recursive: true });
-  const finalPath = path.join(finalDir, path.basename(imagePath));
-  await fs.rename(imagePath, finalPath);
+  // Clean up temp file — it will be re-downloaded when attached to a card.
+  await fs.unlink(imagePath).catch(() => {});
   await fs.rmdir(path.dirname(imagePath)).catch(() => {});
-  await attachFile(cardId, 'image', finalPath);
 
-  await logActivity(createdBy, cardId, 'telegram.photo');
-  const card = (await loadCard(cardId))!;
-  broadcast({ type: 'card.created', card });
-  await reactOk(ctx, aiSummarized ? '👍' : '🤔');
+  const proposal: AIProposal = {
+    is_actionable: !needsReview,
+    title,
+    description: description || '',
+    tags: captionTags,
+    reason: needsReview ? 'photo without caption or vision summary' : 'photo with AI vision summary',
+  };
+
+  const chatId = ctx.chat!.id;
+  const pending = createPending({
+    tgUserId: ctx.from!.id,
+    appUserId,
+    chatId,
+    isPrivateChat: isPrivate,
+    original: title,
+    proposal,
+  });
+  updatePending(pending.id, {
+    pendingPhotoFileId: photoFileId,
+    attachMode: 'new',
+  });
+
+  await ctx.reply(
+    `📷 ${title}${description ? '\n\n' + description : ''}\n\nIs this new, or attaching to existing?`,
+    {
+      reply_markup: attachmentKindKeyboard(pending.id),
+      reply_parameters: { message_id: ctx.msg!.message_id, allow_sending_without_reply: true },
+    },
+  );
 }
 
 // ---------- structured-capture helpers ----------
@@ -796,6 +809,109 @@ function relativeAge(iso: string): string {
   if (hrs >= 1) return `${hrs}h ago`;
   const mins = Math.floor(d / 60_000);
   return `${Math.max(1, mins)}m ago`;
+}
+
+// ---------- attach-picker helpers ----------
+
+async function showAttachPicker(
+  ctx: Context,
+  pending: PendingProposal,
+  filter: string,
+): Promise<void> {
+  let cardItems: Array<{ id: string; label: string }> = [];
+  let kItems: Array<{ id: string; label: string }> = [];
+  if (filter.trim()) {
+    const cs = await searchCardsFts(pending.appUserId, filter, 5);
+    const ks = await searchKnowledgeFts(pending.appUserId, filter, 3);
+    cardItems = cs.map((c) => ({ id: c.id, label: `${STATUS_EMOJI[c.status]} ${c.title}` }));
+    kItems = ks.map((k) => ({ id: k.id, label: `📚 ${k.title}` }));
+  } else {
+    const cs = await pool.query<{ id: string; title: string; status: Status }>(
+      `SELECT DISTINCT c.id, c.title, c.status
+       FROM cards c
+       LEFT JOIN card_assignees ca ON ca.card_id = c.id
+       LEFT JOIN card_shares cs ON cs.card_id = c.id
+       WHERE NOT c.archived
+         AND (
+           c.created_by = $1
+           OR ca.user_id = $1
+           OR cs.user_id = $1
+           OR NOT EXISTS (SELECT 1 FROM card_assignees ca2 WHERE ca2.card_id = c.id)
+         )
+       ORDER BY c.updated_at DESC LIMIT 5`,
+      [pending.appUserId],
+    );
+    cardItems = cs.rows.map((c) => ({ id: c.id, label: `${STATUS_EMOJI[c.status]} ${c.title}` }));
+    const ks = await pool.query<{ id: string; title: string }>(
+      `SELECT k.id, COALESCE(NULLIF(k.title, ''), '(untitled)') AS title
+       FROM knowledge_items k
+       LEFT JOIN knowledge_shares ks ON ks.knowledge_id = k.id
+       WHERE NOT k.archived
+         AND (
+           k.owner_id = $1
+           OR k.visibility = 'inbox'
+           OR (k.visibility = 'shared' AND ks.user_id = $1)
+         )
+       ORDER BY k.updated_at DESC LIMIT 3`,
+      [pending.appUserId],
+    );
+    kItems = ks.rows.map((k) => ({ id: k.id, label: `📚 ${k.title}` }));
+  }
+  const items = [
+    ...cardItems.map((i) => ({ kind: 'card' as const, ...i })),
+    ...kItems.map((i) => ({ kind: 'knowledge' as const, ...i })),
+  ];
+  updatePending(pending.id, {
+    attachMode: filter.trim() ? 'pickFiltered' : 'pickRecent',
+    attachFilter: filter,
+    attachPickerIds: items.map((it) => ({ kind: it.kind, id: it.id })),
+  });
+  if (items.length === 0) {
+    await ctx.reply('No items found. Reply with different words or tap Cancel.', {
+      reply_markup: new InlineKeyboard().text('❌ Cancel', `drop:${pending.id}`),
+    });
+    return;
+  }
+  await ctx.reply('Pick one (or reply with a few words to filter):', {
+    reply_markup: attachPickerKeyboard(pending.id, items),
+  });
+}
+
+async function attachToTarget(
+  ctx: Context,
+  pending: PendingProposal,
+  kind: 'card' | 'knowledge',
+  targetId: string,
+): Promise<void> {
+  if (!pending.pendingPhotoFileId && !pending.pendingAudioFileId) {
+    await ctx.reply('Nothing to attach.');
+    deletePending(pending.id);
+    return;
+  }
+  if (kind === 'card') {
+    try {
+      if (pending.pendingPhotoFileId && botInstance) {
+        const p = await downloadTelegramFile(botInstance, pending.pendingPhotoFileId, targetId, '.jpg');
+        await attachFile(targetId, 'image', p);
+      }
+      if (pending.pendingAudioFileId && botInstance) {
+        const p = await downloadTelegramFile(botInstance, pending.pendingAudioFileId, targetId, '.ogg');
+        await attachFile(targetId, 'audio', p);
+      }
+      const card = await loadCard(targetId);
+      if (card) broadcast({ type: 'card.updated', card });
+      await ctx.reply('📎 Attached to card.');
+    } catch (e) {
+      await ctx.reply(`Attach failed: ${e instanceof Error ? e.message : 'error'}`);
+    }
+  } else {
+    // Knowledge items don't support binary attachments — fall back to new private card.
+    await ctx.reply("Knowledge items don't support attachments yet — saving as new card instead.");
+    updatePending(pending.id, { destination: 'private_card', attachMode: 'new' });
+    await finalizeCard(ctx, pending, 'backlog');
+    return;
+  }
+  deletePending(pending.id);
 }
 
 async function runDuplicateCheck(ctx: Context, pending: PendingProposal): Promise<void> {
@@ -1254,6 +1370,62 @@ export function buildBot(token: string): Bot {
         ),
       });
     } catch {}
+  });
+
+  // att:new:<pid> — proceed to text destination flow with media pending
+  bot.callbackQuery(/^att:new:([^:]+)$/, async (ctx) => {
+    const pid = ctx.match![1]!;
+    const pending = getPending(pid);
+    if (!pending) {
+      await ctx.answerCallbackQuery({ text: 'Session expired.', show_alert: true });
+      return;
+    }
+    if (ctx.from?.id !== pending.tgUserId) {
+      await ctx.answerCallbackQuery({ text: 'Not your prompt.', show_alert: true });
+      return;
+    }
+    updatePending(pid, { attachMode: 'new' });
+    await ctx.answerCallbackQuery();
+    const def = defaultDestination(pending.proposal, pending.isPrivateChat);
+    try {
+      await ctx.editMessageReplyMarkup({
+        reply_markup: destinationKeyboard(pid, def, pending.isPrivateChat),
+      });
+    } catch {}
+  });
+
+  // att:pick:<pid> — open attach picker (recent items)
+  bot.callbackQuery(/^att:pick:([^:]+)$/, async (ctx) => {
+    const pid = ctx.match![1]!;
+    const pending = getPending(pid);
+    if (!pending) {
+      await ctx.answerCallbackQuery({ text: 'Session expired.', show_alert: true });
+      return;
+    }
+    if (ctx.from?.id !== pending.tgUserId) {
+      await ctx.answerCallbackQuery({ text: 'Not your prompt.', show_alert: true });
+      return;
+    }
+    await ctx.answerCallbackQuery();
+    await showAttachPicker(ctx, pending, '');
+  });
+
+  // att:to:<kind>:<targetId>:<pid> — attach to picked target
+  bot.callbackQuery(/^att:to:(card|knowledge):([^:]+):([^:]+)$/, async (ctx) => {
+    const kind = ctx.match![1] as 'card' | 'knowledge';
+    const targetId = ctx.match![2]!;
+    const pid = ctx.match![3]!;
+    const pending = getPending(pid);
+    if (!pending) {
+      await ctx.answerCallbackQuery({ text: 'Session expired.', show_alert: true });
+      return;
+    }
+    if (ctx.from?.id !== pending.tgUserId) {
+      await ctx.answerCallbackQuery({ text: 'Not your prompt.', show_alert: true });
+      return;
+    }
+    await ctx.answerCallbackQuery();
+    await attachToTarget(ctx, pending, kind, targetId);
   });
 
   bot.on('message', async (ctx, next) => {
