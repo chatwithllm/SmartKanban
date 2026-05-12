@@ -191,7 +191,11 @@ export const api = {
   vapidPublicKey: () => req<{ publicKey: string }>('/api/push/vapid-public-key'),
 
   brainstormCard: (cardId: string) =>
-    req<{ id: string; status: 'pending' }>(`/api/cards/${cardId}/insights/brainstorm`, { method: 'POST', headers: { 'Content-Type': 'application/json' } }),
+    req<{ id: string; status: 'pending' }>(`/api/cards/${cardId}/insights/brainstorm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    }),
 
   listInsights: (cardId: string) =>
     req<{ insights: Insight[] }>(`/api/cards/${cardId}/insights`),
