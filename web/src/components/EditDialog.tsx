@@ -3,6 +3,7 @@ import type { Card, CardEvent, User } from '../types.ts';
 import type { KnowledgeItem } from '../types.ts';
 import { api } from '../api.ts';
 import { CardTimeline } from './CardTimeline.tsx';
+import { AiInsightsPanel } from './AiInsightsPanel.tsx';
 
 type Props = {
   card: Card;
@@ -223,6 +224,15 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
               outline: 'none',
             }}
           />
+
+          {card?.id && (
+            <AiInsightsPanel
+              cardId={card.id}
+              onOpenKnowledge={(id) => {
+                window.location.href = `/knowledge/${encodeURIComponent(id)}`;
+              }}
+            />
+          )}
 
           {card?.id && (
             <section>

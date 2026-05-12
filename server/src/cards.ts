@@ -305,3 +305,46 @@ export async function getUnreadCounts(userId: string): Promise<Record<string, nu
   for (const r of rows) result[r.card_id] = parseInt(r.cnt, 10);
   return result;
 }
+
+export type CardFtsHit = {
+  id: string;
+  title: string;
+  description: string;
+  status: Status;
+  updated_at: string;
+  rank: number;
+};
+
+// Visibility predicate: card visible to user iff
+//   - user is creator, OR
+//   - user is an assignee, OR
+//   - user is a sharer, OR
+//   - card is unassigned (Family Inbox — visible to everyone)
+// Matches existing visibility semantics in listCards().
+export async function searchCardsFts(
+  userId: string,
+  query: string,
+  limit = 10,
+): Promise<CardFtsHit[]> {
+  const q = query.trim();
+  if (!q) return [];
+  const { rows } = await pool.query<CardFtsHit>(
+    `SELECT DISTINCT c.id, c.title, c.description, c.status, c.updated_at,
+            ts_rank(c.fts, websearch_to_tsquery('english', $2)) AS rank
+     FROM cards c
+     LEFT JOIN card_assignees ca ON ca.card_id = c.id
+     LEFT JOIN card_shares cs ON cs.card_id = c.id
+     WHERE NOT c.archived
+       AND c.fts @@ websearch_to_tsquery('english', $2)
+       AND (
+         c.created_by = $1
+         OR ca.user_id = $1
+         OR cs.user_id = $1
+         OR NOT EXISTS (SELECT 1 FROM card_assignees ca2 WHERE ca2.card_id = c.id)
+       )
+     ORDER BY rank DESC, c.updated_at DESC
+     LIMIT $3`,
+    [userId, q, limit],
+  );
+  return rows;
+}

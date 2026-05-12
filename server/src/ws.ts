@@ -4,6 +4,7 @@ import { SESSION_COOKIE, userFromMirrorToken, userFromSession } from './auth.js'
 import type { Card, CardEvent } from './cards.js';
 import type { Template, Visibility } from './templates.js';
 import type { KnowledgeItem, KnowledgeVisibility } from './knowledge.js';
+import type { Insight } from './insights.js';
 
 export type BroadcastEvent =
   | { type: 'card.created'; card: Card }
@@ -18,7 +19,10 @@ export type BroadcastEvent =
   | { type: 'knowledge.link.created'; knowledge_id: string; card_id: string }
   | { type: 'knowledge.link.deleted'; knowledge_id: string; card_id: string }
   | { type: 'card.message';     event: CardEvent; card_id: string; card: Card }
-  | { type: 'card.ai_response'; event: CardEvent; card_id: string; card: Card };
+  | { type: 'card.ai_response'; event: CardEvent; card_id: string; card: Card }
+  | { type: 'insight.queued';  insight: Insight; card_id: string; owner_id: string }
+  | { type: 'insight.updated'; insight: Insight; card_id: string; owner_id: string }
+  | { type: 'insight.failed';  insight: Insight; card_id: string; owner_id: string };
 
 type Client = { socket: WebSocket; userId: string };
 const clients = new Set<Client>();
@@ -74,6 +78,13 @@ export function broadcast(ev: BroadcastEvent) {
       ) continue;
     }
     // knowledge.link.* events: visibility was checked at the route layer; broadcast to all auth'd clients.
+    if (ev.type === 'insight.queued' || ev.type === 'insight.updated' || ev.type === 'insight.failed') {
+      // Send only to the requesting user OR the card owner.
+      // Other users with card visibility (assignee/share/inbox) can fetch via GET if needed.
+      if (ev.insight.requested_by !== c.userId && ev.owner_id !== c.userId) {
+        continue;
+      }
+    }
     c.socket.send(JSON.stringify(ev));
   }
 }

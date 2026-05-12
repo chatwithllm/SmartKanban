@@ -17,6 +17,7 @@ import { connectWS } from './ws.ts';
 import { applyTemplateEvent } from './hooks/useTemplates.ts';
 import { KnowledgeView } from './KnowledgeView.tsx';
 import { applyKnowledgeEvent } from './hooks/useKnowledge.ts';
+import { applyInsightEvent } from './hooks/useInsights.ts';
 import { MobileCardView } from './MobileCardView.tsx';
 import { MobileShell } from './MobileShell.tsx';
 import { useIsMobile } from './hooks/useIsMobile.ts';
@@ -145,6 +146,14 @@ function Authed({ meId }: { meId: string }) {
         ev.type === 'knowledge.link.deleted'
       ) {
         applyKnowledgeEvent(ev, meId);
+        return;
+      }
+      if (
+        ev.type === 'insight.queued' ||
+        ev.type === 'insight.updated' ||
+        ev.type === 'insight.failed'
+      ) {
+        applyInsightEvent(ev);
         return;
       }
       if (ev.type === 'card.message' || ev.type === 'card.ai_response') {

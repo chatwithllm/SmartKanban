@@ -16,11 +16,14 @@ import { attachmentRoutes } from './routes/attachments.js';
 import { attachmentUploadRoutes } from './routes/attachments_upload.js';
 import { templateRoutes } from './routes/templates.js';
 import { knowledgeRoutes } from './routes/knowledge.js';
+import { insightsRoutes } from './routes/insights.js';
 import { chatRoutes } from './routes/chat.js';
 import { notificationRoutes } from './routes/notifications.js';
 import { qrRoutes } from './routes/qr.js';
 import { wsRoutes } from './ws.js';
 import { startTelegramBot } from './telegram/bot.js';
+import { enqueueBrainstorm } from './ai/brainstorm_queue.js';
+import { recoverPendingInsights } from './insights.js';
 
 const app = Fastify({ logger: true });
 
@@ -56,6 +59,7 @@ await app.register(apiTokenRoutes);
 await app.register(reviewRoutes);
 await app.register(templateRoutes);
 await app.register(knowledgeRoutes);
+await app.register(insightsRoutes);
 await app.register(qrRoutes);
 await app.register(telegramRoutes);
 await app.register(attachmentRoutes, { attachmentsDir });
@@ -90,3 +94,10 @@ await app.listen({ port, host: '0.0.0.0' });
 if (process.env.TELEGRAM_BOT_TOKEN) {
   startTelegramBot().catch((err) => app.log.error(err, 'telegram bot error'));
 }
+
+recoverPendingInsights()
+  .then((ids) => {
+    for (const id of ids) enqueueBrainstorm(id);
+    if (ids.length > 0) app.log.info({ count: ids.length }, 'brainstorm: re-enqueued pending insights from prior run');
+  })
+  .catch((e) => app.log.warn(e, 'brainstorm recovery scan failed'));

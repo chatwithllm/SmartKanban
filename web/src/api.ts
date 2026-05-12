@@ -1,4 +1,4 @@
-import type { AiSuggestion, ApiToken, Card, CardEvent, KnowledgeItem, KnowledgeVisibility, MirrorToken, Notification, ReviewData, Scope, Status, Template, User } from './types.ts';
+import type { AiSuggestion, ApiToken, Card, CardEvent, Insight, KnowledgeItem, KnowledgeVisibility, MirrorToken, Notification, ReviewData, Scope, Status, Template, User } from './types.ts';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -189,4 +189,14 @@ export const api = {
   unsubscribePush: (endpoint: string) =>
     req<void>('/api/push/subscribe', { ...json({ endpoint }), method: 'DELETE' }),
   vapidPublicKey: () => req<{ publicKey: string }>('/api/push/vapid-public-key'),
+
+  brainstormCard: (cardId: string) =>
+    req<{ id: string; status: 'pending' }>(`/api/cards/${cardId}/insights/brainstorm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    }),
+
+  listInsights: (cardId: string) =>
+    req<{ insights: Insight[] }>(`/api/cards/${cardId}/insights`),
 };
