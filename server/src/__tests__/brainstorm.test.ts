@@ -42,6 +42,20 @@ test('buildBrainstormPrompt includes card, local, web sections', () => {
   assert.match(prompt, /strict JSON/i);
 });
 
+test('buildBrainstormPrompt exposes UUIDs inline (so LLM uses them verbatim)', () => {
+  const prompt = buildBrainstormPrompt(
+    { title: 'My card', description: '', tags: [] },
+    {
+      cards: [{ id: '11111111-1111-1111-1111-111111111111', title: 'a', snippet: 's' }],
+      knowledge: [{ id: '22222222-2222-2222-2222-222222222222', title: 'b', snippet: 's' }],
+    } satisfies LocalContext,
+    { results: [] } satisfies WebContext,
+  );
+  assert.match(prompt, /id=11111111-1111-1111-1111-111111111111/);
+  assert.match(prompt, /id=22222222-2222-2222-2222-222222222222/);
+  assert.match(prompt, /copy the id field verbatim/i);
+});
+
 test('parseBrainstormResponse extracts well-formed JSON', () => {
   const raw = JSON.stringify({
     summary: 'a',
