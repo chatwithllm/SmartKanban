@@ -19,6 +19,7 @@ import {
 } from './proposals.js';
 import { defaultDestination, destinationOptions } from './destination.js';
 import { searchCardsFts } from '../cards.js';
+import { createLink, isCardLinkLabel, type CardLinkLabel } from '../card_links.js';
 import { searchKnowledgeFts } from '../knowledge.js';
 import { rankCandidates, type Candidate } from '../ai/dedupe.js';
 import { findTemplateByName, instantiateTemplate, listTemplates } from '../templates.js';
@@ -300,7 +301,9 @@ function destinationKeyboard(
   for (const o of destinationOptions(isPrivateChat)) {
     kb.text(`${o.key === def ? '✓ ' : ''}${o.label}`, `dest:${o.key}:${pid}`);
   }
-  kb.row().text('🔍 Check duplicates?', `dup:check:${pid}`);
+  kb.row()
+    .text('🔍 Check duplicates?', `dup:check:${pid}`)
+    .text('🔗 Link to existing', `linkpick:${pid}`);
   kb.row()
     .text('✏️ Edit', `edit:${pid}`)
     .text('❌ Cancel', `drop:${pid}`);
@@ -439,6 +442,11 @@ async function handleText(
     }
     if (existing && (existing.attachMode === 'pickRecent' || existing.attachMode === 'pickFiltered')) {
       await showAttachPicker(ctx, existing, text);
+      return;
+    }
+    if (existing && existing.awaitingLinkNote) {
+      updatePending(existing.id, { awaitingLinkNote: false });
+      await finalizeCardWithLink(ctx, existing, text.slice(0, 500));
       return;
     }
   }
@@ -1184,6 +1192,116 @@ async function handleKnowledgeCommand(
   }
 }
 
+function linkLabelEmoji(label: CardLinkLabel): string {
+  switch (label) {
+    case 'evolves_from': return '🌱';
+    case 'supersedes':   return '➡️';
+    case 'split_from':   return '✂️';
+    case 'related':      return '🔗';
+    case 'inspired_by':  return '💡';
+    case 'duplicate_of': return '👯';
+  }
+}
+
+async function showLinkPicker(
+  ctx: Context,
+  pending: PendingProposal,
+  filter: string,
+): Promise<void> {
+  const userId = pending.appUserId;
+  let cards: Array<{ id: string; title: string }> = [];
+  if (filter.trim()) {
+    const hits = await searchCardsFts(userId, filter, 8);
+    cards = hits.map((h) => ({ id: h.id, title: h.title }));
+  } else {
+    const { rows } = await pool.query<{ id: string; title: string }>(
+      `SELECT DISTINCT c.id, c.title
+       FROM cards c
+       LEFT JOIN card_assignees ca ON ca.card_id = c.id
+       LEFT JOIN card_shares cs ON cs.card_id = c.id
+       WHERE NOT c.archived
+         AND (c.created_by = $1 OR ca.user_id = $1 OR cs.user_id = $1
+              OR NOT EXISTS (SELECT 1 FROM card_assignees ca2 WHERE ca2.card_id = c.id))
+       ORDER BY c.updated_at DESC
+       LIMIT 5`,
+      [userId],
+    );
+    cards = rows;
+  }
+  if (cards.length === 0) {
+    const kb = new InlineKeyboard().text('❌ Cancel', `drop:${pending.id}`);
+    await ctx.reply('No cards to link. Reply with different words or Cancel.', { reply_markup: kb });
+    return;
+  }
+  const kb = new InlineKeyboard();
+  for (const c of cards) {
+    kb.text(`Pick: ${c.title.slice(0, 40)}`, `linkto:${c.id}:${pending.id}`).row();
+  }
+  kb.text('❌ Cancel', `drop:${pending.id}`);
+  await ctx.reply('Pick a card to link to (or reply with words to filter):', { reply_markup: kb });
+}
+
+async function finalizeCardWithLink(
+  ctx: Context,
+  pending: PendingProposal,
+  noteText: string | null,
+): Promise<void> {
+  const status: Status = pending.destination === 'private_card' || pending.destination === 'public_card'
+    ? 'today'
+    : 'backlog';
+  if (pending.destination === 'knowledge') {
+    await ctx.reply('Linking is only available for card destinations. Pick Private or Public first.');
+    deletePending(pending.id);
+    return;
+  }
+  if (!pending.pendingLinkTargetId || !pending.pendingLinkLabel) {
+    await ctx.reply('Missing link target or label. Restart the flow.');
+    deletePending(pending.id);
+    return;
+  }
+
+  const cardId = await createCard({
+    title: pending.proposal.title || pending.original.slice(0, 80),
+    description: pending.proposal.description ?? '',
+    tags: pending.proposal.tags ?? [],
+    createdBy: pending.appUserId,
+    source: 'telegram',
+    status,
+    aiSummarized: true,
+    assignees: pending.destination === 'private_card' ? [pending.appUserId] : undefined,
+    telegramChatId: pending.chatId,
+    telegramMessageId: pending.promptMessageId ?? undefined,
+  });
+
+  try {
+    await createLink(
+      pending.appUserId,
+      cardId,
+      pending.pendingLinkTargetId,
+      pending.pendingLinkLabel,
+      noteText,
+    );
+  } catch {
+    // Non-fatal — card is saved even if link fails
+  }
+
+  await logActivity(pending.appUserId, cardId, `telegram.${pending.destination}.linked`);
+  deletePending(pending.id);
+
+  const target = await loadCard(pending.pendingLinkTargetId);
+  const noteLine = noteText ? `\n   note: "${noteText.slice(0, 80)}"` : '';
+  const card = await loadCard(cardId);
+  await ctx.reply(
+    `✓ Saved · ${STATUS_EMOJI[status]} ${STATUS_LABEL[status]} — ${pending.proposal.title}\n🔗 ${pending.pendingLinkLabel} "${target?.title ?? '(unknown)'}"${noteLine}`,
+    {
+      reply_markup: card ? postSaveKeyboard(cardId, status) : undefined,
+    },
+  );
+  if (card) {
+    broadcast({ type: 'card.created', card });
+  }
+}
+
 export function buildBot(token: string): Bot {
   const bot = new Bot(token);
 
@@ -1449,6 +1567,88 @@ export function buildBot(token: string): Bot {
     }
     await ctx.answerCallbackQuery();
     await attachToTarget(ctx, pending, kind, targetId);
+  });
+
+  // linkpick:<pid> — open recent-cards picker for linking
+  bot.callbackQuery(/^linkpick:([^:]+)$/, async (ctx) => {
+    const pid = ctx.match![1]!;
+    const pending = getPending(pid);
+    if (!pending) {
+      await ctx.answerCallbackQuery({ text: 'Session expired.', show_alert: true });
+      return;
+    }
+    if (ctx.from?.id !== pending.tgUserId) {
+      await ctx.answerCallbackQuery({ text: 'Not your prompt.', show_alert: true });
+      return;
+    }
+    await ctx.answerCallbackQuery();
+    await showLinkPicker(ctx, pending, '');
+  });
+
+  // linkto:<targetCardId>:<pid> — user picked a card to link to
+  bot.callbackQuery(/^linkto:([0-9a-f-]+):([^:]+)$/, async (ctx) => {
+    const targetId = ctx.match![1]!;
+    const pid = ctx.match![2]!;
+    const pending = getPending(pid);
+    if (!pending) {
+      await ctx.answerCallbackQuery({ text: 'Session expired.', show_alert: true });
+      return;
+    }
+    if (ctx.from?.id !== pending.tgUserId) {
+      await ctx.answerCallbackQuery({ text: 'Not your prompt.', show_alert: true });
+      return;
+    }
+    if (!(await canUserSeeCard(pending.appUserId, targetId))) {
+      await ctx.answerCallbackQuery({ text: 'Card not visible to you.', show_alert: true });
+      return;
+    }
+    updatePending(pid, { pendingLinkTargetId: targetId });
+    await ctx.answerCallbackQuery();
+    const target = await loadCard(targetId);
+    const kb = new InlineKeyboard();
+    const labels: CardLinkLabel[] = [
+      'evolves_from', 'supersedes', 'split_from', 'related', 'inspired_by', 'duplicate_of',
+    ];
+    labels.forEach((l, i) => {
+      kb.text(`${linkLabelEmoji(l)} ${l.replace(/_/g, ' ')}`, `linklabel:${l}:${pid}`);
+      if (i % 2 === 1) kb.row();
+    });
+    await ctx.reply(
+      `Link to "${target?.title ?? targetId}" — what kind of relationship?`,
+      { reply_markup: kb },
+    );
+  });
+
+  // linklabel:<label>:<pid> — user picked a label
+  bot.callbackQuery(/^linklabel:([a-z_]+):([^:]+)$/, async (ctx) => {
+    const labelStr = ctx.match![1]!;
+    const pid = ctx.match![2]!;
+    const pending = getPending(pid);
+    if (!pending) {
+      await ctx.answerCallbackQuery({ text: 'Session expired.', show_alert: true });
+      return;
+    }
+    if (!isCardLinkLabel(labelStr)) {
+      await ctx.answerCallbackQuery({ text: 'Invalid label.', show_alert: true });
+      return;
+    }
+    updatePending(pid, { pendingLinkLabel: labelStr, awaitingLinkNote: true });
+    await ctx.answerCallbackQuery();
+    const skipKb = new InlineKeyboard().text('Skip', `linknote:skip:${pid}`);
+    await ctx.reply('Add a note? Reply with text or tap Skip.', { reply_markup: skipKb });
+  });
+
+  // linknote:skip:<pid>
+  bot.callbackQuery(/^linknote:skip:([^:]+)$/, async (ctx) => {
+    const pid = ctx.match![1]!;
+    const pending = getPending(pid);
+    if (!pending) {
+      await ctx.answerCallbackQuery({ text: 'Session expired.', show_alert: true });
+      return;
+    }
+    await ctx.answerCallbackQuery();
+    updatePending(pid, { awaitingLinkNote: false });
+    await finalizeCardWithLink(ctx, pending, null);
   });
 
   bot.callbackQuery(/^brain:([^:]+)$/, async (ctx) => {

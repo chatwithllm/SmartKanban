@@ -5,6 +5,7 @@ import type { Card, CardEvent } from './cards.js';
 import type { Template, Visibility } from './templates.js';
 import type { KnowledgeItem, KnowledgeVisibility } from './knowledge.js';
 import type { Insight } from './insights.js';
+import type { CardLink } from './card_links.js';
 
 export type BroadcastEvent =
   | { type: 'card.created'; card: Card }
@@ -22,7 +23,9 @@ export type BroadcastEvent =
   | { type: 'card.ai_response'; event: CardEvent; card_id: string; card: Card }
   | { type: 'insight.queued';  insight: Insight; card_id: string; owner_id: string }
   | { type: 'insight.updated'; insight: Insight; card_id: string; owner_id: string }
-  | { type: 'insight.failed';  insight: Insight; card_id: string; owner_id: string };
+  | { type: 'insight.failed';  insight: Insight; card_id: string; owner_id: string }
+  | { type: 'card.link.created'; link: CardLink; from_owner_id: string; to_owner_id: string }
+  | { type: 'card.link.deleted'; id: string; from_card_id: string; to_card_id: string; from_owner_id: string; to_owner_id: string };
 
 type Client = { socket: WebSocket; userId: string };
 const clients = new Set<Client>();
@@ -82,6 +85,13 @@ export function broadcast(ev: BroadcastEvent) {
       // Send only to the requesting user OR the card owner.
       // Other users with card visibility (assignee/share/inbox) can fetch via GET if needed.
       if (ev.insight.requested_by !== c.userId && ev.owner_id !== c.userId) {
+        continue;
+      }
+    }
+    if (ev.type === 'card.link.created' || ev.type === 'card.link.deleted') {
+      // Send only to owners of either endpoint card. Full visibility predicate
+      // was enforced at the route layer; this is a defense-in-depth filter for WS.
+      if (ev.from_owner_id !== c.userId && ev.to_owner_id !== c.userId) {
         continue;
       }
     }

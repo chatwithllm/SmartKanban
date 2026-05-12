@@ -18,6 +18,7 @@ import { applyTemplateEvent } from './hooks/useTemplates.ts';
 import { KnowledgeView } from './KnowledgeView.tsx';
 import { applyKnowledgeEvent } from './hooks/useKnowledge.ts';
 import { applyInsightEvent } from './hooks/useInsights.ts';
+import { applyCardLinkEvent } from './hooks/useCardLinks.ts';
 import { MobileCardView } from './MobileCardView.tsx';
 import { MobileShell } from './MobileShell.tsx';
 import { useIsMobile } from './hooks/useIsMobile.ts';
@@ -154,6 +155,10 @@ function Authed({ meId }: { meId: string }) {
         ev.type === 'insight.failed'
       ) {
         applyInsightEvent(ev);
+        return;
+      }
+      if (ev.type === 'card.link.created' || ev.type === 'card.link.deleted') {
+        applyCardLinkEvent(ev);
         return;
       }
       if (ev.type === 'card.message' || ev.type === 'card.ai_response') {

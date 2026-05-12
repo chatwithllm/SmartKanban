@@ -167,6 +167,28 @@ nudge fires when it's done. Per-user rate limits (5 pending, 50/day,
 1 per card) keep cost bounded. Without `TAVILY_API_KEY` the pipeline
 runs in "degraded" mode (local context only).
 
+### Card chains — track how an idea evolved
+
+Cards can link to each other with one of six labeled relationships:
+
+| Label | Meaning |
+|---|---|
+| `evolves_from` | This card is a follow-up / next iteration |
+| `supersedes` | This card replaces an older one |
+| `split_from` | This card is one piece of a bigger card |
+| `related` | Generic association |
+| `inspired_by` | This card was sparked by another |
+| `duplicate_of` | Marked for housekeeping |
+
+Each link supports an optional free-text note ("switched to organic").
+Links are visible in:
+
+- The **Related cards** section in the card edit dialog (with direction arrows)
+- A dedicated **🧬 Chain** modal (lazy-loaded react-flow graph) that
+  renders the neighborhood up to 2 hops with AI Insight side-nodes
+- Telegram capture flow: tap **🔗 Link to existing** on the destination
+  keyboard → pick card → pick label → optional note
+
 ### Privacy model
 
 - DM to bot → private to you (assignees = [you]; nobody else sees it,

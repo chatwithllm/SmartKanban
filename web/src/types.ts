@@ -154,3 +154,19 @@ export type Insight = {
   created_at: string;
   completed_at: string | null;
 };
+
+export const CARD_LINK_LABELS = [
+  'evolves_from','supersedes','split_from','related','inspired_by','duplicate_of',
+] as const;
+
+export type CardLinkLabel = (typeof CARD_LINK_LABELS)[number];
+
+export type CardLink = {
+  id: string;
+  from_card_id: string;
+  to_card_id: string;
+  label: CardLinkLabel;
+  note: string | null;
+  created_by: string;
+  created_at: string;
+};

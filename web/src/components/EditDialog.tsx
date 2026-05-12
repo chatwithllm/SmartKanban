@@ -4,6 +4,9 @@ import type { KnowledgeItem } from '../types.ts';
 import { api } from '../api.ts';
 import { CardTimeline } from './CardTimeline.tsx';
 import { AiInsightsPanel } from './AiInsightsPanel.tsx';
+import { RelatedCardsSection } from './RelatedCardsSection.tsx';
+import { lazy, Suspense } from 'react';
+const CardChainModal = lazy(() => import('./CardChainModal.tsx').then((m) => ({ default: m.CardChainModal })));
 
 type Props = {
   card: Card;
@@ -27,6 +30,7 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
   const [showQr, setShowQr] = useState(false);
   const [sharingBusy, setSharingBusy] = useState(false);
   const [sharesSaved, setSharesSaved] = useState(false);
+  const [chainOpen, setChainOpen] = useState(false);
 
   const handleRead = useCallback(() => onRead?.(card.id), [onRead, card.id]);
 
@@ -148,13 +152,25 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
           style={{ background: 'rgb(var(--violet))', borderRadius: '14px 14px 0 0' }}
         >
           <span style={{ fontSize: 14, fontWeight: 600, color: 'white', fontFamily: 'Spectral, serif' }}>Edit card</span>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.8)', fontSize: 16 }}
-          >
-            ✕
-          </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {card?.id && (
+              <button
+                onClick={() => setChainOpen(true)}
+                aria-label="View chain"
+                title="View chain"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.8)', fontSize: 16 }}
+              >
+                🧬
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.8)', fontSize: 16 }}
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Body */}
@@ -230,6 +246,15 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
               cardId={card.id}
               onOpenKnowledge={(id) => {
                 window.location.href = `/knowledge/${encodeURIComponent(id)}`;
+              }}
+            />
+          )}
+
+          {card?.id && (
+            <RelatedCardsSection
+              cardId={card.id}
+              onOpenCard={(id) => {
+                window.location.href = `/?card=${encodeURIComponent(id)}`;
               }}
             />
           )}
@@ -451,6 +476,18 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
           </button>
         </div>
       </div>
+      {chainOpen && card?.id && (
+        <Suspense fallback={<div className="fixed inset-0 z-[60] flex items-center justify-center text-2 text-ink-rev bg-ink/60">Loading chain…</div>}>
+          <CardChainModal
+            cardId={card.id}
+            onClose={() => setChainOpen(false)}
+            onOpenCard={(id) => {
+              setChainOpen(false);
+              window.location.href = `/?card=${encodeURIComponent(id)}`;
+            }}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

@@ -252,3 +252,21 @@ CREATE TABLE IF NOT EXISTS ai_insights (
 
 CREATE INDEX IF NOT EXISTS ai_insights_card_idx
   ON ai_insights (card_id, created_at DESC);
+
+-- Card chain (2026-05-12): free-form many-to-many card relationships
+CREATE TABLE IF NOT EXISTS card_links (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  from_card_id UUID NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+  to_card_id   UUID NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+  label        TEXT NOT NULL CHECK (label IN (
+    'evolves_from','supersedes','split_from',
+    'related','inspired_by','duplicate_of'
+  )),
+  note         TEXT,
+  created_by   UUID NOT NULL REFERENCES users(id),
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (from_card_id, to_card_id, label)
+);
+
+CREATE INDEX IF NOT EXISTS card_links_from_idx ON card_links (from_card_id);
+CREATE INDEX IF NOT EXISTS card_links_to_idx   ON card_links (to_card_id);
