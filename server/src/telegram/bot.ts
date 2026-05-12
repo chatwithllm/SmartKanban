@@ -14,7 +14,12 @@ import {
   getLatestForUser,
   getPending,
   updatePending,
+  type Destination,
 } from './proposals.js';
+import { defaultDestination, destinationOptions } from './destination.js';
+import { searchCardsFts } from '../cards.js';
+import { searchKnowledgeFts } from '../knowledge.js';
+import { rankCandidates, type Candidate } from '../ai/dedupe.js';
 import { findTemplateByName, instantiateTemplate, listTemplates } from '../templates.js';
 import {
   createKnowledge,
@@ -287,6 +292,69 @@ function proposalKeyboard(id: string, isPrivateChat: boolean): InlineKeyboard {
     .text('🔗 Add link', `link:${id}`)
     .text('✏️ Edit', `edit:${id}`)
     .text('❌ Cancel', `drop:${id}`);
+  return kb;
+}
+
+// ---------- structured-capture keyboards (new flow) ----------
+
+function destinationKeyboard(
+  pid: string,
+  def: Destination,
+  isPrivateChat: boolean,
+): InlineKeyboard {
+  const kb = new InlineKeyboard();
+  for (const o of destinationOptions(isPrivateChat)) {
+    kb.text(`${o.key === def ? '✓ ' : ''}${o.label}`, `dest:${o.key}:${pid}`);
+  }
+  kb.row().text('🔍 Check duplicates?', `dup:check:${pid}`);
+  kb.row()
+    .text('✏️ Edit', `edit:${pid}`)
+    .text('❌ Cancel', `drop:${pid}`);
+  return kb;
+}
+
+function columnKeyboard(pid: string): InlineKeyboard {
+  return new InlineKeyboard()
+    .text('📥 Backlog', `col:backlog:${pid}`)
+    .text('📅 Today', `col:today:${pid}`)
+    .row()
+    .text('⚡ In Progress', `col:in_progress:${pid}`)
+    .text('✅ Done', `col:done:${pid}`);
+}
+
+function attachmentKindKeyboard(pid: string): InlineKeyboard {
+  return new InlineKeyboard()
+    .text('✨ New', `att:new:${pid}`)
+    .text('🔗 Attach to existing', `att:pick:${pid}`)
+    .row()
+    .text('❌ Cancel', `drop:${pid}`);
+}
+
+function attachPickerKeyboard(
+  pid: string,
+  items: Array<{ id: string; kind: 'card' | 'knowledge'; label: string }>,
+): InlineKeyboard {
+  const kb = new InlineKeyboard();
+  for (const it of items) {
+    kb.text(`Pick: ${it.label.slice(0, 50)}`, `att:to:${it.kind}:${it.id}:${pid}`).row();
+  }
+  kb.text('❌ Cancel', `drop:${pid}`);
+  return kb;
+}
+
+function dupResultsKeyboard(
+  pid: string,
+  matches: Array<{ kind: 'card' | 'knowledge'; id: string }>,
+): InlineKeyboard {
+  const kb = new InlineKeyboard();
+  const top = matches[0];
+  if (top) {
+    kb.text(
+      `🔗 Link to ${top.kind === 'card' ? 'card' : 'knowledge'}`,
+      `dup:link:${top.kind}:${top.id}:${pid}`,
+    );
+  }
+  kb.text('+ Save anyway', `dup:save:${pid}`).row().text('❌ Cancel', `drop:${pid}`);
   return kb;
 }
 
