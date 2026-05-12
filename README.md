@@ -32,35 +32,55 @@ seconds; sending a message to a bot is instant, and works from any phone.
 
 ### Capture (Telegram)
 
-- **DM the bot** — any message becomes a private card on your board
-- **Post to the family group** — lands in **Family Inbox** with a Private /
-  Public privacy prompt
-- **Voice notes** → Whisper transcription, original audio attached
-- **Photos** → gpt-4o-mini vision summary, original image attached
-- **URLs auto-detected** — `github.com/...` and other links preserved as
-  markdown link list in the description
+- **DM the bot** — kicks off the structured two-step flow below
+- **Post to the family group** — same flow, with Family Inbox as the
+  auto-suggested destination
+- **Voice notes** → Whisper transcribe → New-vs-Attach prompt → flow
+- **Photos** → vision summary → New-vs-Attach prompt → flow
+- **URLs auto-detected** — destination defaults to Knowledge
 
 ### Interactive proposal flow (text messages)
 
-Instead of blindly saving every message as a card, the bot runs your text
-through an LLM (gemini-2.0-flash-001 by default, via OpenRouter) and replies:
+The bot runs your text through an LLM (gemini-2.0-flash-001 by default, via
+OpenRouter) and replies with a destination chooser:
 
 ```
 📝 Buy eggs
 Tags: #groceries
 
-[🔒 Private] [👥 Public]
-[📅 Today]   [⚡ Doing]
-[🔗 Add link] [✏️ Edit] [❌ Cancel]
+[✓ 🔒 Private] [👥 Public] [📚 Knowledge]
+[🔍 Check duplicates?]
+[✏️ Edit] [❌ Cancel]
 ```
 
-- **Save / Today / Doing** — create the card in that column
-- **Add link** — paste URLs, attached to the description
-- **Edit** — tell the bot "change tags to home" and it re-proposes
-- **Cancel** — discard, no card
+- **🔒 Private / 👥 Public** — opens a column picker:
+  `[📥 Backlog] [📅 Today] [⚡ In Progress] [✅ Done]`
+- **📚 Knowledge** — saves directly (URL auto-fetch if present, otherwise
+  saved as a note)
+- **🔍 Check duplicates?** — runs Postgres FTS + Gemini Flash re-rank
+  across your visible cards + knowledge and offers
+  `[🔗 Link to existing] [+ Save anyway] [❌ Cancel]`
+- **✏️ Edit** — send replacement text; bot re-proposes
+- **❌ Cancel** — discard, no save
 
-Non-task messages ("lol") are flagged with "Doesn't look like a task — save
-anyway if you want." so you're never surprised by spurious cards.
+Non-task messages ("lol") are still flagged with "Doesn't look like a task —
+save anyway if you want." so you're never surprised by spurious cards.
+
+### Attaching photos or voice to existing items
+
+After vision / Whisper extracts text, the bot asks:
+
+```
+📷 Receipt from grocery run     (or 🎙 for voice)
+
+[✨ New] [🔗 Attach to existing] [❌ Cancel]
+```
+
+**Attach** shows the top 5 recent cards + top 3 recent knowledge items
+visible to you, with a `[Pick]` row per item and a "reply with text to
+filter" hint. A reply re-renders the picker filtered by FTS. Picking a
+card attaches the photo / audio to it; picking a knowledge item falls
+back to a new private card (knowledge attachments are web-only for now).
 
 ### After save
 
