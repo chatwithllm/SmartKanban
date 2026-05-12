@@ -235,3 +235,20 @@ ALTER TABLE cards
 
 CREATE INDEX IF NOT EXISTS cards_fts_idx ON cards USING GIN (fts);
 CREATE INDEX IF NOT EXISTS idx_klc_card ON knowledge_card_links(card_id);
+
+-- AI brainstorm research (2026-05-12): per-card insight rows
+CREATE TABLE IF NOT EXISTS ai_insights (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  card_id       UUID NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+  requested_by  UUID NOT NULL REFERENCES users(id),
+  status        TEXT NOT NULL CHECK (status IN ('pending','ok','failed')) DEFAULT 'pending',
+  summary       TEXT,
+  body          JSONB,
+  error         TEXT,
+  degraded      BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  completed_at  TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS ai_insights_card_idx
+  ON ai_insights (card_id, created_at DESC);
