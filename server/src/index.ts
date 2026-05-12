@@ -22,6 +22,8 @@ import { qrRoutes } from './routes/qr.js';
 import { wsRoutes } from './ws.js';
 import { startTelegramBot } from './telegram/bot.js';
 import { pool } from './db.js';
+import { enqueueBrainstorm } from './ai/brainstorm_queue.js';
+import { recoverPendingInsights } from './insights.js';
 
 const app = Fastify({ logger: true });
 
@@ -111,3 +113,10 @@ await app.listen({ port, host: '0.0.0.0' });
 if (process.env.TELEGRAM_BOT_TOKEN) {
   startTelegramBot().catch((err) => app.log.error(err, 'telegram bot error'));
 }
+
+recoverPendingInsights()
+  .then((ids) => {
+    for (const id of ids) enqueueBrainstorm(id);
+    if (ids.length > 0) app.log.info({ count: ids.length }, 'brainstorm: re-enqueued pending insights from prior run');
+  })
+  .catch((e) => app.log.warn(e, 'brainstorm recovery scan failed'));
