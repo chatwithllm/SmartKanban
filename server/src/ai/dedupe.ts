@@ -56,7 +56,7 @@ export function parseDedupeResponse(raw: string, candidates: Candidate[]): Ranke
     ranked.push({
       ...cand,
       confidence: Math.max(0, Math.min(100, Math.round(m.confidence))),
-      why: typeof m.why === 'string' ? m.why.slice(0, 80) : '',
+      why: typeof m.why === 'string' ? m.why.slice(0, 60) : undefined,
     });
     if (ranked.length >= MAX_MATCHES) break;
   }
