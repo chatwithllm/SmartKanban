@@ -1,6 +1,19 @@
 import crypto from 'node:crypto';
 import type { Proposal as AIProposal } from '../ai/propose.js';
 
+export type Destination = 'private_card' | 'public_card' | 'knowledge';
+export type AttachState = 'new' | 'pickRecent' | 'pickFiltered';
+
+export type DupCandidate = {
+  kind: 'card' | 'knowledge';
+  id: string;
+  title: string;
+  snippet: string;
+  contextLine: string;
+  confidence?: number;
+  why?: string;
+};
+
 export type PendingProposal = {
   id: string;
   tgUserId: number;
@@ -14,9 +27,17 @@ export type PendingProposal = {
   awaitingEdit: boolean;
   awaitingLinks: boolean;
   createdAt: number;
+  // Structured-capture extensions
+  destination?: Destination;
+  attachMode?: AttachState;
+  attachFilter?: string;
+  attachPickerIds?: Array<{ kind: 'card' | 'knowledge'; id: string }>;
+  dupCandidates?: DupCandidate[];
+  pendingPhotoFileId?: string;
+  pendingAudioFileId?: string;
 };
 
-const TTL_MS = 10 * 60 * 1000;
+const TTL_MS = 15 * 60 * 1000;
 
 const byId = new Map<string, PendingProposal>();
 const byTgUser = new Map<number, string>(); // tg user id -> latest proposal id
@@ -34,7 +55,19 @@ function prune() {
 export function createPending(
   p: Omit<
     PendingProposal,
-    'id' | 'createdAt' | 'awaitingEdit' | 'awaitingLinks' | 'links' | 'promptMessageId'
+    | 'id'
+    | 'createdAt'
+    | 'awaitingEdit'
+    | 'awaitingLinks'
+    | 'links'
+    | 'promptMessageId'
+    | 'destination'
+    | 'attachMode'
+    | 'attachFilter'
+    | 'attachPickerIds'
+    | 'dupCandidates'
+    | 'pendingPhotoFileId'
+    | 'pendingAudioFileId'
   >,
 ): PendingProposal {
   prune();
