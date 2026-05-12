@@ -147,6 +147,26 @@ A lightweight inbox for URLs, snippets, and notes that link to cards.
 - Live sync via WebSocket (cards, templates, knowledge, links)
 - Keyboard shortcut hints + toast notifications on CRUD actions
 
+### AI Brainstorm research
+
+Tap **🤔 Brainstorm** on any card (via the Telegram post-save keyboard
+or the AI Insights panel in the card edit dialog) to run a hybrid
+research pipeline:
+
+- **Local context** — full-text search across your visible cards and
+  knowledge items for things you've already captured on related
+  topics.
+- **Web search** — fresh results via [Tavily](https://tavily.com/)
+  (free tier 1000/mo; set `TAVILY_API_KEY` in `server/.env`).
+- **LLM synthesis** — Gemini Flash composes a structured response:
+  summary + related items + web findings + suggested next steps.
+
+Results appear as a dedicated panel in the card edit dialog and a
+✨ snippet on the board card. Async — research takes ~10s; a Telegram
+nudge fires when it's done. Per-user rate limits (5 pending, 50/day,
+1 per card) keep cost bounded. Without `TAVILY_API_KEY` the pipeline
+runs in "degraded" mode (local context only).
+
 ### Privacy model
 
 - DM to bot → private to you (assignees = [you]; nobody else sees it,
@@ -388,6 +408,7 @@ See [`.env.example`](.env.example) for the full list. Highlights:
 | `KNOWLEDGE_FETCH_TIMEOUT_MS` | URL fetch timeout                                   | `10000`                         |
 | `KNOWLEDGE_BODY_MAX_CHARS`   | Knowledge body cap                                  | `200000`                        |
 | `KNOWLEDGE_EMBEDDINGS`       | Enable pgvector semantic search                     | *(unset)*                       |
+| `TAVILY_API_KEY`             | Web search for AI Brainstorm                        | *(optional)*                    |
 
 ---
 

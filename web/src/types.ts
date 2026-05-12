@@ -133,3 +133,24 @@ export type WeatherData = {
   current: { temp: number; code: number; humidity: number; wind: number };
   daily: Array<{ date: string; code: number; max: number; min: number }>;
 };
+
+export type InsightStatus = 'pending' | 'ok' | 'failed';
+
+export type InsightBody = {
+  related_items?: Array<{ kind: 'card' | 'knowledge'; id: string; title: string; why: string }>;
+  web_findings?: Array<{ title: string; url: string; why: string }>;
+  next_steps?: string[];
+};
+
+export type Insight = {
+  id: string;
+  card_id: string;
+  requested_by: string;
+  status: InsightStatus;
+  summary: string | null;
+  body: InsightBody | null;
+  error: string | null;
+  degraded: boolean;
+  created_at: string;
+  completed_at: string | null;
+};

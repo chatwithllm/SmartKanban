@@ -1,6 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Card, User } from '../types.ts';
+import { getCachedLatest } from '../hooks/useInsights.ts';
 
 const STATUS_ACCENT: Record<string, string> = {
   backlog:     'backlog',
@@ -61,6 +62,7 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, dragging,
   const shares = card.shares
     .map(id => users.find(u => u.id === id))
     .filter((u): u is NonNullable<typeof u> => !!u);
+  const insightLatest = getCachedLatest(card.id);
 
   return (
     <div
@@ -83,11 +85,17 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, dragging,
         {/* Card body */}
         <div className="note" style={{ opacity: isDragging || dragging ? 0.4 : 1 }}>
           {/* Source row */}
-          {(card.source === 'telegram' || card.ai_summarized || card.needs_review) && (
+          {(card.source === 'telegram' || card.ai_summarized || card.needs_review || insightLatest?.status === 'pending' || insightLatest?.status === 'ok') && (
             <div className="note-source">
               {card.source === 'telegram' && <span>⟰ telegram</span>}
               {card.ai_summarized && <span style={{ color: 'rgb(var(--violet))' }}> · ✦ ai</span>}
               {card.needs_review && <span style={{ color: 'rgb(var(--danger))' }}> · needs review</span>}
+              {insightLatest?.status === 'pending' && (
+                <span className="text-1 animate-pulse" title="Researching…" aria-label="Researching"> · 🤔</span>
+              )}
+              {insightLatest?.status === 'ok' && (
+                <span className="text-1" title="AI Insights ready" aria-label="AI Insights ready"> · ✨</span>
+              )}
             </div>
           )}
 
@@ -101,7 +109,7 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, dragging,
             <div style={{
               fontSize: 12.5,
               color: 'rgb(var(--ink-2))',
-              marginBottom: 10,
+              marginBottom: insightLatest?.status === 'ok' && insightLatest.summary ? 4 : 10,
               lineHeight: 1.45,
               display: '-webkit-box',
               WebkitLineClamp: 2,
@@ -110,6 +118,13 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, dragging,
             }}>
               {card.description}
             </div>
+          )}
+
+          {/* AI insight summary snippet */}
+          {!compact && insightLatest?.status === 'ok' && insightLatest.summary && (
+            <p className="mt-1 text-1 text-ink-soft tracking-tight2 line-clamp-1" style={{ marginBottom: 10 }}>
+              ✨ {insightLatest.summary}
+            </p>
           )}
 
           {/* Tags */}

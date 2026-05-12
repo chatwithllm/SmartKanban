@@ -3,7 +3,7 @@ import path from 'node:path';
 import { Bot, InlineKeyboard, webhookCallback, type Context } from 'grammy';
 import { pool } from '../db.js';
 import { broadcast } from '../ws.js';
-import { loadCard, logActivity, type Status } from '../cards.js';
+import { loadCard, logActivity, canUserSeeCard, type Status } from '../cards.js';
 import { transcribeAudio } from '../ai/whisper.js';
 import { summarizeImage } from '../ai/vision.js';
 import { AI_ENABLED } from '../ai/openai.js';
@@ -33,6 +33,13 @@ import {
   validateUrl,
 } from '../knowledge.js';
 import { triggerFetch } from '../knowledge_fetch.js';
+import {
+  createInsight,
+  countPendingByCard,
+  countPendingByUser,
+  countTodayByUser,
+} from '../insights.js';
+import { enqueueBrainstorm } from '../ai/brainstorm_queue.js';
 
 let botInstance: Bot | null = null;
 let pollingStarted = false;
@@ -356,6 +363,7 @@ function postSaveKeyboard(cardId: string, currentStatus: Status): InlineKeyboard
     if (s !== currentStatus) kb.text(label, cb);
   }
   kb.text('🗑', `arch:${cardId}`);
+  kb.row().text('🤔 Brainstorm', `brain:${cardId}`);
   return kb;
 }
 
@@ -1443,6 +1451,64 @@ export function buildBot(token: string): Bot {
     await attachToTarget(ctx, pending, kind, targetId);
   });
 
+  bot.callbackQuery(/^brain:([^:]+)$/, async (ctx) => {
+    const cardId = ctx.match![1]!;
+    const tgUserId = ctx.from?.id;
+    if (!tgUserId) {
+      await ctx.answerCallbackQuery({ text: 'no user', show_alert: true });
+      return;
+    }
+    const appUserId = await resolveAppUser(tgUserId, ctx.from?.username ?? undefined);
+    if (!appUserId) {
+      await ctx.answerCallbackQuery({ text: 'Link your Telegram identity first.', show_alert: true });
+      return;
+    }
+    if (!AI_ENABLED()) {
+      await ctx.answerCallbackQuery({ text: 'AI not configured.', show_alert: true });
+      return;
+    }
+    if (!(await canUserSeeCard(appUserId, cardId))) {
+      await ctx.answerCallbackQuery({ text: 'Card not visible to you.', show_alert: true });
+      return;
+    }
+    const [pendingCard, pendingUser, today] = await Promise.all([
+      countPendingByCard(cardId),
+      countPendingByUser(appUserId),
+      countTodayByUser(appUserId),
+    ]);
+    if (pendingCard >= 1) {
+      await ctx.answerCallbackQuery({ text: 'Already researching this card.', show_alert: true });
+      return;
+    }
+    if (pendingUser >= 5) {
+      await ctx.answerCallbackQuery({ text: 'Too many pending — try later.', show_alert: true });
+      return;
+    }
+    if (today >= 50) {
+      await ctx.answerCallbackQuery({ text: 'Daily limit reached.', show_alert: true });
+      return;
+    }
+    const insight = await createInsight(cardId, appUserId);
+    enqueueBrainstorm(insight.id);
+    await ctx.answerCallbackQuery({ text: 'Research queued' });
+    // Strip the brainstorm button so it isn't re-tapped
+    try {
+      const card = await loadCard(cardId);
+      if (card) {
+        const kb = new InlineKeyboard();
+        const row: Array<[string, Status, string]> = [
+          ['📅 Today', 'today', `mv:today:${cardId}`],
+          ['⚡ Doing', 'in_progress', `mv:doing:${cardId}`],
+          ['✅ Done', 'done', `mv:done:${cardId}`],
+        ];
+        for (const [label, s, cb] of row) if (s !== card.status) kb.text(label, cb);
+        kb.text('🗑', `arch:${cardId}`);
+        await ctx.editMessageReplyMarkup({ reply_markup: kb });
+      }
+    } catch { /* edit non-fatal */ }
+    await ctx.reply('✓ Research queued — open card for results when ready.');
+  });
+
   bot.on('message', async (ctx, next) => {
     const chatId = ctx.chat?.id;
     const chatType = ctx.chat?.type;
@@ -1509,4 +1575,25 @@ export async function startTelegramBot(): Promise<void> {
 export function telegramWebhookCallback() {
   if (!botInstance) return null;
   return webhookCallback(botInstance, 'fastify');
+}
+
+export async function sendBrainstormNudge(
+  appUserId: string,
+  cardTitle: string,
+  status: 'ok' | 'failed',
+  error?: string,
+): Promise<void> {
+  if (!botInstance) return;
+  const { rows } = await pool.query<{ telegram_user_id: number }>(
+    `SELECT telegram_user_id FROM telegram_identities WHERE app_user_id = $1 LIMIT 1`,
+    [appUserId],
+  );
+  const tgUserId = rows[0]?.telegram_user_id;
+  if (!tgUserId) return;
+  const text = status === 'ok'
+    ? `📚 Brainstorm done — ${cardTitle}`
+    : `⚠ Brainstorm failed: ${error?.slice(0, 100) ?? 'unknown error'} — try again from the card.`;
+  try {
+    await botInstance.api.sendMessage(tgUserId, text);
+  } catch { /* user blocked bot, etc. */ }
 }
