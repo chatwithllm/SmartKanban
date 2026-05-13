@@ -1753,6 +1753,14 @@ export function buildBot(token: string): Bot {
     return next();
   });
 
+  // Global error handler. Without this, any handler throw — including expected
+  // grammy errors like a stale answerCallbackQuery (400 "query is too old") —
+  // bubbles out of bot.start() and kills the long-polling loop. We log and
+  // swallow so polling survives.
+  bot.catch((err) => {
+    console.error('[telegram] handler error on update', err.ctx?.update?.update_id, ':', err.error);
+  });
+
   return bot;
 }
 
