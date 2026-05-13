@@ -180,7 +180,10 @@ export async function runBrainstorm(insightId: string): Promise<void> {
   );
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10_000);
+  // OpenRouter → Gemini 2.0 Flash routinely exceeds 10s under load, which
+  // surfaced as "Request was aborted" failures on prod with no actual error.
+  const timeoutMs = Number(process.env.BRAINSTORM_TIMEOUT_MS ?? 30_000);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   let parsed: BrainstormParsed;
   try {
     const completion = await target.client.chat.completions.create(
