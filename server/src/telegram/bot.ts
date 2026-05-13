@@ -1753,6 +1753,14 @@ export function buildBot(token: string): Bot {
     return next();
   });
 
+  // Global error handler. Without this, any handler throw — including expected
+  // grammy errors like a stale answerCallbackQuery (400 "query is too old") —
+  // bubbles out of bot.start() and kills the long-polling loop. We log and
+  // swallow so polling survives.
+  bot.catch((err) => {
+    console.error('[telegram] handler error on update', err.ctx?.update?.update_id, ':', err.error);
+  });
+
   return bot;
 }
 
@@ -1766,9 +1774,20 @@ export async function startTelegramBot(): Promise<void> {
   const webhookUrl = process.env.TELEGRAM_WEBHOOK_URL;
   if (webhookUrl) {
     await botInstance.api.setWebhook(webhookUrl);
+    console.log('[telegram] webhook mode:', webhookUrl);
   } else if (!pollingStarted) {
     pollingStarted = true;
-    botInstance.start({ onStart: () => {} }).catch(() => {});
+    // Clear any stale webhook + drop pending updates before starting long polling.
+    // grammy's bot.start() does call deleteWebhook by default, but only with
+    // drop_pending_updates=false, so a wedged update can keep it from advancing.
+    try {
+      await botInstance.api.deleteWebhook({ drop_pending_updates: true });
+    } catch (err) {
+      console.error('[telegram] deleteWebhook failed:', err);
+    }
+    botInstance
+      .start({ onStart: (info) => console.log('[telegram] polling started as @' + info.username) })
+      .catch((err) => console.error('[telegram] polling crashed:', err));
   }
 }
 
