@@ -3,7 +3,7 @@ import path from 'node:path';
 import { Bot, InlineKeyboard, webhookCallback, type Context } from 'grammy';
 import { pool } from '../db.js';
 import { broadcast } from '../ws.js';
-import { loadCard, logActivity, canUserSeeCard, type Status } from '../cards.js';
+import { loadCard, logActivity, canUserSeeCard, postCardMessage, type Status } from '../cards.js';
 import { transcribeAudio } from '../ai/whisper.js';
 import { summarizeImage } from '../ai/vision.js';
 import { AI_ENABLED } from '../ai/openai.js';
@@ -350,6 +350,7 @@ function dupResultsKeyboard(
       `🔗 Link to ${top.kind === 'card' ? 'card' : 'knowledge'}`,
       `dup:link:${top.kind}:${top.id}:${pid}`,
     );
+    kb.text('👁 Same — just touch', `dup:touch:${top.kind}:${top.id}:${pid}`).row();
   }
   kb.text('+ Save anyway', `dup:save:${pid}`).row().text('❌ Cancel', `drop:${pid}`);
   return kb;
@@ -1476,6 +1477,11 @@ export function buildBot(token: string): Bot {
     await runDuplicateCheck(ctx, pending);
   });
 
+  // dup:link — user confirmed the proposed text is a duplicate of an existing
+  // item. Do NOT create a new card. Bump the existing item's updated_at so it
+  // surfaces as recently active, log activity, and (for cards) append the
+  // original telegram text as a card message so the existing card grows context
+  // instead of fragmenting into N near-identical copies.
   bot.callbackQuery(/^dup:link:(card|knowledge):([^:]+):([^:]+)$/, async (ctx) => {
     const kind = ctx.match![1] as 'card' | 'knowledge';
     const id = ctx.match![2]!;
@@ -1486,12 +1492,75 @@ export function buildBot(token: string): Bot {
       return;
     }
     await ctx.answerCallbackQuery();
+    try {
+      if (kind === 'card') {
+        await postCardMessage(id, pending.appUserId, `[telegram dup] ${pending.original}`);
+        await pool.query(`UPDATE cards SET updated_at = now() WHERE id = $1`, [id]);
+        await logActivity(pending.appUserId, id, 'telegram.dup.linked', {
+          original: pending.original.slice(0, 500),
+        });
+        const card = await loadCard(id);
+        if (card) {
+          broadcast({ type: 'card.updated', card });
+          await ctx.reply(`🔗 Merged into "${card.title}" — last interaction now.`);
+        } else {
+          await ctx.reply('🔗 Merged into existing card.');
+        }
+      } else {
+        await pool.query(`UPDATE knowledge_items SET updated_at = now() WHERE id = $1`, [id]);
+        const knowledge = await loadKnowledge(id);
+        if (knowledge) {
+          broadcast({ type: 'knowledge.updated', knowledge });
+          await ctx.reply(`🔗 Touched "${knowledge.title}" — last interaction now.`);
+        } else {
+          await ctx.reply('🔗 Merged into existing knowledge item.');
+        }
+      }
+    } catch (err) {
+      console.error('[telegram] dup:link failed:', err);
+      await ctx.reply('Could not merge into existing item.');
+    }
     deletePending(pid);
-    await ctx.reply(`🔗 Linked to existing ${kind}.`);
-    // The actual linking semantics: for now, we just acknowledge — the user may
-    // navigate to the existing item via the web app. Future work could record
-    // a back-reference; not in scope for this task.
-    void id;
+  });
+
+  // dup:touch — same target, but no message appended. Just bumps updated_at
+  // so the existing item rises to the top with no extra noise on its timeline.
+  bot.callbackQuery(/^dup:touch:(card|knowledge):([^:]+):([^:]+)$/, async (ctx) => {
+    const kind = ctx.match![1] as 'card' | 'knowledge';
+    const id = ctx.match![2]!;
+    const pid = ctx.match![3]!;
+    const pending = getPending(pid);
+    if (!pending) {
+      await ctx.answerCallbackQuery({ text: 'Session expired.', show_alert: true });
+      return;
+    }
+    await ctx.answerCallbackQuery();
+    try {
+      if (kind === 'card') {
+        await pool.query(`UPDATE cards SET updated_at = now() WHERE id = $1`, [id]);
+        await logActivity(pending.appUserId, id, 'telegram.dup.touched');
+        const card = await loadCard(id);
+        if (card) {
+          broadcast({ type: 'card.updated', card });
+          await ctx.reply(`👁 "${card.title}" — last interaction now.`);
+        } else {
+          await ctx.reply('👁 Touched existing card.');
+        }
+      } else {
+        await pool.query(`UPDATE knowledge_items SET updated_at = now() WHERE id = $1`, [id]);
+        const knowledge = await loadKnowledge(id);
+        if (knowledge) {
+          broadcast({ type: 'knowledge.updated', knowledge });
+          await ctx.reply(`👁 "${knowledge.title}" — last interaction now.`);
+        } else {
+          await ctx.reply('👁 Touched existing knowledge item.');
+        }
+      }
+    } catch (err) {
+      console.error('[telegram] dup:touch failed:', err);
+      await ctx.reply('Could not touch existing item.');
+    }
+    deletePending(pid);
   });
 
   bot.callbackQuery(/^dup:save:([^:]+)$/, async (ctx) => {
