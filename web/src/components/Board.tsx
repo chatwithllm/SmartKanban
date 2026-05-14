@@ -104,19 +104,30 @@ export function Board({ cards, users, searchQuery, unreadCounts, onCreate, onEdi
       onDragEnd={onDragEnd}
       onDragCancel={() => setActiveId(null)}
     >
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div
+        className="
+          flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2
+          md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:pb-0
+          lg:grid-cols-4
+        "
+        style={{ scrollPaddingLeft: 12 }}
+      >
         {STATUSES.map((status) => (
-          <Column
+          <div
             key={status}
-            status={status}
-            cards={byStatus[status]}
-            users={users}
-            unreadCounts={unreadCounts}
-            searchActive={searchActive}
-            onCreate={(title) => onCreate(title, status)}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
+            className="snap-start shrink-0 w-[88vw] md:w-auto md:shrink"
+          >
+            <Column
+              status={status}
+              cards={byStatus[status]}
+              users={users}
+              unreadCounts={unreadCounts}
+              searchActive={searchActive}
+              onCreate={(title) => onCreate(title, status)}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          </div>
         ))}
       </div>
       <DragOverlay>

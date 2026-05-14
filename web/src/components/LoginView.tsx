@@ -48,71 +48,192 @@ export function LoginView({ redirectTo }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
-      <div className="card-surface w-full max-w-[500px] p-8">
-        <h1 className="text-9 font-semibold text-green-starbucks tracking-tight2 mb-6">SmartKanban</h1>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-3 font-semibold text-ink tracking-tight2">
-            {mode === 'login' ? 'Sign in' : 'Create account'}
-          </h2>
+    <div
+      style={{
+        minHeight: '100dvh',
+        background: 'rgb(var(--canvas))',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '24px 16px',
+        position: 'relative', overflow: 'hidden',
+      }}
+    >
+      {/* Soft status-tinted blooms behind the card — premium without slop */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background:
+          'radial-gradient(ellipse 60% 50% at 20% 25%, rgb(var(--violet) / 0.18), transparent 60%),' +
+          'radial-gradient(ellipse 50% 50% at 80% 80%, rgb(var(--pin-doing) / 0.10), transparent 65%)',
+      }} />
+
+      <div
+        style={{
+          position: 'relative', width: '100%', maxWidth: 420,
+          background: 'rgb(var(--surface))',
+          border: '1px solid rgb(var(--hairline) / 0.10)',
+          borderRadius: 18,
+          padding: '32px 28px',
+          boxShadow: 'var(--sh-3)',
+        }}
+      >
+        {/* Brand row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+          <span
+            aria-hidden
+            style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 38, height: 38, borderRadius: 10,
+              background: 'rgb(var(--violet))',
+              color: 'white', fontWeight: 700, fontSize: 18,
+              fontFamily: 'Inter, sans-serif', letterSpacing: '-0.02em',
+              boxShadow: '0 0 0 1px rgb(var(--violet) / 0.4), 0 4px 12px rgb(var(--violet) / 0.25)',
+            }}
+          >
+            K
+          </span>
+          <div>
+            <h1 style={{
+              margin: 0, fontFamily: 'Spectral, serif',
+              fontSize: 22, fontWeight: 600, color: 'rgb(var(--ink))',
+              letterSpacing: '-0.02em', lineHeight: 1.1,
+            }}>
+              SmartKanban
+            </h1>
+            <div style={{
+              marginTop: 2, fontFamily: 'JetBrains Mono, monospace',
+              fontSize: 11, color: 'rgb(var(--ink-3))', letterSpacing: '0.04em',
+            }}>
+              {mode === 'login' ? 'SIGN IN' : 'CREATE ACCOUNT'}
+            </div>
+          </div>
         </div>
-        <form onSubmit={submit} className="space-y-3">
+
+        <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {mode === 'register' && (
             <>
-              <input
+              <LoginInput
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={setName}
                 placeholder="Your name"
                 required
-                className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full mb-3"
               />
-              <input
+              <LoginInput
                 value={shortName}
-                onChange={(e) => setShortName(e.target.value.slice(0, 16))}
+                onChange={(v) => setShortName(v.slice(0, 16))}
                 placeholder="Short name shown on cards (e.g. Jay)"
                 required
                 minLength={1}
                 maxLength={16}
-                className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full mb-3"
               />
             </>
           )}
-          <input
+          <LoginInput
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={setEmail}
             placeholder="Email"
             required
-            className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full mb-3"
+            autoComplete={mode === 'login' ? 'username' : 'email'}
           />
-          <input
+          <LoginInput
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             placeholder="Password"
             required
             minLength={6}
-            className="bg-card border border-ink/10 rounded-card px-3 py-2 text-3 text-ink tracking-tight2 placeholder:text-ink-soft focus:border-green-accent focus:outline-none w-full mb-3"
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
           />
-          {error && <div className="text-2 text-red tracking-tight2 mt-2">{error}</div>}
+
+          {error && (
+            <div style={{
+              fontSize: 12, color: 'rgb(var(--danger))',
+              padding: '6px 12px', borderRadius: 8,
+              background: 'rgb(var(--danger) / 0.08)',
+              border: '1px solid rgb(var(--danger) / 0.18)',
+              fontFamily: 'Inter, sans-serif',
+            }}>
+              {error}
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={busy}
-            className="btn-pill btn-pill-filled-black w-full mt-2"
+            style={{
+              marginTop: 8,
+              padding: '12px 16px', borderRadius: 999,
+              background: busy ? 'rgb(var(--hairline) / 0.12)' : 'rgb(var(--violet))',
+              color: busy ? 'rgb(var(--ink-3))' : 'white',
+              border: 'none', cursor: busy ? 'wait' : 'pointer',
+              fontSize: 14, fontWeight: 600, fontFamily: 'Inter, sans-serif',
+              letterSpacing: '-0.005em',
+              transition: 'background 150ms ease',
+            }}
           >
-            {busy ? '…' : mode === 'login' ? 'Sign in' : 'Create account'}
+            {busy ? 'Working…' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>
         </form>
+
         <button
+          type="button"
           onClick={() => {
             setMode(mode === 'login' ? 'register' : 'login');
             setError(null);
           }}
-          className="mt-4 text-2 text-ink-soft hover:text-ink tracking-tight2"
+          style={{
+            display: 'block', width: '100%',
+            marginTop: 18, padding: '8px 0',
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 13, color: 'rgb(var(--ink-3))', fontFamily: 'Inter, sans-serif',
+            textAlign: 'center',
+          }}
         >
-          {mode === 'login' ? 'Need an account? Register' : 'Have an account? Sign in'}
+          {mode === 'login'
+            ? "No account yet? Register"
+            : 'Already have an account? Sign in'}
         </button>
       </div>
     </div>
+  );
+}
+
+function LoginInput({
+  value, onChange, placeholder, type = 'text', required, minLength, maxLength, autoComplete,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  type?: string;
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  autoComplete?: string;
+}) {
+  const [focus, setFocus] = useState(false);
+  return (
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      required={required}
+      minLength={minLength}
+      maxLength={maxLength}
+      autoComplete={autoComplete}
+      onFocus={() => setFocus(true)}
+      onBlur={() => setFocus(false)}
+      style={{
+        width: '100%', boxSizing: 'border-box',
+        background: 'rgb(var(--canvas))',
+        color: 'rgb(var(--ink))',
+        border: '1px solid ' + (focus ? 'rgb(var(--violet) / 0.6)' : 'rgb(var(--hairline) / 0.12)'),
+        borderRadius: 10, padding: '12px 14px',
+        // 16px so iOS Safari doesn't auto-zoom on focus.
+        fontSize: 16, outline: 'none',
+        fontFamily: 'Inter, sans-serif',
+        boxShadow: focus ? '0 0 0 3px rgb(var(--violet) / 0.12)' : 'none',
+        transition: 'border-color 120ms ease, box-shadow 120ms ease',
+      }}
+    />
   );
 }

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from './api.ts';
 import type { Card, Scope, Status, User } from './types.ts';
 import { STATUSES, STATUS_LABELS } from './types.ts';
 import { connectWS } from './ws.ts';
 import { useToast } from './hooks/useToast.ts';
-import { useTemplates, applyTemplateEvent } from './hooks/useTemplates.ts';
+import { applyTemplateEvent } from './hooks/useTemplates.ts';
+import { CaptureBar } from './components/CaptureBar.tsx';
 import { applyKnowledgeEvent } from './hooks/useKnowledge.ts';
 import { applyInsightEvent } from './hooks/useInsights.ts';
 import { applyCardLinkEvent } from './hooks/useCardLinks.ts';
@@ -14,6 +15,7 @@ import { MobileCardActions } from './components/MobileCardActions.tsx';
 import { KnowledgeView } from './KnowledgeView.tsx';
 import { ActivityTicker } from './components/ActivityTicker.tsx';
 import { ArchiveDialog } from './components/ArchiveDialog.tsx';
+import { Board } from './components/Board.tsx';
 import { useWeather, wmoEmoji } from './hooks/useWeather.ts';
 
 type Tab = 'board' | 'knowledge' | 'archive';
@@ -30,6 +32,14 @@ const LANE_BG: Record<Status, string> = {
   today:       'rgb(var(--lane-today))',
   in_progress: 'rgb(var(--lane-doing))',
   done:        'rgb(var(--lane-done))',
+};
+
+// Matches Column.tsx — used for the status dot before the lane title.
+const LANE_ACCENT: Record<Status, string> = {
+  backlog:     'backlog',
+  today:       'today',
+  in_progress: 'doing',
+  done:        'done',
 };
 
 const EMPTY_MSG: Record<Status, string> = {
@@ -68,13 +78,14 @@ export function MobileShell({ meId }: { meId: string }) {
   const [cards, setCards] = useState<Card[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [actionsCard, setActionsCard] = useState<Card | null>(null);
-  const [draft, setDraft] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  // Lane picker is view-only now; the target picker lives inside CaptureBar.
+  const [lanePicker, setLanePicker] = useState<'view' | null>(null);
+  const swipeStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const [installDismissed, setInstallDismissed] = useState(
     () => typeof localStorage !== 'undefined' && !!localStorage.getItem('install-dismissed'),
   );
   const { addToast } = useToast();
-  const { templates } = useTemplates();
   const { canInstall, install } = useInstallPrompt();
 
   const me = users.find((u) => u.id === meId);
@@ -91,6 +102,7 @@ export function MobileShell({ meId }: { meId: string }) {
   useEffect(() => {
     api.listCards(scope).then(setCards).catch((e) => addToast(`Load failed: ${e}`, 'error'));
   }, [scope]);
+
   useEffect(() => {
     api.users().then(setUsers).catch(() => {});
   }, []);
@@ -154,26 +166,29 @@ export function MobileShell({ meId }: { meId: string }) {
     )
     .sort((a, b) => a.position - b.position);
 
-  const submitCreate = async () => {
-    const t = draft.trim();
-    setDraft('');
+
+  // Lateral swipe on the card list cycles through lanes. Horizontal-dominant
+  // gestures only; vertical scroll passes through. ~30px threshold avoids
+  // accidental swipes on long-press flows.
+  const onSwipeStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
     if (!t) return;
-    if (t.startsWith('/') && !/\s/.test(t)) {
-      const name = t.slice(1);
-      const tpl = templates.find((tt) => tt.name.toLowerCase() === name.toLowerCase());
-      if (tpl) {
-        try { await api.instantiateTemplate(tpl.id, { status_override: activeStatus }); }
-        catch (e) { addToast(`Template failed: ${e instanceof Error ? e.message : 'error'}`, 'error'); }
-        return;
-      }
-    }
-    try {
-      const created = await api.createCard({ title: t, status: activeStatus });
-      setCards((prev) => prev.some((c) => c.id === created.id) ? prev : [...prev, created]);
-      addToast('Card created', 'success');
-    } catch (e) {
-      addToast(`Failed: ${e instanceof Error ? e.message : 'error'}`, 'error');
-    }
+    swipeStartRef.current = { x: t.clientX, y: t.clientY, t: Date.now() };
+  };
+  const onSwipeEnd = (e: React.TouchEvent) => {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start) return;
+    const end = e.changedTouches[0];
+    if (!end) return;
+    const dx = end.clientX - start.x;
+    const dy = end.clientY - start.y;
+    const dt = Date.now() - start.t;
+    if (dt > 600) return;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const idx = STATUSES.indexOf(activeStatus);
+    const next = dx < 0 ? STATUSES[idx + 1] : STATUSES[idx - 1];
+    if (next) setActiveStatus(next);
   };
 
   const handleMove = async (status: Status) => {
@@ -231,25 +246,25 @@ export function MobileShell({ meId }: { meId: string }) {
 
       {tab === 'board' && (
         <>
-          {/* ── Lane-colored header ── */}
+          {/* ── Header: dark canvas like desktop, no per-lane color flood ── */}
           <header
             className="sticky top-0 z-10"
-            style={{ background: LANE_BG[activeStatus], transition: 'background 350ms ease' }}
+            style={{ background: 'rgb(var(--canvas))', transition: 'background 200ms ease' }}
           >
-            {/* Top bar: date + scope + avatar */}
+            {/* Top bar: date + weather + scope + avatar */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px 0' }}>
               <span style={{
                 fontSize: 11, fontWeight: 600, letterSpacing: '0.06em',
-                color: 'rgba(255,255,255,0.7)', fontFamily: 'JetBrains Mono, monospace',
+                color: 'rgb(var(--ink-3))', fontFamily: 'JetBrains Mono, monospace',
               }}>
                 {formatDate()}
               </span>
               {weather && (
                 <span style={{
                   fontSize: 12, fontWeight: 500,
-                  color: 'rgba(255,255,255,0.85)',
+                  color: 'rgb(var(--ink-2))',
                   display: 'inline-flex', alignItems: 'center', gap: 3,
-                  background: 'rgba(0,0,0,0.15)', borderRadius: 999,
+                  background: 'rgb(var(--hairline) / 0.06)', borderRadius: 999,
                   padding: '2px 8px',
                 }}>
                   {wmoEmoji(weather.current.code)} {Math.round(weather.current.temp)}°
@@ -260,8 +275,8 @@ export function MobileShell({ meId }: { meId: string }) {
                 value={scope}
                 onChange={(e) => setScope(e.target.value as Scope)}
                 style={{
-                  background: 'rgba(0,0,0,0.20)', color: 'rgba(255,255,255,0.88)',
-                  border: 'none', borderRadius: 8, padding: '4px 8px',
+                  background: 'rgb(var(--hairline) / 0.06)', color: 'rgb(var(--ink-2))',
+                  border: '1px solid rgb(var(--hairline) / 0.10)', borderRadius: 8, padding: '4px 8px',
                   fontSize: 12, fontWeight: 500, outline: 'none', cursor: 'pointer',
                 }}
               >
@@ -272,11 +287,11 @@ export function MobileShell({ meId }: { meId: string }) {
                   <button
                     onClick={(e) => { e.stopPropagation(); setProfileOpen((v) => !v); }}
                     style={{
-                      width: 34, height: 34, borderRadius: 999,
+                      width: 32, height: 32, borderRadius: 999,
                       background: userColor(me.id),
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 14, fontWeight: 700, color: 'white',
-                      border: '2px solid rgba(255,255,255,0.35)',
+                      fontSize: 13, fontWeight: 700, color: 'white',
+                      border: '1px solid rgb(var(--hairline) / 0.18)',
                       cursor: 'pointer',
                     }}
                   >
@@ -285,7 +300,7 @@ export function MobileShell({ meId }: { meId: string }) {
                   {profileOpen && (
                     <div
                       style={{
-                        position: 'absolute', top: 42, right: 0, zIndex: 100,
+                        position: 'absolute', top: 40, right: 0, zIndex: 100,
                         background: 'rgb(var(--surface))',
                         borderRadius: 12, padding: '6px 0',
                         boxShadow: 'var(--sh-3)',
@@ -315,49 +330,40 @@ export function MobileShell({ meId }: { meId: string }) {
               )}
             </div>
 
-            {/* Large status title */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: '6px 16px 12px' }}>
+            {/* Lane heading — tap to switch lanes via bottom-sheet picker */}
+            <button
+              type="button"
+              onClick={() => setLanePicker('view')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '8px 16px 12px',
+                background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
+              }}
+            >
+              <span aria-hidden style={{
+                display: 'inline-block', width: 9, height: 9, borderRadius: 999,
+                background: `rgb(var(--pin-${LANE_ACCENT[activeStatus]}))`,
+                boxShadow: `0 0 0 3px rgb(var(--pin-${LANE_ACCENT[activeStatus]}) / 0.15)`,
+              }} />
               <h1 style={{
-                fontSize: 42, fontWeight: 700, lineHeight: 1.05,
-                color: 'rgba(255,255,255,0.96)',
-                fontFamily: 'Spectral, serif', letterSpacing: '-0.02em',
+                fontSize: 22, fontWeight: 600, lineHeight: 1.1,
+                color: 'rgb(var(--ink))', margin: 0,
+                fontFamily: 'Spectral, serif', letterSpacing: '-0.012em',
               }}>
                 {STATUS_LABELS[activeStatus]}
               </h1>
               <span style={{
-                fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.55)',
-                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: 11, fontWeight: 500,
+                color: 'rgb(var(--ink-3))',
+                background: 'rgb(var(--hairline) / 0.05)',
+                border: '1px solid rgb(var(--hairline) / 0.08)',
+                padding: '2px 7px', borderRadius: 999,
+                fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.04em',
               }}>
-                {counts[activeStatus]}
+                {String(counts[activeStatus]).padStart(2, '0')}
               </span>
-            </div>
-
-            {/* Status tabs */}
-            <div style={{
-              display: 'flex', gap: 8, overflowX: 'auto',
-              padding: '0 16px 14px', scrollbarWidth: 'none',
-            }}>
-              {STATUSES.map((s) => {
-                const active = activeStatus === s;
-                return (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setActiveStatus(s)}
-                    style={{
-                      flexShrink: 0, padding: '6px 14px', borderRadius: 999,
-                      background: active ? 'rgba(255,255,255,0.92)' : 'rgba(0,0,0,0.18)',
-                      color: active ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.82)',
-                      fontWeight: active ? 600 : 400, fontSize: 13,
-                      border: 'none', cursor: 'pointer',
-                      transition: 'background 150ms ease, color 150ms ease',
-                    }}
-                  >
-                    {STATUS_LABELS[s]}
-                  </button>
-                );
-              })}
-            </div>
+              <span aria-hidden style={{ fontSize: 12, color: 'rgb(var(--ink-3))' }}>▾</span>
+            </button>
           </header>
 
           {/* ── Activity ticker ── */}
@@ -379,12 +385,16 @@ export function MobileShell({ meId }: { meId: string }) {
             />
           </div>
 
-          {/* ── Card list ── */}
-          <ul style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '16px 12px', listStyle: 'none', margin: 0 }}>
+          {/* ── Card list (swipe left/right to cycle lanes) ── */}
+          <ul
+            onTouchStart={onSwipeStart}
+            onTouchEnd={onSwipeEnd}
+            style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '16px 12px', listStyle: 'none', margin: 0 }}
+          >
             {filtered.length === 0 && (
               <li style={{
                 padding: '40px 0', textAlign: 'center',
-                fontSize: 14, color: 'rgba(255,255,255,0.7)',
+                fontSize: 14, color: 'rgb(var(--ink-3))',
                 fontStyle: 'italic', fontFamily: 'Spectral, serif',
               }}>
                 {EMPTY_MSG[activeStatus]}
@@ -447,42 +457,94 @@ export function MobileShell({ meId }: { meId: string }) {
       {/* ── Capture bar (above nav, board only) ── */}
       {tab === 'board' && (
         <div style={{
-          position: 'fixed', left: 0, right: 0,
-          bottom: 'calc(56px + env(safe-area-inset-bottom))',
+          position: 'fixed', left: 8, right: 8,
+          bottom: 'calc(56px + env(safe-area-inset-bottom) + 8px)',
           zIndex: 30,
-          background: 'rgb(var(--surface))',
-          borderTop: '1px solid rgb(var(--hairline) / 0.08)',
-          padding: '8px 12px',
-          display: 'flex', alignItems: 'center', gap: 8,
         }}>
-          <span style={{ fontSize: 18, opacity: 0.45, flexShrink: 0 }}>🤖</span>
-          <input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') submitCreate(); }}
-            placeholder="Capture as card…"
-            style={{
-              flex: 1, background: 'transparent', border: 'none', outline: 'none',
-              fontSize: 14, color: 'rgb(var(--ink))', fontFamily: 'Inter, sans-serif',
+          <CaptureBar
+            initialStatus={activeStatus}
+            counts={counts}
+            onCreate={async (title, status) => {
+              try {
+                const created = await api.createCard({ title, status });
+                setCards((prev) => prev.some((c) => c.id === created.id) ? prev : [...prev, created]);
+                addToast(`Created in ${STATUS_LABELS[status]}`, 'success');
+              } catch (e) {
+                addToast(`Failed: ${e instanceof Error ? e.message : 'error'}`, 'error');
+              }
             }}
+            onCreateFromImage={async (file, status) => {
+              try {
+                const created = await api.createCardFromImage(file, status);
+                setCards((prev) => prev.some((c) => c.id === created.id) ? prev : [...prev, created]);
+                addToast(`Photo card in ${STATUS_LABELS[status]}`, 'success');
+              } catch (err) {
+                addToast(`Photo failed: ${err instanceof Error ? err.message : 'error'}`, 'error');
+              }
+            }}
+            onInstantiateTemplate={async (id, status) => {
+              try {
+                await api.instantiateTemplate(id, { status_override: status });
+                addToast(`Template added to ${STATUS_LABELS[status]}`, 'success');
+              } catch (err) {
+                addToast(`Template failed: ${err instanceof Error ? err.message : 'error'}`, 'error');
+              }
+            }}
+            onVoiceTodo={() => addToast('Voice capture coming soon')}
           />
-          <button
-            aria-label="Voice input"
-            style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', opacity: 0.5, padding: '0 2px', flexShrink: 0 }}
-          >
-            🎙️
-          </button>
-          <button
-            onClick={submitCreate}
+        </div>
+      )}
+
+      {/* ── View-switch lane picker (tap big title at top) ── */}
+      {lanePicker === 'view' && (
+        <div
+          onClick={() => setLanePicker(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 70, background: 'rgb(0 0 0 / 0.4)',
+            display: 'flex', alignItems: 'flex-end',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
             style={{
-              flexShrink: 0, width: 36, height: 36, borderRadius: 999,
-              background: 'rgb(var(--violet))', color: 'white',
-              border: 'none', cursor: 'pointer', fontSize: 16,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgb(var(--surface))', width: '100%',
+              borderTopLeftRadius: 18, borderTopRightRadius: 18,
+              padding: '18px 12px calc(20px + env(safe-area-inset-bottom))',
+              boxShadow: 'var(--sh-3)',
             }}
           >
-            →
-          </button>
+            <div style={{ padding: '0 6px 12px', fontSize: 12, fontWeight: 600, color: 'rgb(var(--ink-3))', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Show lane…
+            </div>
+            {STATUSES.map((s) => {
+              const active = activeStatus === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => { setActiveStatus(s); setLanePicker(null); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left',
+                    padding: '14px 14px', borderRadius: 12, margin: '2px 0',
+                    background: active ? 'rgb(var(--hairline) / 0.06)' : 'none',
+                    border: '1px solid ' + (active ? 'rgb(var(--hairline) / 0.12)' : 'transparent'),
+                    cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block', width: 14, height: 14, borderRadius: 999,
+                    background: `rgb(var(--pin-${LANE_ACCENT[s]}))`,
+                  }} />
+                  <span style={{ flex: 1, fontSize: 15, fontWeight: active ? 600 : 500, color: 'rgb(var(--ink))' }}>
+                    {STATUS_LABELS[s]}
+                  </span>
+                  <span style={{ fontSize: 13, color: 'rgb(var(--ink-3))', fontFamily: 'JetBrains Mono, monospace' }}>
+                    {counts[s]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -528,9 +590,9 @@ export function MobileShell({ meId }: { meId: string }) {
 }
 
 function MobileNoteCard({
-  card, users, accentColor, onLongPress,
+  card, users, onLongPress,
 }: {
-  card: Card; users: User[]; accentColor: string; onLongPress: () => void;
+  card: Card; users: User[]; accentColor?: string; onLongPress: () => void;
 }) {
   const lp = useLongPress(onLongPress, 500);
   const assignees = card.assignees
@@ -542,6 +604,9 @@ function MobileNoteCard({
     location.assign(`/m/card/${card.id}`);
   };
 
+  // Status accent (dot + bloom) — same palette as desktop Column.tsx.
+  const accent = LANE_ACCENT[card.status] ?? 'backlog';
+
   return (
     <li
       onClick={handleClick}
@@ -552,35 +617,23 @@ function MobileNoteCard({
       onContextMenu={lp.onContextMenu}
       style={{ listStyle: 'none', position: 'relative', cursor: 'pointer' }}
     >
-      {/* Drop-shadow wrapper */}
+      {/* Desktop-style flat card: dark surface, hairline border, status dot */}
       <div style={{
         position: 'relative',
-        filter: 'drop-shadow(0 6px 14px rgb(0 0 0 / 0.10)) drop-shadow(0 14px 24px rgb(0 0 0 / 0.06))',
-      }}>
-        {/* Pin */}
-        <span style={{ position: 'absolute', top: -10, left: 16, zIndex: 3 }}>
-          <span style={{
-            display: 'block', width: 20, height: 20, borderRadius: '50%',
-            background: accentColor, margin: '0 auto',
-            boxShadow: 'inset -3px -4px 0 rgba(0,0,0,0.18), inset 3px 3px 0 rgba(255,255,255,0.28), 0 2px 4px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.18)',
-          }} />
-          <span style={{ display: 'block', width: 3, height: 5, background: 'rgb(60,50,40)', margin: '-3px auto 0', borderRadius: '0 0 2px 2px' }} />
-        </span>
-
-        {/* Fold corner */}
-        <div style={{
-          position: 'absolute', right: 0, bottom: 0, width: 26, height: 26,
-          background: 'rgb(var(--paper-fold))',
-          clipPath: 'polygon(100% 0, 100% 100%, 0 100%)',
-          zIndex: 1,
+        background: 'rgb(var(--card))',
+        border: '1px solid rgb(var(--hairline) / 0.08)',
+        borderRadius: 12,
+        padding: '14px 14px 12px 18px',
+        boxShadow: 'var(--sh-1)',
+        '--pin-color': `var(--pin-${accent})`,
+      } as React.CSSProperties}>
+        {/* Status pill on the left edge — like desktop column accent */}
+        <span style={{
+          position: 'absolute', top: 12, bottom: 12, left: 6,
+          width: 3, borderRadius: 2,
+          background: `rgb(var(--pin-${accent}))`,
+          opacity: 0.7,
         }} />
-
-        {/* Card body */}
-        <div style={{
-          background: 'rgb(var(--paper))',
-          clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%)',
-          padding: '22px 14px 14px',
-        }}>
           {/* Source badge */}
           {(card.source === 'telegram' || card.ai_summarized || card.needs_review) && (
             <div style={{
@@ -630,7 +683,7 @@ function MobileNoteCard({
           {/* Footer */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            fontSize: 11.5, color: 'rgb(var(--ink-3))', paddingRight: 22,
+            fontSize: 11.5, color: 'rgb(var(--ink-3))',
           }}>
             <span>{relTime(card.updated_at)}</span>
             {assignees.length > 0 && (
@@ -644,7 +697,7 @@ function MobileNoteCard({
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 10, fontWeight: 600, color: 'white',
                       background: userColor(u.id),
-                      border: '2px solid rgb(var(--paper))',
+                      border: '2px solid rgb(var(--card))',
                       marginLeft: i > 0 ? -6 : 0,
                     }}
                   >
@@ -654,7 +707,6 @@ function MobileNoteCard({
               </div>
             )}
           </div>
-        </div>
       </div>
     </li>
   );
