@@ -36,7 +36,7 @@ function SystemEntry({ e }: { e: CardEvent }) {
       <time className="block text-1 text-ink-soft tracking-tight2" title={new Date(e.created_at).toLocaleString()}>
         {relativeTime(e.created_at)}
       </time>
-      <p className="text-2 text-ink tracking-tight2">
+      <p className="text-2 text-ink tracking-tight2" style={body ? { whiteSpace: 'pre-wrap' } : undefined}>
         <span className="font-medium">{e.actor_name ?? 'System'}</span>
         {body ? <>{': '}<span>{body}</span></> : <>{' '}<span>{e.action}</span></>}
       </p>
