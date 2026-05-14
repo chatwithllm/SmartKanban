@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import type { Card, CardEvent, User } from '../types.ts';
 import type { KnowledgeItem } from '../types.ts';
 import { api } from '../api.ts';
@@ -131,12 +132,15 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
   };
 
   return (
-    <div
+    <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
       style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }}
       onClick={onClose}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.16 }}
     >
-      <div
+      <motion.div
         className="w-full max-w-[560px] max-h-[90vh] overflow-y-auto flex flex-col"
         style={{
           background: 'rgb(var(--surface))',
@@ -145,6 +149,9 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
           border: '1px solid rgb(var(--hairline) / 0.08)',
         }}
         onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, y: 30, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 26 }}
       >
         {/* Header strip */}
         <div
@@ -475,7 +482,7 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
             Save
           </button>
         </div>
-      </div>
+      </motion.div>
       {chainOpen && card?.id && (
         <Suspense fallback={<div className="fixed inset-0 z-[60] flex items-center justify-center text-2 text-ink-rev bg-ink/60">Loading chain…</div>}>
           <CardChainModal
@@ -488,6 +495,6 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
           />
         </Suspense>
       )}
-    </div>
+    </motion.div>
   );
 }
