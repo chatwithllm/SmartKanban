@@ -26,6 +26,10 @@ function relativeTime(iso: string): string {
 }
 
 function SystemEntry({ e }: { e: CardEvent }) {
+  // External integrations (notetaker-kanban bridge, etc) post bodies into
+  // details.body. Show them inline so the timeline reads as a real comment
+  // instead of just "<actor> comment".
+  const body = typeof e.details?.body === 'string' ? (e.details.body as string) : null;
   return (
     <>
       <span className="absolute -left-[7px] top-1.5 h-3 w-3 rounded-full bg-green-accent" aria-hidden />
@@ -34,8 +38,7 @@ function SystemEntry({ e }: { e: CardEvent }) {
       </time>
       <p className="text-2 text-ink tracking-tight2">
         <span className="font-medium">{e.actor_name ?? 'System'}</span>
-        {' '}
-        <span>{e.action}</span>
+        {body ? <>{': '}<span>{body}</span></> : <>{' '}<span>{e.action}</span></>}
       </p>
     </>
   );
