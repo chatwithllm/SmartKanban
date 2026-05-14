@@ -158,7 +158,32 @@ export function EditDialog({ card, users, meId, incomingChatEvents, onSave, onCl
           className="flex items-center justify-between px-5 py-3 shrink-0"
           style={{ background: 'rgb(var(--violet))', borderRadius: '14px 14px 0 0' }}
         >
-          <span style={{ fontSize: 14, fontWeight: 600, color: 'white', fontFamily: 'Spectral, serif' }}>Edit card</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'white', fontFamily: 'Spectral, serif' }}>Edit card</span>
+            {card?.id && (
+              <button
+                type="button"
+                onClick={async () => {
+                  try { await navigator.clipboard.writeText(card.id); }
+                  catch { /* clipboard unavailable */ }
+                }}
+                title={`Copy card id ${card.id}`}
+                aria-label="Copy card id"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  background: 'rgba(255,255,255,0.14)',
+                  border: '1px solid rgba(255,255,255,0.18)',
+                  borderRadius: 999, padding: '2px 8px',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: 10, color: 'rgba(255,255,255,0.85)',
+                  cursor: 'pointer',
+                }}
+              >
+                <span>{card.id.slice(0, 8)}</span>
+                <span aria-hidden style={{ opacity: 0.7 }}>⎘</span>
+              </button>
+            )}
+          </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {card?.id && (
               <button
