@@ -1,5 +1,6 @@
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Card, User } from '../types.ts';
 import { CardView } from './CardView.tsx';
 import type { Status } from '../types.ts';
@@ -14,22 +15,16 @@ const LANE_ACCENT: Record<string, string> = {
 const LANE_LABEL: Record<string, string> = {
   backlog:     'Backlog',
   today:       'Today',
-  in_progress: 'In progress',
+  in_progress: 'In Progress',
   done:        'Done',
 };
 
 const EMPTY_MSG: Record<string, string> = {
-  backlog:     'Empty backlog.',
+  backlog:     'Nothing here yet.',
   today:       'Nothing planned for today.',
   in_progress: 'Quiet here.',
   done:        'Nothing finished yet.',
 };
-
-function stableHash(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i);
-  return Math.abs(h);
-}
 
 type Props = {
   status: Status;
@@ -42,26 +37,27 @@ type Props = {
   onDelete: (id: string) => void;
 };
 
-export function Column({ status, cards, users, unreadCounts, onCreate, onEdit, onDelete }: Props) {
+export function Column({ status, cards, users, unreadCounts, onCreate, onEdit }: Props) {
   const accent = LANE_ACCENT[status] ?? 'backlog';
   const { setNodeRef: setDropRef, isOver: isColumnOver } = useDroppable({ id: `column:${status}` });
 
   return (
-    <div
+    <motion.div
       className="lane"
-      style={{
-        '--lane-color': `var(--lane-${accent})`,
+      animate={{
         boxShadow: isColumnOver
-          ? '0 0 0 3px rgb(255 255 255 / 0.6), inset 0 0 0 1px rgb(0 0 0 / 0.06)'
-          : 'inset 0 0 0 1px rgb(0 0 0 / 0.06), inset 0 1px 0 rgb(255 255 255 / 0.18)',
-        transition: 'box-shadow 160ms ease',
-      } as React.CSSProperties}
+          ? '0 0 0 2px rgb(var(--pin-color) / 0.35), 0 0 0 6px rgb(var(--pin-color) / 0.08)'
+          : '0 0 0 0px rgb(var(--pin-color) / 0)',
+      }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+      style={{ '--pin-color': `var(--pin-${accent})` } as React.CSSProperties}
     >
       {/* Header */}
       <div className="lane-header">
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+        <div className="lane-header-row">
+          <span className="lane-dot" aria-hidden style={{ background: `rgb(var(--pin-${accent}))` }} />
           <span className="lane-title">{LANE_LABEL[status]}</span>
-          <span className="lane-count">{cards.length}</span>
+          <span className="lane-count">{String(cards.length).padStart(2, '0')}</span>
         </div>
         <button
           className="lane-add"
@@ -87,90 +83,135 @@ export function Column({ status, cards, users, unreadCounts, onCreate, onEdit, o
           ))}
         </SortableContext>
 
-        {cards.length === 0 && (
-          <div style={{
-            border: '1.5px dashed rgb(255 255 255 / 0.45)',
-            borderRadius: 10,
-            padding: '28px 12px',
-            textAlign: 'center',
-            fontSize: 12.5,
-            color: 'rgb(255 255 255 / 0.78)',
-            fontFamily: 'Spectral, serif',
-            fontStyle: 'italic',
-          }}>
-            {EMPTY_MSG[status] ?? 'Nothing here.'}
-          </div>
-        )}
+        <AnimatePresence>
+          {cards.length === 0 && (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.25 }}
+              className="lane-empty"
+            >
+              {EMPTY_MSG[status] ?? 'Nothing here.'}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <style>{`
         .lane {
-          background: rgb(var(--lane-color));
-          border-radius: 14px;
-          padding: 18px 14px 14px;
+          background: transparent;
+          padding: 4px 8px 14px;
           display: flex;
           flex-direction: column;
           min-height: 380px;
           max-height: calc(100vh - 105px);
           position: relative;
+          border-radius: 14px;
+          isolation: isolate;
         }
+        /* Subtle column bloom — tinted glow behind each lane */
         .lane::before {
           content: "";
-          position: absolute; inset: 0;
-          border-radius: inherit;
-          background-image:
-            radial-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px),
-            radial-gradient(rgb(0 0 0 / 0.04) 1px, transparent 1px);
-          background-size: 22px 22px, 14px 14px;
-          background-position: 0 0, 7px 7px;
+          position: absolute;
+          inset: -8px -4px auto -4px;
+          height: 140px;
           pointer-events: none;
-          opacity: 0.6;
+          z-index: -1;
+          background: radial-gradient(
+            ellipse 70% 100% at 50% 0%,
+            rgb(var(--pin-color) / 0.08),
+            transparent 70%
+          );
+          border-radius: 14px;
+          opacity: 0.85;
         }
-        [data-theme="dark"] .lane::before { opacity: 0.4; }
         .lane-header {
-          display: flex; align-items: baseline; justify-content: space-between;
-          padding: 0 4px 12px;
-          position: relative; z-index: 1;
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 4px 6px 14px;
+          margin-bottom: 10px;
+          position: relative;
+        }
+        .lane-header::after {
+          content: "";
+          position: absolute;
+          left: 6px; right: 6px; bottom: 0;
+          height: 1px;
+          background: linear-gradient(
+            to right,
+            rgb(var(--pin-color) / 0.28),
+            rgb(var(--hairline) / 0.06) 40%,
+            transparent 100%
+          );
+        }
+        .lane-header-row {
+          display: flex; align-items: center; gap: 10px;
+        }
+        .lane-dot {
+          display: inline-block;
+          width: 8px; height: 8px;
+          border-radius: 9999px;
+          flex-shrink: 0;
+          box-shadow: 0 0 0 3px rgb(var(--pin-color) / 0.12);
         }
         .lane-title {
-          font-family: 'Spectral', serif;
-          font-weight: 600;
-          font-size: 22px;
-          color: rgb(255 255 255 / 0.96);
-          letter-spacing: -0.01em;
-          text-shadow: 0 1px 0 rgb(0 0 0 / 0.08);
+          font-family: 'Spectral', 'Iowan Old Style', Georgia, serif;
+          font-weight: 500;
+          font-size: 18px;
+          color: rgb(var(--ink));
+          letter-spacing: -0.012em;
         }
         .lane-count {
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 12px;
-          color: rgb(255 255 255 / 0.78);
-          background: rgb(0 0 0 / 0.14);
-          padding: 2px 8px;
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          font-weight: 500;
+          font-size: 10.5px;
+          color: rgb(var(--ink-3));
+          background: rgb(var(--hairline) / 0.05);
+          border: 1px solid rgb(var(--hairline) / 0.07);
+          padding: 2px 7px;
           border-radius: 999px;
+          letter-spacing: 0.04em;
+          font-feature-settings: 'tnum' 1;
+          line-height: 1;
         }
         .lane-add {
-          background: rgb(255 255 255 / 0.18);
-          color: rgb(255 255 255 / 0.95);
-          border-radius: 999px;
-          width: 26px; height: 26px;
+          background: transparent;
+          color: rgb(var(--ink-3));
+          border-radius: 9999px;
+          width: 24px; height: 24px;
           display: inline-flex; align-items: center; justify-content: center;
           border: none; cursor: pointer;
           font-size: 18px; line-height: 1;
-          transition: background 120ms ease, transform 80ms ease;
+          font-weight: 300;
+          transition: color 120ms ease, background 120ms ease, transform 120ms ease;
         }
-        .lane-add:hover { background: rgb(255 255 255 / 0.28); }
-        .lane-add:active { transform: scale(0.95); }
+        .lane-add:hover { color: rgb(var(--ink)); background: rgb(var(--hairline) / 0.06); transform: rotate(90deg); }
         .lane-body {
           flex: 1; overflow-y: auto;
           overflow-x: visible;
-          padding: 8px 4px 6px;
-          position: relative; z-index: 1;
+          padding: 8px 6px 10px;
           display: flex; flex-direction: column;
-          gap: 18px;
+          gap: 10px;
+          background: rgb(var(--hairline) / 0.015);
+          border-radius: 12px;
+          box-shadow: inset 0 0 0 1px rgb(var(--hairline) / 0.04);
         }
-        .lane-body::-webkit-scrollbar-thumb { background: rgb(0 0 0 / 0.18); }
+        [data-theme="dark"] .lane-body {
+          background: rgb(var(--hairline) / 0.025);
+          box-shadow: inset 0 0 0 1px rgb(var(--hairline) / 0.06);
+        }
+        .lane-empty {
+          padding: 32px 12px;
+          text-align: center;
+          font-size: 13px;
+          color: rgb(var(--ink-3));
+          font-family: 'Spectral', serif;
+          font-style: italic;
+          font-weight: 400;
+        }
       `}</style>
-    </div>
+    </motion.div>
   );
 }
 
@@ -179,7 +220,6 @@ function SortableCard({ card, users, unreadCount, onEdit }: {
   onEdit: (card: Card) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({ id: card.id });
-  const rotation = (stableHash(card.id) % 9 - 4) * 0.18;
 
   return (
     <div
@@ -188,8 +228,8 @@ function SortableCard({ card, users, unreadCount, onEdit }: {
       {...listeners}
       style={{
         transform: transform
-          ? `translate(${transform.x}px, ${transform.y}px) rotate(${rotation}deg)`
-          : `rotate(${rotation}deg)`,
+          ? `translate(${transform.x}px, ${transform.y}px)`
+          : undefined,
         transition: isDragging ? 'none' : 'transform 200ms ease',
         touchAction: 'none',
       }}

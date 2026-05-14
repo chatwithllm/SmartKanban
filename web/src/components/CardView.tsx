@@ -1,5 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { motion, useReducedMotion } from 'framer-motion';
 import type { Card, User } from '../types.ts';
 import { getCachedLatest } from '../hooks/useInsights.ts';
 
@@ -15,6 +16,9 @@ function stableHash(s: string): number {
   for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i);
   return Math.abs(h);
 }
+
+// Premium: single neutral tag chip (no rainbow)
+const NEUTRAL_TAG = { bg: 'rgb(var(--ceramic))', fg: 'rgb(var(--ink-2))' };
 
 function relTime(iso: string): string {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -52,9 +56,9 @@ type Props = {
 export function CardView({ card, users = [], unreadCount = 0, onClick, dragging, compact }: Props) {
   const sortable = useSortable({ id: card.id, data: { status: card.status } });
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = sortable;
+  const reduce = useReducedMotion();
 
   const accent = STATUS_ACCENT[card.status] ?? 'backlog';
-  const rotation = (stableHash(card.id) % 9 - 4) * 0.18;
   const due = formatDue(card.due_date);
   const assignees = card.assignees
     .map(id => users.find(u => u.id === id))
@@ -71,19 +75,23 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, dragging,
       {...attributes}
       {...listeners}
     >
-      <div
+      <motion.div
+        initial={reduce ? false : { opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={reduce ? undefined : { y: -2 }}
+        whileTap={reduce ? undefined : { scale: 0.99 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 28, mass: 0.5 }}
         className="note-wrap"
-        style={{ '--pin-color': `var(--pin-${accent})`, transform: `rotate(${rotation}deg)` } as React.CSSProperties}
+        style={{ '--accent-color': `var(--pin-${accent})` } as React.CSSProperties}
         onClick={onClick}
       >
-        {/* Pushpin */}
-        <span className="pin" aria-hidden="true">
-          <span className="pin-head" />
-          <span className="pin-needle" />
-        </span>
-
         {/* Card body */}
-        <div className="note" style={{ opacity: isDragging || dragging ? 0.4 : 1 }}>
+        <div className="note" style={{ opacity: isDragging || dragging ? 0.4 : 1, position: 'relative' }}>{/* status accent bar */}
+          <span aria-hidden className="note-accent" style={{ background: `rgb(var(--pin-${accent}))` }} />
+          {/* status-tinted gradient bloom — subtle premium tone */}
+          <span aria-hidden className="note-bloom" style={{
+            background: `linear-gradient(135deg, rgb(var(--pin-${accent}) / 0.07) 0%, rgb(var(--pin-${accent}) / 0.02) 32%, transparent 65%)`,
+          }} />
           {/* Source row */}
           {(card.source === 'telegram' || card.ai_summarized || card.needs_review || insightLatest?.status === 'pending' || insightLatest?.status === 'ok') && (
             <div className="note-source">
@@ -127,18 +135,21 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, dragging,
             </p>
           )}
 
-          {/* Tags */}
+          {/* Tags — neutral chip */}
           {card.tags.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 10 }}>
               {card.tags.map(t => (
-                <span key={t} style={{
-                  display: 'inline-flex', alignItems: 'center',
-                  fontSize: 11, fontWeight: 500, lineHeight: 1,
-                  padding: '4px 8px', borderRadius: 999,
-                  background: 'rgb(var(--surface-2, 246 245 242))',
-                  color: 'rgb(var(--ink-2))',
-                  border: '1px solid rgb(var(--hairline) / 0.08)',
-                }}>
+                <span
+                  key={t}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center',
+                    fontSize: 11, fontWeight: 500, lineHeight: 1,
+                    padding: '3px 8px', borderRadius: 4,
+                    background: NEUTRAL_TAG.bg,
+                    color: NEUTRAL_TAG.fg,
+                    letterSpacing: '-0.005em',
+                  }}
+                >
                   {t}
                 </span>
               ))}
@@ -153,17 +164,31 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, dragging,
             paddingRight: 22,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              {due && (
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 3,
-                  color: due.tone === 'overdue' ? 'rgb(var(--danger))'
-                       : due.tone === 'today' ? 'rgb(var(--violet))'
-                       : 'rgb(var(--ink-3))',
-                  fontWeight: due.tone === 'overdue' || due.tone === 'today' ? 600 : 500,
-                }}>
-                  {due.tone === 'overdue' ? '🔥' : '📅'} {due.label}
-                </span>
-              )}
+              {due && (() => {
+                const styles = {
+                  overdue: { fg: 'rgb(var(--danger))', dot: 'rgb(var(--danger))', weight: 600 },
+                  today:   { fg: 'rgb(var(--ink))',     dot: 'rgb(var(--violet))', weight: 600 },
+                  soon:    { fg: 'rgb(var(--ink-2))',   dot: 'rgb(var(--gold))',   weight: 500 },
+                  future:  { fg: 'rgb(var(--ink-3))',   dot: 'rgb(var(--ink-3))',  weight: 500 },
+                } as const;
+                const s = styles[due.tone];
+                return (
+                  <span
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      color: s.fg,
+                      fontWeight: s.weight, fontSize: 11,
+                    }}
+                  >
+                    <span aria-hidden style={{
+                      width: 6, height: 6, borderRadius: 9999,
+                      background: s.dot,
+                      display: 'inline-block',
+                    }} />
+                    {due.label}
+                  </span>
+                );
+              })()}
               {card.attachments.some(a => a.kind !== 'image') && (
                 <span>📎 {card.attachments.filter(a => a.kind !== 'image').length}</span>
               )}
@@ -251,64 +276,61 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, dragging,
           .note-wrap {
             position: relative;
             cursor: pointer;
-            filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.10)) drop-shadow(0 14px 24px rgb(0 0 0 / 0.06));
-            transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
-          }
-          .note-wrap:hover { filter: drop-shadow(0 8px 18px rgb(0 0 0 / 0.16)) drop-shadow(0 16px 28px rgb(0 0 0 / 0.08)); transform: translateY(-2px) rotate(var(--note-rot, 0deg)); }
-          [data-theme="dark"] .note-wrap {
-            filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.45)) drop-shadow(0 14px 24px rgb(0 0 0 / 0.35));
-          }
-          .note-wrap::before {
-            content: "";
-            position: absolute;
-            right: 0; bottom: 0;
-            width: 26px; height: 26px;
-            background: rgb(var(--paper-fold));
-            clip-path: polygon(100% 0, 100% 100%, 0 100%);
-            z-index: 1;
           }
           .note {
             position: relative;
-            background: rgb(var(--paper));
-            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%);
-            padding: 22px 14px 14px;
-          }
-          .pin {
-            display: block;
-            position: absolute;
-            top: -10px; left: 16px;
-            width: 22px; height: 22px;
-            z-index: 3;
-          }
-          .pin-head {
-            display: block;
-            width: 20px; height: 20px;
-            border-radius: 50%;
-            background: rgb(var(--pin-color));
-            margin: 0 auto;
+            background: rgb(var(--surface));
+            border: 1px solid rgb(var(--hairline) / 0.06);
+            border-radius: 10px;
+            padding: 14px 14px 12px;
             box-shadow:
-              inset -3px -4px 0 rgb(0 0 0 / 0.18),
-              inset 3px 3px 0 rgb(255 255 255 / 0.28),
-              0 2px 4px rgb(0 0 0 / 0.35),
-              0 0 0 1px rgb(0 0 0 / 0.18);
-            position: relative;
+              0 1px 0 rgb(var(--hairline) / 0.04),
+              0 1px 2px rgb(var(--hairline) / 0.06),
+              0 6px 16px rgb(var(--hairline) / 0.04);
+            transition: box-shadow 200ms ease, border-color 200ms ease;
+            overflow: hidden;
           }
-          .pin-head::after {
-            content: "";
+          .note-wrap:hover .note {
+            border-color: rgb(var(--accent-color) / 0.22);
+            box-shadow:
+              0 0 0 1px rgb(var(--accent-color) / 0.10),
+              0 1px 0 rgb(var(--hairline) / 0.05),
+              0 4px 10px rgb(var(--hairline) / 0.08),
+              0 14px 32px rgb(var(--accent-color) / 0.12);
+          }
+          .note-wrap:hover .note-bloom { opacity: 1.15; }
+          [data-theme="dark"] .note {
+            background: rgb(var(--surface));
+            border-color: rgb(var(--hairline) / 0.12);
+            box-shadow:
+              0 1px 2px rgb(0 0 0 / 0.4),
+              0 6px 16px rgb(0 0 0 / 0.25);
+          }
+          [data-theme="dark"] .note-wrap:hover .note {
+            border-color: rgb(var(--accent-color) / 0.45);
+            box-shadow:
+              0 0 0 1px rgb(var(--accent-color) / 0.20),
+              0 4px 14px rgb(0 0 0 / 0.5),
+              0 18px 36px rgb(var(--accent-color) / 0.18);
+          }
+          .note-accent {
             position: absolute;
-            top: 3px; left: 4px;
-            width: 6px; height: 5px;
-            border-radius: 50%;
-            background: rgb(255 255 255 / 0.7);
-            filter: blur(0.5px);
+            left: 0; top: 0; bottom: 0;
+            width: 3px;
+            opacity: 0.85;
+            z-index: 1;
           }
-          .pin-needle {
-            display: block;
-            width: 3px; height: 5px;
-            background: rgb(60 50 40);
-            margin: -3px auto 0;
-            border-radius: 0 0 2px 2px;
-            box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+          .note-bloom {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 220ms ease;
+            border-radius: inherit;
+          }
+          .note > *:not(.note-accent):not(.note-bloom) {
+            position: relative;
+            z-index: 1;
           }
           .note-source {
             display: inline-flex; align-items: center; gap: 4px;
@@ -328,7 +350,7 @@ export function CardView({ card, users = [], unreadCount = 0, onClick, dragging,
             margin-bottom: 8px;
           }
         `}</style>
-      </div>
+      </motion.div>
     </div>
   );
 }

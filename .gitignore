@@ -27,3 +27,5 @@ logs/security/
 # notetaker-kanban bridge buffer/state — generated per-clone, never commit
 .kanban/
 docker-compose.override.yml
+.claude/
+design_*.md
