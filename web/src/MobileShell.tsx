@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from './api.ts';
 import type { Card, Scope, Status, User } from './types.ts';
 import { STATUSES, STATUS_LABELS } from './types.ts';
@@ -53,6 +53,17 @@ function userColor(id: string): string {
   return colors[Math.abs(h) % colors.length]!;
 }
 
+function modeButtonStyle(): React.CSSProperties {
+  return {
+    display: 'inline-flex', alignItems: 'center', gap: 4,
+    background: 'rgb(var(--hairline) / 0.04)',
+    border: '1px solid rgb(var(--hairline) / 0.08)',
+    borderRadius: 999, padding: '4px 10px',
+    fontSize: 11, color: 'rgb(var(--ink-2))', cursor: 'pointer',
+    fontFamily: 'Inter, sans-serif',
+  };
+}
+
 function relTime(iso: string): string {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
   if (diff < 60) return 'just now';
@@ -70,6 +81,13 @@ export function MobileShell({ meId }: { meId: string }) {
   const [actionsCard, setActionsCard] = useState<Card | null>(null);
   const [draft, setDraft] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  // Lane picker can serve two intents: pick the visible lane ('view') or pick
+  // the target lane for the next capture ('target').
+  const [lanePicker, setLanePicker] = useState<'view' | 'target' | null>(null);
+  const [captureTarget, setCaptureTarget] = useState<Status>('today');
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const swipeStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const [installDismissed, setInstallDismissed] = useState(
     () => typeof localStorage !== 'undefined' && !!localStorage.getItem('install-dismissed'),
   );
@@ -91,6 +109,12 @@ export function MobileShell({ meId }: { meId: string }) {
   useEffect(() => {
     api.listCards(scope).then(setCards).catch((e) => addToast(`Load failed: ${e}`, 'error'));
   }, [scope]);
+
+  // Keep capture target in sync with the lane the user is viewing, unless
+  // they have explicitly picked a different target via the chip.
+  useEffect(() => {
+    setCaptureTarget(activeStatus);
+  }, [activeStatus]);
   useEffect(() => {
     api.users().then(setUsers).catch(() => {});
   }, []);
@@ -162,18 +186,65 @@ export function MobileShell({ meId }: { meId: string }) {
       const name = t.slice(1);
       const tpl = templates.find((tt) => tt.name.toLowerCase() === name.toLowerCase());
       if (tpl) {
-        try { await api.instantiateTemplate(tpl.id, { status_override: activeStatus }); }
+        try { await api.instantiateTemplate(tpl.id, { status_override: captureTarget }); }
         catch (e) { addToast(`Template failed: ${e instanceof Error ? e.message : 'error'}`, 'error'); }
         return;
       }
     }
     try {
-      const created = await api.createCard({ title: t, status: activeStatus });
+      const created = await api.createCard({ title: t, status: captureTarget });
       setCards((prev) => prev.some((c) => c.id === created.id) ? prev : [...prev, created]);
-      addToast('Card created', 'success');
+      addToast(`Created in ${STATUS_LABELS[captureTarget]}`, 'success');
     } catch (e) {
       addToast(`Failed: ${e instanceof Error ? e.message : 'error'}`, 'error');
     }
+  };
+
+  const onPickPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow picking same file twice in a row
+    if (!file) return;
+    try {
+      const created = await api.createCardFromImage(file, captureTarget);
+      setCards((prev) => prev.some((c) => c.id === created.id) ? prev : [...prev, created]);
+      addToast(`Photo card in ${STATUS_LABELS[captureTarget]}`, 'success');
+    } catch (err) {
+      addToast(`Photo failed: ${err instanceof Error ? err.message : 'error'}`, 'error');
+    }
+  };
+
+  const onPickTemplate = async (templateId: string) => {
+    setTemplatePickerOpen(false);
+    try {
+      await api.instantiateTemplate(templateId, { status_override: captureTarget });
+      addToast(`Template added to ${STATUS_LABELS[captureTarget]}`, 'success');
+    } catch (err) {
+      addToast(`Template failed: ${err instanceof Error ? err.message : 'error'}`, 'error');
+    }
+  };
+
+  // Lateral swipe on the card list cycles through lanes. Horizontal-dominant
+  // gestures only; vertical scroll passes through. ~30px threshold avoids
+  // accidental swipes on long-press flows.
+  const onSwipeStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    if (!t) return;
+    swipeStartRef.current = { x: t.clientX, y: t.clientY, t: Date.now() };
+  };
+  const onSwipeEnd = (e: React.TouchEvent) => {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start) return;
+    const end = e.changedTouches[0];
+    if (!end) return;
+    const dx = end.clientX - start.x;
+    const dy = end.clientY - start.y;
+    const dt = Date.now() - start.t;
+    if (dt > 600) return;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const idx = STATUSES.indexOf(activeStatus);
+    const next = dx < 0 ? STATUSES[idx + 1] : STATUSES[idx - 1];
+    if (next) setActiveStatus(next);
   };
 
   const handleMove = async (status: Status) => {
@@ -315,11 +386,18 @@ export function MobileShell({ meId }: { meId: string }) {
               )}
             </div>
 
-            {/* Large status title */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: '6px 16px 12px' }}>
+            {/* Large status title — tap to open lane picker */}
+            <button
+              type="button"
+              onClick={() => setLanePicker('view')}
+              style={{
+                display: 'flex', alignItems: 'baseline', gap: 10, padding: '6px 16px 12px',
+                background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
+              }}
+            >
               <h1 style={{
                 fontSize: 42, fontWeight: 700, lineHeight: 1.05,
-                color: 'rgba(255,255,255,0.96)',
+                color: 'rgba(255,255,255,0.96)', margin: 0,
                 fontFamily: 'Spectral, serif', letterSpacing: '-0.02em',
               }}>
                 {STATUS_LABELS[activeStatus]}
@@ -330,7 +408,10 @@ export function MobileShell({ meId }: { meId: string }) {
               }}>
                 {counts[activeStatus]}
               </span>
-            </div>
+              <span aria-hidden style={{
+                fontSize: 14, color: 'rgba(255,255,255,0.55)', marginLeft: 4,
+              }}>▾</span>
+            </button>
 
             {/* Status tabs */}
             <div style={{
@@ -379,8 +460,12 @@ export function MobileShell({ meId }: { meId: string }) {
             />
           </div>
 
-          {/* ── Card list ── */}
-          <ul style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '16px 12px', listStyle: 'none', margin: 0 }}>
+          {/* ── Card list (swipe left/right to cycle lanes) ── */}
+          <ul
+            onTouchStart={onSwipeStart}
+            onTouchEnd={onSwipeEnd}
+            style={{ display: 'flex', flexDirection: 'column', gap: 18, padding: '16px 12px', listStyle: 'none', margin: 0 }}
+          >
             {filtered.length === 0 && (
               <li style={{
                 padding: '40px 0', textAlign: 'center',
@@ -453,36 +538,195 @@ export function MobileShell({ meId }: { meId: string }) {
           background: 'rgb(var(--surface))',
           borderTop: '1px solid rgb(var(--hairline) / 0.08)',
           padding: '8px 12px',
-          display: 'flex', alignItems: 'center', gap: 8,
+          display: 'flex', flexDirection: 'column', gap: 6,
         }}>
-          <span style={{ fontSize: 18, opacity: 0.45, flexShrink: 0 }}>🤖</span>
+          {/* Hidden file input — triggered by the camera button */}
           <input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') submitCreate(); }}
-            placeholder="Capture as card…"
-            style={{
-              flex: 1, background: 'transparent', border: 'none', outline: 'none',
-              fontSize: 14, color: 'rgb(var(--ink))', fontFamily: 'Inter, sans-serif',
-            }}
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={onPickPhoto}
+            style={{ display: 'none' }}
           />
-          <button
-            aria-label="Voice input"
-            style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', opacity: 0.5, padding: '0 2px', flexShrink: 0 }}
-          >
-            🎙️
-          </button>
-          <button
-            onClick={submitCreate}
+
+          {/* Target lane chip + draft input + send */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => setLanePicker('target')}
+              aria-label="Pick target lane"
+              style={{
+                flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: 'rgb(var(--hairline) / 0.06)', border: '1px solid rgb(var(--hairline) / 0.12)',
+                borderRadius: 999, padding: '4px 10px 4px 6px',
+                fontSize: 12, fontWeight: 500, color: 'rgb(var(--ink-2))', cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif',
+              }}
+            >
+              <span style={{
+                display: 'inline-block', width: 10, height: 10, borderRadius: 999,
+                background: LANE_BG[captureTarget],
+              }} />
+              <span>{STATUS_LABELS[captureTarget]}</span>
+              <span aria-hidden style={{ fontSize: 9, opacity: 0.6 }}>▾</span>
+            </button>
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') submitCreate(); }}
+              placeholder="Capture as card…"
+              style={{
+                flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                fontSize: 14, color: 'rgb(var(--ink))', fontFamily: 'Inter, sans-serif',
+              }}
+            />
+            <button
+              onClick={submitCreate}
+              aria-label="Send"
+              style={{
+                flexShrink: 0, width: 36, height: 36, borderRadius: 999,
+                background: draft.trim() ? 'rgb(var(--violet))' : 'rgb(var(--hairline) / 0.12)',
+                color: draft.trim() ? 'white' : 'rgb(var(--ink-3))',
+                border: 'none', cursor: 'pointer', fontSize: 16,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'background 150ms ease, color 150ms ease',
+              }}
+            >
+              →
+            </button>
+          </div>
+
+          {/* Mode row: photo / template / voice (voice = stub for now) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              aria-label="Add photo"
+              style={modeButtonStyle()}
+            >
+              <span>📷</span>
+              <span>Photo</span>
+            </button>
+            {templates.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setTemplatePickerOpen((v) => !v)}
+                aria-label="Pick template"
+                style={modeButtonStyle()}
+              >
+                <span>✱</span>
+                <span>Template</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => addToast('Voice capture coming soon', 'info')}
+              aria-label="Voice (coming soon)"
+              style={{ ...modeButtonStyle(), opacity: 0.4 }}
+            >
+              <span>🎙️</span>
+              <span>Voice</span>
+            </button>
+          </div>
+
+          {/* Template popover */}
+          {templatePickerOpen && (
+            <div
+              onClick={() => setTemplatePickerOpen(false)}
+              style={{
+                position: 'fixed', inset: 0, zIndex: 60, background: 'rgb(0 0 0 / 0.35)',
+                display: 'flex', alignItems: 'flex-end',
+              }}
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: 'rgb(var(--surface))', width: '100%',
+                  borderTopLeftRadius: 16, borderTopRightRadius: 16,
+                  padding: '14px 12px calc(20px + env(safe-area-inset-bottom))',
+                  maxHeight: '60vh', overflowY: 'auto',
+                  boxShadow: 'var(--sh-3)',
+                }}
+              >
+                <div style={{ padding: '0 4px 10px', fontSize: 12, fontWeight: 600, color: 'rgb(var(--ink-3))', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Templates → {STATUS_LABELS[captureTarget]}
+                </div>
+                {templates.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    type="button"
+                    onClick={() => onPickTemplate(tpl.id)}
+                    style={{
+                      display: 'block', width: '100%', textAlign: 'left',
+                      padding: '12px 14px', borderRadius: 10,
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontSize: 14, color: 'rgb(var(--ink))', fontFamily: 'Inter, sans-serif',
+                    }}
+                  >
+                    {tpl.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Lane picker sheet (used for both view-switch and capture-target) ── */}
+      {lanePicker && (
+        <div
+          onClick={() => setLanePicker(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 70, background: 'rgb(0 0 0 / 0.4)',
+            display: 'flex', alignItems: 'flex-end',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
             style={{
-              flexShrink: 0, width: 36, height: 36, borderRadius: 999,
-              background: 'rgb(var(--violet))', color: 'white',
-              border: 'none', cursor: 'pointer', fontSize: 16,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgb(var(--surface))', width: '100%',
+              borderTopLeftRadius: 18, borderTopRightRadius: 18,
+              padding: '18px 12px calc(20px + env(safe-area-inset-bottom))',
+              boxShadow: 'var(--sh-3)',
             }}
           >
-            →
-          </button>
+            <div style={{ padding: '0 6px 12px', fontSize: 12, fontWeight: 600, color: 'rgb(var(--ink-3))', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              {lanePicker === 'target' ? 'Save next card to…' : 'Show lane…'}
+            </div>
+            {STATUSES.map((s) => {
+              const active = (lanePicker === 'target' ? captureTarget : activeStatus) === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => {
+                    if (lanePicker === 'target') setCaptureTarget(s);
+                    else setActiveStatus(s);
+                    setLanePicker(null);
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left',
+                    padding: '14px 14px', borderRadius: 12, margin: '2px 0',
+                    background: active ? 'rgb(var(--hairline) / 0.06)' : 'none',
+                    border: '1px solid ' + (active ? 'rgb(var(--hairline) / 0.12)' : 'transparent'),
+                    cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block', width: 14, height: 14, borderRadius: 999,
+                    background: LANE_BG[s],
+                  }} />
+                  <span style={{ flex: 1, fontSize: 15, fontWeight: active ? 600 : 500, color: 'rgb(var(--ink))' }}>
+                    {STATUS_LABELS[s]}
+                  </span>
+                  <span style={{ fontSize: 13, color: 'rgb(var(--ink-3))', fontFamily: 'JetBrains Mono, monospace' }}>
+                    {counts[s]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
