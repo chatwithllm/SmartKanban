@@ -24,6 +24,8 @@ import { MobileShell } from './MobileShell.tsx';
 import { useIsMobile } from './hooks/useIsMobile.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { NotificationBell } from './components/NotificationBell.tsx';
+import { CaptureBar } from './components/CaptureBar.tsx';
+import { STATUSES } from './types.ts';
 
 export function App() {
   const { user, loading } = useAuth();
@@ -72,6 +74,7 @@ function Authed({ meId }: { meId: string }) {
   const [scope, setScope] = useState<Scope>('personal');
   const [searchQuery, setSearchQuery] = useState('');
   const [editing, setEditing] = useState<Card | null>(null);
+  const [captureOpen, setCaptureOpen] = useState<{ status: Status } | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
@@ -103,8 +106,19 @@ function Authed({ meId }: { meId: string }) {
     if (settingsOpen) setSettingsOpen(false);
     else if (archiveOpen) { setArchiveOpen(false); setSection('board'); }
     else if (reviewOpen) setReviewOpen(false);
+    else if (captureOpen) setCaptureOpen(null);
     else if (editing) setEditing(null);
-  }, [editing, reviewOpen, archiveOpen, settingsOpen]);
+  }, [editing, reviewOpen, archiveOpen, settingsOpen, captureOpen]);
+
+  // Listen for FAB / keyboard-shortcut requests to open the capture modal.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ status?: Status }>).detail ?? {};
+      setCaptureOpen({ status: detail.status ?? 'today' });
+    };
+    window.addEventListener('kanban:add-card', handler);
+    return () => window.removeEventListener('kanban:add-card', handler);
+  }, []);
 
   useKeyboardShortcuts({
     searchQuery,
@@ -266,6 +280,30 @@ function Authed({ meId }: { meId: string }) {
     }
   };
 
+  const handleCreateFromImage = async (file: File, status: Status) => {
+    try {
+      const created = await api.createCardFromImage(file, status);
+      setCards((prev) =>
+        prev.some((c) => c.id === created.id) ? prev : [...prev, created],
+      );
+      addToast(
+        `Card created from screenshot${created.ai_summarized ? ' (AI titled)' : ''}`,
+        'success',
+      );
+    } catch (e) {
+      addToast(`Photo failed: ${e instanceof Error ? e.message : 'error'}`, 'error');
+    }
+  };
+
+  const handleInstantiateTemplate = async (templateId: string, status: Status) => {
+    try {
+      await api.instantiateTemplate(templateId, { status_override: status });
+      addToast('Template added', 'success');
+    } catch (e) {
+      addToast(`Template failed: ${e instanceof Error ? e.message : 'error'}`, 'error');
+    }
+  };
+
   const handleDelete = async (id: string) => {
     setCards((prev) => prev.filter((c) => c.id !== id));
     try {
@@ -356,7 +394,7 @@ function Authed({ meId }: { meId: string }) {
   }, [cards, searchQuery, searchActive]);
 
   return (
-    <div className="min-h-full p-4">
+    <div className="min-h-full p-4" style={{ position: 'relative' }}>
       <BoardHeader
         scope={scope}
         onScope={(s) => { setScope(s); setSearchQuery(''); }}
@@ -429,6 +467,44 @@ function Authed({ meId }: { meId: string }) {
         />
       )}
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
+      {captureOpen && (
+        <div
+          onClick={() => setCaptureOpen(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            background: 'rgb(0 0 0 / 0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 24,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: '100%', maxWidth: 560 }}
+          >
+            <CaptureBar
+              initialStatus={captureOpen.status}
+              counts={STATUSES.reduce(
+                (acc, s) => ({ ...acc, [s]: cards.filter((c) => !c.archived && c.status === s).length }),
+                {} as Record<Status, number>,
+              )}
+              autoFocus
+              onCreate={async (title, status) => {
+                await handleCreate(title, status);
+                setCaptureOpen(null);
+              }}
+              onCreateFromImage={async (file, status) => {
+                await handleCreateFromImage(file, status);
+                setCaptureOpen(null);
+              }}
+              onInstantiateTemplate={async (id, status) => {
+                await handleInstantiateTemplate(id, status);
+                setCaptureOpen(null);
+              }}
+              onVoiceTodo={() => addToast('Voice capture coming soon')}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
