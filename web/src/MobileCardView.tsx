@@ -135,6 +135,27 @@ export function MobileCardView({ cardId }: Props) {
       <header className="sticky top-0 z-10 -mx-3 mb-3 flex items-center gap-3 bg-card px-3 py-2 shadow-app-bar">
         <a href="/" className="text-ink-soft hover:text-ink text-xl">←</a>
         <h1 className="flex-1 truncate text-3 font-semibold text-ink tracking-tight2">{card.title || 'Untitled'}</h1>
+        <button
+          type="button"
+          onClick={async () => {
+            try { await navigator.clipboard.writeText(card.id); }
+            catch { /* clipboard unavailable on http */ }
+          }}
+          title={`Copy card id ${card.id}`}
+          aria-label="Copy card id"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            background: 'rgb(var(--hairline) / 0.06)',
+            border: '1px solid rgb(var(--hairline) / 0.10)',
+            borderRadius: 999, padding: '2px 8px',
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: 10, color: 'rgb(var(--ink-2))',
+            cursor: 'pointer', flexShrink: 0,
+          }}
+        >
+          <span>{card.id.slice(0, 8)}</span>
+          <span aria-hidden style={{ opacity: 0.7 }}>⎘</span>
+        </button>
         {busy && <span className="text-1 text-ink-soft tracking-tight2">saving…</span>}
       </header>
 
