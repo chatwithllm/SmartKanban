@@ -32,6 +32,14 @@ const LANE_BG: Record<Status, string> = {
   done:        'rgb(var(--lane-done))',
 };
 
+// Matches Column.tsx — used for the status dot before the lane title.
+const LANE_ACCENT: Record<Status, string> = {
+  backlog:     'backlog',
+  today:       'today',
+  in_progress: 'doing',
+  done:        'done',
+};
+
 const EMPTY_MSG: Record<Status, string> = {
   backlog:     'Empty backlog.',
   today:       'Nothing planned for today.',
@@ -302,25 +310,25 @@ export function MobileShell({ meId }: { meId: string }) {
 
       {tab === 'board' && (
         <>
-          {/* ── Lane-colored header ── */}
+          {/* ── Header: dark canvas like desktop, no per-lane color flood ── */}
           <header
             className="sticky top-0 z-10"
-            style={{ background: LANE_BG[activeStatus], transition: 'background 350ms ease' }}
+            style={{ background: 'rgb(var(--canvas))', transition: 'background 200ms ease' }}
           >
-            {/* Top bar: date + scope + avatar */}
+            {/* Top bar: date + weather + scope + avatar */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px 0' }}>
               <span style={{
                 fontSize: 11, fontWeight: 600, letterSpacing: '0.06em',
-                color: 'rgba(255,255,255,0.7)', fontFamily: 'JetBrains Mono, monospace',
+                color: 'rgb(var(--ink-3))', fontFamily: 'JetBrains Mono, monospace',
               }}>
                 {formatDate()}
               </span>
               {weather && (
                 <span style={{
                   fontSize: 12, fontWeight: 500,
-                  color: 'rgba(255,255,255,0.85)',
+                  color: 'rgb(var(--ink-2))',
                   display: 'inline-flex', alignItems: 'center', gap: 3,
-                  background: 'rgba(0,0,0,0.15)', borderRadius: 999,
+                  background: 'rgb(var(--hairline) / 0.06)', borderRadius: 999,
                   padding: '2px 8px',
                 }}>
                   {wmoEmoji(weather.current.code)} {Math.round(weather.current.temp)}°
@@ -331,8 +339,8 @@ export function MobileShell({ meId }: { meId: string }) {
                 value={scope}
                 onChange={(e) => setScope(e.target.value as Scope)}
                 style={{
-                  background: 'rgba(0,0,0,0.20)', color: 'rgba(255,255,255,0.88)',
-                  border: 'none', borderRadius: 8, padding: '4px 8px',
+                  background: 'rgb(var(--hairline) / 0.06)', color: 'rgb(var(--ink-2))',
+                  border: '1px solid rgb(var(--hairline) / 0.10)', borderRadius: 8, padding: '4px 8px',
                   fontSize: 12, fontWeight: 500, outline: 'none', cursor: 'pointer',
                 }}
               >
@@ -343,11 +351,11 @@ export function MobileShell({ meId }: { meId: string }) {
                   <button
                     onClick={(e) => { e.stopPropagation(); setProfileOpen((v) => !v); }}
                     style={{
-                      width: 34, height: 34, borderRadius: 999,
+                      width: 32, height: 32, borderRadius: 999,
                       background: userColor(me.id),
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 14, fontWeight: 700, color: 'white',
-                      border: '2px solid rgba(255,255,255,0.35)',
+                      fontSize: 13, fontWeight: 700, color: 'white',
+                      border: '1px solid rgb(var(--hairline) / 0.18)',
                       cursor: 'pointer',
                     }}
                   >
@@ -356,7 +364,7 @@ export function MobileShell({ meId }: { meId: string }) {
                   {profileOpen && (
                     <div
                       style={{
-                        position: 'absolute', top: 42, right: 0, zIndex: 100,
+                        position: 'absolute', top: 40, right: 0, zIndex: 100,
                         background: 'rgb(var(--surface))',
                         borderRadius: 12, padding: '6px 0',
                         boxShadow: 'var(--sh-3)',
@@ -386,59 +394,42 @@ export function MobileShell({ meId }: { meId: string }) {
               )}
             </div>
 
-            {/* Large status title — tap to open lane picker */}
+            {/* Lane heading: ● dot + title + mono count + ▾ — desktop look */}
             <button
               type="button"
               onClick={() => setLanePicker('view')}
               style={{
-                display: 'flex', alignItems: 'baseline', gap: 10, padding: '6px 16px 12px',
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 16px 6px',
                 background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
               }}
             >
+              <span aria-hidden style={{
+                display: 'inline-block', width: 9, height: 9, borderRadius: 999,
+                background: `rgb(var(--pin-${LANE_ACCENT[activeStatus]}))`,
+                boxShadow: `0 0 0 3px rgb(var(--pin-${LANE_ACCENT[activeStatus]}) / 0.15)`,
+              }} />
               <h1 style={{
-                fontSize: 42, fontWeight: 700, lineHeight: 1.05,
-                color: 'rgba(255,255,255,0.96)', margin: 0,
-                fontFamily: 'Spectral, serif', letterSpacing: '-0.02em',
+                fontSize: 22, fontWeight: 600, lineHeight: 1.1,
+                color: 'rgb(var(--ink))', margin: 0,
+                fontFamily: 'Spectral, serif', letterSpacing: '-0.012em',
               }}>
                 {STATUS_LABELS[activeStatus]}
               </h1>
               <span style={{
-                fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.55)',
-                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: 11, fontWeight: 500,
+                color: 'rgb(var(--ink-3))',
+                background: 'rgb(var(--hairline) / 0.05)',
+                border: '1px solid rgb(var(--hairline) / 0.08)',
+                padding: '2px 7px', borderRadius: 999,
+                fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.04em',
               }}>
-                {counts[activeStatus]}
+                {String(counts[activeStatus]).padStart(2, '0')}
               </span>
               <span aria-hidden style={{
-                fontSize: 14, color: 'rgba(255,255,255,0.55)', marginLeft: 4,
+                fontSize: 12, color: 'rgb(var(--ink-3))',
               }}>▾</span>
             </button>
-
-            {/* Status tabs */}
-            <div style={{
-              display: 'flex', gap: 8, overflowX: 'auto',
-              padding: '0 16px 14px', scrollbarWidth: 'none',
-            }}>
-              {STATUSES.map((s) => {
-                const active = activeStatus === s;
-                return (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setActiveStatus(s)}
-                    style={{
-                      flexShrink: 0, padding: '6px 14px', borderRadius: 999,
-                      background: active ? 'rgba(255,255,255,0.92)' : 'rgba(0,0,0,0.18)',
-                      color: active ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.82)',
-                      fontWeight: active ? 600 : 400, fontSize: 13,
-                      border: 'none', cursor: 'pointer',
-                      transition: 'background 150ms ease, color 150ms ease',
-                    }}
-                  >
-                    {STATUS_LABELS[s]}
-                  </button>
-                );
-              })}
-            </div>
           </header>
 
           {/* ── Activity ticker ── */}
@@ -469,7 +460,7 @@ export function MobileShell({ meId }: { meId: string }) {
             {filtered.length === 0 && (
               <li style={{
                 padding: '40px 0', textAlign: 'center',
-                fontSize: 14, color: 'rgba(255,255,255,0.7)',
+                fontSize: 14, color: 'rgb(var(--ink-3))',
                 fontStyle: 'italic', fontFamily: 'Spectral, serif',
               }}>
                 {EMPTY_MSG[activeStatus]}
@@ -772,9 +763,9 @@ export function MobileShell({ meId }: { meId: string }) {
 }
 
 function MobileNoteCard({
-  card, users, accentColor, onLongPress,
+  card, users, onLongPress,
 }: {
-  card: Card; users: User[]; accentColor: string; onLongPress: () => void;
+  card: Card; users: User[]; accentColor?: string; onLongPress: () => void;
 }) {
   const lp = useLongPress(onLongPress, 500);
   const assignees = card.assignees
@@ -786,6 +777,9 @@ function MobileNoteCard({
     location.assign(`/m/card/${card.id}`);
   };
 
+  // Status accent (dot + bloom) — same palette as desktop Column.tsx.
+  const accent = LANE_ACCENT[card.status] ?? 'backlog';
+
   return (
     <li
       onClick={handleClick}
@@ -796,35 +790,23 @@ function MobileNoteCard({
       onContextMenu={lp.onContextMenu}
       style={{ listStyle: 'none', position: 'relative', cursor: 'pointer' }}
     >
-      {/* Drop-shadow wrapper */}
+      {/* Desktop-style flat card: dark surface, hairline border, status dot */}
       <div style={{
         position: 'relative',
-        filter: 'drop-shadow(0 6px 14px rgb(0 0 0 / 0.10)) drop-shadow(0 14px 24px rgb(0 0 0 / 0.06))',
-      }}>
-        {/* Pin */}
-        <span style={{ position: 'absolute', top: -10, left: 16, zIndex: 3 }}>
-          <span style={{
-            display: 'block', width: 20, height: 20, borderRadius: '50%',
-            background: accentColor, margin: '0 auto',
-            boxShadow: 'inset -3px -4px 0 rgba(0,0,0,0.18), inset 3px 3px 0 rgba(255,255,255,0.28), 0 2px 4px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.18)',
-          }} />
-          <span style={{ display: 'block', width: 3, height: 5, background: 'rgb(60,50,40)', margin: '-3px auto 0', borderRadius: '0 0 2px 2px' }} />
-        </span>
-
-        {/* Fold corner */}
-        <div style={{
-          position: 'absolute', right: 0, bottom: 0, width: 26, height: 26,
-          background: 'rgb(var(--paper-fold))',
-          clipPath: 'polygon(100% 0, 100% 100%, 0 100%)',
-          zIndex: 1,
+        background: 'rgb(var(--card))',
+        border: '1px solid rgb(var(--hairline) / 0.08)',
+        borderRadius: 12,
+        padding: '14px 14px 12px 18px',
+        boxShadow: 'var(--sh-1)',
+        '--pin-color': `var(--pin-${accent})`,
+      } as React.CSSProperties}>
+        {/* Status pill on the left edge — like desktop column accent */}
+        <span style={{
+          position: 'absolute', top: 12, bottom: 12, left: 6,
+          width: 3, borderRadius: 2,
+          background: `rgb(var(--pin-${accent}))`,
+          opacity: 0.7,
         }} />
-
-        {/* Card body */}
-        <div style={{
-          background: 'rgb(var(--paper))',
-          clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%)',
-          padding: '22px 14px 14px',
-        }}>
           {/* Source badge */}
           {(card.source === 'telegram' || card.ai_summarized || card.needs_review) && (
             <div style={{
@@ -874,7 +856,7 @@ function MobileNoteCard({
           {/* Footer */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            fontSize: 11.5, color: 'rgb(var(--ink-3))', paddingRight: 22,
+            fontSize: 11.5, color: 'rgb(var(--ink-3))',
           }}>
             <span>{relTime(card.updated_at)}</span>
             {assignees.length > 0 && (
@@ -888,7 +870,7 @@ function MobileNoteCard({
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 10, fontWeight: 600, color: 'white',
                       background: userColor(u.id),
-                      border: '2px solid rgb(var(--paper))',
+                      border: '2px solid rgb(var(--card))',
                       marginLeft: i > 0 ? -6 : 0,
                     }}
                   >
@@ -898,7 +880,6 @@ function MobileNoteCard({
               </div>
             )}
           </div>
-        </div>
       </div>
     </li>
   );
