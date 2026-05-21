@@ -165,31 +165,31 @@ Effort: M (≈ 2 hr)
 
 ## P1 — Fix Next (behavioral parity gaps)
 
-### FIX-007: KnowledgeEditSheet URL → title autofill (title_auto flag)
+### FIX-007: KnowledgeEditSheet URL → title autofill (title_auto flag) ✅ UI/Knowledge/KnowledgeEditSheet.swift:36 + KnowledgeItem.swift:53
 Found by: CA-008
 File: `macOS/KanbanClaude/UI/Knowledge/KnowledgeEditSheet.swift`
 Specific change: Add `@State var titleAuto = item == nil` (true for new items). On `url.onChange { new in if titleAuto, title.isEmpty || titleAuto { title = URL(string: new)?.host ?? title } }`. On `title.onChange { _ in titleAuto = false }`. Pass `title_auto` through `KnowledgeInput` payload to backend.
 Effort: S (≈ 30 min)
 
-### FIX-008: KnowledgeEditSheet "Auto-fetch when I save" checkbox
+### FIX-008: KnowledgeEditSheet "Auto-fetch when I save" checkbox ✅ UI/Knowledge/KnowledgeEditSheet.swift:46
 Found by: CA-009
 File: `macOS/KanbanClaude/UI/Knowledge/KnowledgeEditSheet.swift`
 Specific change: Replace the derived `autoFetch = !url.isEmpty && body.isEmpty` with `@State var autoFetch: Bool = true`. Render `Toggle("Auto-fetch when I save", isOn: $autoFetch)` below the URL field. Pass through to `KnowledgeInput.autoFetch`.
 Effort: S (≈ 30 min)
 
-### FIX-009: KnowledgeEditSheet field-level inline validation
+### FIX-009: KnowledgeEditSheet field-level inline validation ✅ UI/Knowledge/KnowledgeEditSheet.swift:74 + 138
 Found by: CA-010
 File: `macOS/KanbanClaude/UI/Knowledge/KnowledgeEditSheet.swift`
 Specific change: Add `@State var fieldErrors: [String: String]` and render `Text(err).font(.sans(11)).foregroundStyle(Tokens.danger)` under each field whose key has an error. On save, parse server `error.fields` (web does this) into `fieldErrors`; reset on next save attempt.
 Effort: S (≈ 45 min)
 
-### FIX-010: Knowledge top-20 tag chip cloud
+### FIX-010: Knowledge top-20 tag chip cloud ✅ UI/Knowledge/KnowledgeListView.swift:43 + 89
 Found by: CA-011 + GAP-B-005
 File: `macOS/KanbanClaude/UI/Knowledge/KnowledgeListView.swift`
 Specific change: Above the list rows, render a horizontally scrolling `FlowLayout` (or `HStack` with wrapping) of the top 20 tags by count. Source: aggregate `item.tags.flatMap()` from current `store.items`, sort by frequency desc, take 20. Each chip = `Button` that toggles `selectedTag`; active chip uses `Tokens.greenAccent.opacity(0.18)` background + green-accent border.
 Effort: M (≈ 1.5 hr)
 
-### FIX-011: Knowledge row "📎 N" linked-cards count chip
+### FIX-011: Knowledge row "📎 N" linked-cards count chip ✅ UI/Knowledge/KnowledgeRowView.swift:33
 Found by: CA-012
 File: `macOS/KanbanClaude/UI/Knowledge/KnowledgeRowView.swift`
 Specific change: After the existing tags row, if `item.linkedCardIds.count > 0`, render:
@@ -328,7 +328,7 @@ Effort: S (≈ 30 min)
 
 ## P2 — Verify Then Fix (polish / copy / edge state)
 
-### FIX-024: Knowledge row title prefix — 🔗 (web pattern)
+### FIX-024: Knowledge row title prefix — 🔗 (web pattern) ✅ UI/Knowledge/KnowledgeRowView.swift:11
 Found by: CA-013
 File: `macOS/KanbanClaude/UI/Knowledge/KnowledgeRowView.swift`
 Specific change: If `item.url != nil`, prepend `"🔗"` to the title; render visibility icon as a separate trailing icon span (lock/tray/people). Mirrors F-320/F-324.

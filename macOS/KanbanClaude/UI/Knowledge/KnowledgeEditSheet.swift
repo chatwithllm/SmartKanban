@@ -10,6 +10,9 @@ struct KnowledgeEditSheet: View {
     @State private var tagsText: String = ""
     @State private var visibility: KnowledgeVisibility = .private
     @State private var busy = false
+    @State private var titleAuto: Bool = true
+    @State private var autoFetch: Bool = true
+    @State private var fieldErrors: [String: String] = [:]
 
     var isEditing: Bool { initial != nil }
 
@@ -27,8 +30,19 @@ struct KnowledgeEditSheet: View {
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    field("Title", text: $title)
-                    field("URL", text: $url)
+                    fieldWithError("Title", text: $title, key: "title")
+                        .onChange(of: title) { _ in titleAuto = false }
+                    fieldWithError("URL", text: $url, key: "url")
+                        .onChange(of: url) { newURL in
+                            if titleAuto {
+                                if let host = URL(string: newURL)?.host, !host.isEmpty {
+                                    title = host
+                                }
+                            }
+                        }
+                    Toggle("Auto-fetch when I save", isOn: $autoFetch)
+                        .font(.sans(11))
+                        .toggleStyle(.checkbox)
                     VStack(alignment: .leading, spacing: 4) {
                         labelText("Body")
                         TextEditor(text: $noteBody)
@@ -38,8 +52,11 @@ struct KnowledgeEditSheet: View {
                             .padding(8)
                             .background(Tokens.surface)
                             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Tokens.hairline, lineWidth: 1))
+                        if let err = fieldErrors["body"] {
+                            Text(err).font(.sans(11)).foregroundStyle(Tokens.danger)
+                        }
                     }
-                    field("Tags (comma separated)", text: $tagsText)
+                    fieldWithError("Tags (comma separated)", text: $tagsText, key: "tags")
                     VStack(alignment: .leading, spacing: 4) {
                         labelText("Visibility")
                         Picker("", selection: $visibility) {
@@ -69,6 +86,22 @@ struct KnowledgeEditSheet: View {
         }
     }
 
+    private func fieldWithError(_ title: String, text: Binding<String>, key: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            labelText(title)
+            TextField("", text: text)
+                .textFieldStyle(.plain)
+                .padding(.vertical, 8).padding(.horizontal, 10)
+                .background(Tokens.surface)
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(
+                    fieldErrors[key] != nil ? Tokens.danger : Tokens.hairline,
+                    lineWidth: fieldErrors[key] != nil ? 1.5 : 1))
+            if let err = fieldErrors[key] {
+                Text(err).font(.sans(11)).foregroundStyle(Tokens.danger)
+            }
+        }
+    }
+
     private func labelText(_ s: String) -> some View {
         Text(s).font(.mono(10, weight: .semibold)).tracking(1.2).foregroundStyle(Tokens.ink3)
     }
@@ -95,12 +128,17 @@ struct KnowledgeEditSheet: View {
     }
 
     private func hydrate() {
-        guard let item = initial else { return }
+        guard let item = initial else {
+            titleAuto = true
+            return
+        }
         title = item.title
         url = item.url ?? ""
         noteBody = item.body
         tagsText = item.tags.joined(separator: ", ")
         visibility = item.visibility
+        titleAuto = item.titleAuto
+        autoFetch = false
     }
 
     private func parsedTags() -> [String] {
@@ -110,6 +148,18 @@ struct KnowledgeEditSheet: View {
     }
 
     private func save() {
+        fieldErrors = [:]
+        var localErrors: [String: String] = [:]
+        if title.trimmingCharacters(in: .whitespaces).isEmpty {
+            localErrors["title"] = "Title is required."
+        }
+        if !url.isEmpty, URL(string: url) == nil {
+            localErrors["url"] = "Enter a valid URL or leave blank."
+        }
+        if !localErrors.isEmpty {
+            fieldErrors = localErrors
+            return
+        }
         busy = true
         Task {
             defer { busy = false }
@@ -123,12 +173,13 @@ struct KnowledgeEditSheet: View {
             } else {
                 let input = KnowledgeInput(
                     title: title.isEmpty ? nil : title,
+                    titleAuto: titleAuto,
                     url: url.isEmpty ? nil : url,
                     body: noteBody.isEmpty ? nil : noteBody,
                     tags: parsedTags(),
                     visibility: visibility,
                     source: .manual,
-                    autoFetch: !url.isEmpty && noteBody.isEmpty
+                    autoFetch: !url.isEmpty && autoFetch
                 )
                 _ = await KnowledgeStore.shared.create(input)
             }

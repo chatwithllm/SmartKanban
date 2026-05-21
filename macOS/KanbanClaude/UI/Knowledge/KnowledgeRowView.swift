@@ -7,13 +7,14 @@ struct KnowledgeRowView: View {
         CardSurface {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
-                    Image(systemName: visibilityIcon)
-                        .font(.system(size: 10))
-                        .foregroundStyle(Tokens.ink3)
-                    Text(item.title)
+                    Text(item.url != nil ? "🔗 \(item.title)" : item.title)
                         .font(.serif(15, weight: .semibold))
                         .foregroundStyle(Tokens.ink)
                         .lineLimit(2)
+                    Spacer()
+                    Image(systemName: visibilityIcon)
+                        .font(.system(size: 10))
+                        .foregroundStyle(Tokens.ink3)
                 }
                 if let url = item.url {
                     Text(URL(string: url)?.host ?? url)
@@ -30,6 +31,12 @@ struct KnowledgeRowView: View {
                 HStack(spacing: 4) {
                     ForEach(item.tags.prefix(3), id: \.self) { tag in
                         TagChip(tag: tag)
+                    }
+                    if let linkedCount = item.linkedCardIds?.count, linkedCount > 0 {
+                        Label("\(linkedCount)", systemImage: "paperclip")
+                            .labelStyle(.titleAndIcon)
+                            .font(.sans(11))
+                            .foregroundStyle(Tokens.ink3)
                     }
                     Spacer()
                     fetchChip

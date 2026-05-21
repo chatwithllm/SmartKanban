@@ -37,6 +37,7 @@ struct KnowledgeListView: View {
                     }.buttonStyle(.plain)
                 }
             }
+            tagCloud
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: 12)], spacing: 12) {
                     ForEach(store.items) { item in
@@ -67,6 +68,47 @@ struct KnowledgeListView: View {
                 detail = nil
             }
         }
+    }
+
+    @ViewBuilder private var tagCloud: some View {
+        let tops = topTags()
+        if !tops.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(tops, id: \.0) { tag, count in
+                        let active = store.tag == tag
+                        Button {
+                            store.tag = active ? nil : tag
+                            Task { await store.refresh() }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("#\(tag)").font(.mono(10, weight: .semibold))
+                                Text("\(count)").font(.mono(9)).foregroundStyle(Tokens.ink3)
+                            }
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(active ? Tokens.greenAccent.opacity(0.18) : Tokens.ceramic)
+                            .overlay(Capsule().strokeBorder(active ? Tokens.greenAccent : .clear, lineWidth: 1))
+                            .clipShape(Capsule())
+                            .foregroundStyle(active ? Tokens.greenAccent : Tokens.ink2)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private func topTags() -> [(String, Int)] {
+        var counts: [String: Int] = [:]
+        for item in store.items {
+            for t in item.tags {
+                counts[t, default: 0] += 1
+            }
+        }
+        return counts.sorted { lhs, rhs in
+            if lhs.value != rhs.value { return lhs.value > rhs.value }
+            return lhs.key < rhs.key
+        }.prefix(20).map { ($0.key, $0.value) }
     }
 
     private var header: some View {

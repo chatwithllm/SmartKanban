@@ -50,6 +50,7 @@ struct KnowledgeItem: Codable, Identifiable, Hashable, Sendable {
 
 struct KnowledgeInput: Codable, Sendable {
     var title: String?
+    var titleAuto: Bool?
     var url: String?
     var body: String?
     var tags: [String]?
@@ -58,7 +59,9 @@ struct KnowledgeInput: Codable, Sendable {
     var autoFetch: Bool?
 
     enum CodingKeys: String, CodingKey {
-        case title, url, body, tags, visibility, source
+        case title
+        case titleAuto = "title_auto"
+        case url, body, tags, visibility, source
         case autoFetch = "auto_fetch"
     }
 }
