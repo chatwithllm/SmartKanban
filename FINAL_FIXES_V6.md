@@ -107,7 +107,7 @@ Estimated effort: **S (~15 min)** — single-file edit + build + log validation.
 
 ## P2 — Verify Then Fix (visual polish / narrow parity)
 
-### FIX-V6-002: CardTimeline AI dot + label render in violet vs web green-accent
+### FIX-V6-002: CardTimeline AI dot + label render in violet vs web green-accent — ✅ DONE (Path A) @ CardTimelineView.swift:138 (dotColor .ai → greenAccent.opacity(0.6)), :146 (labelColor .ai → greenAccent)
 Found by: CA6-002 (A only)
 File: `macOS/KanbanClaude/UI/Card/CardTimelineView.swift`
 Line: 128 (`dotColor` for `.ai`), 134 (`labelColor` for `.ai`)

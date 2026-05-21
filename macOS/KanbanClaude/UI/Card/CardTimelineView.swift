@@ -142,13 +142,13 @@ private struct TimelineRow: View {
         switch event.entryType {
         case .system: return Tokens.greenAccent
         case .message: return Tokens.ceramic
-        case .ai: return Tokens.violet
+        case .ai: return Tokens.greenAccent.opacity(0.6)
         case .share: return Tokens.greenUplift
         }
     }
     private var labelColor: Color {
         switch event.entryType {
-        case .ai: return Tokens.violet
+        case .ai: return Tokens.greenAccent
         default: return Tokens.ink2
         }
     }
