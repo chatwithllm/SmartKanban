@@ -71,7 +71,7 @@ struct EditCardView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     // MARK: - F-174 title
                     titleSection(card: binding)
-                    // MARK: - F-194 status (macOS-only adaptation; web has no inline picker)
+                    // MARK: - status (macOS-only adaptation; web has no inline picker)
                     statusSection(card: binding)
                     // MARK: - F-177 description
                     descriptionSection(card: binding)

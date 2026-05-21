@@ -122,7 +122,7 @@ Specific change: delete the `Text("Summary")...` line (24) and the wrapping `VSt
 Web reference: `web/src/components/WeeklyReview.tsx:65-69` — bare paragraph.
 Effort: S (≈5 min)
 
-### FIX-V3-006: Correct the `// MARK: - F-194 status` comment in EditCardView
+### ✅ FIX-V3-006: Correct the `// MARK: - F-194 status` comment in EditCardView (EditCardView.swift:73)
 Found by: CA3-006 (A only — doc nit)
 File: `macOS/KanbanClaude/UI/Card/EditCardView.swift`
 Line: 74
