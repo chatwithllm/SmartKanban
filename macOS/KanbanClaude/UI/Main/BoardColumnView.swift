@@ -88,7 +88,10 @@ struct BoardColumnView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Circle().fill(dotColor).frame(width: 8, height: 8)
+            ZStack {
+                Circle().fill(dotColor.opacity(0.12)).frame(width: 14, height: 14)
+                Circle().fill(dotColor).frame(width: 8, height: 8)
+            }
             Text(status.label).font(.serif(13, weight: .semibold)).foregroundStyle(Tokens.ink)
             Text(String(format: "%02d", cards.count))
                 .font(.mono(11, weight: .medium))
