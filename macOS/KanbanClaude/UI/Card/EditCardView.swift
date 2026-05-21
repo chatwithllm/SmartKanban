@@ -71,12 +71,16 @@ struct EditCardView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     // MARK: - F-174 title
                     titleSection(card: binding)
-                    // MARK: - F-194 status
+                    // MARK: - F-194 status (macOS-only adaptation; web has no inline picker)
                     statusSection(card: binding)
                     // MARK: - F-177 description
                     descriptionSection(card: binding)
                     // MARK: - F-178 tags
                     tagsSection(card: binding)
+                    // MARK: - F-218..F-237 AI insights (high-signal — above the fold)
+                    aiInsightsSection()
+                    // MARK: - F-181..F-187 knowledge (high-signal — above the fold)
+                    knowledgeSection()
                     // MARK: - F-188..F-189 due date
                     dueDateSection(card: binding)
                     // MARK: - F-190..F-192 attachments
@@ -85,10 +89,6 @@ struct EditCardView: View {
                     assigneesSection(card: binding)
                     // MARK: - F-194 shares
                     sharesSection(card: binding)
-                    // MARK: - F-181..F-187 knowledge
-                    knowledgeSection()
-                    // MARK: - F-218..F-237 AI insights
-                    aiInsightsSection()
                     // MARK: - F-273..F-294 chat & activity (Phase 4f)
                     chatPlaceholder()
                 }

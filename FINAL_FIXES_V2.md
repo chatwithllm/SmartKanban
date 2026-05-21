@@ -224,7 +224,8 @@ File: `macOS/KanbanClaude/UI/Capture/CaptureView.swift:86–94`
 Specific change: wrap the Template `ModeButton` in `if !templates.isEmpty { ... }`. Slash-parser in `submit()` (193–200) is no-op when templates list is empty, so no regression.
 Effort: S (≈ 10 min)
 
-### FIX-V2-012: EditDialog — reorder sections to match web
+### ✅ FIX-V2-012: EditDialog — reorder sections to match web
+**Done:** EditCardView section order is now title → status → description → tags → AI Insights → Knowledge → due → attachments → assignees → shares → chat. AI + Knowledge now above the fold per web layout.
 Found by: CA2-010 (A)
 File: `macOS/KanbanClaude/UI/Card/EditCardView.swift:71–94`
 Web order: title row → description → tags → AI Insights → Related Cards (🔄 V1) → Knowledge → due → attachments → assignees+shares grid → Activity.
