@@ -4,7 +4,8 @@ struct AccountTab: View {
     @StateObject private var auth = AuthStore.shared
     @State private var shortName: String = ""
     @State private var saving = false
-    @State private var savedMessage: String?
+    @State private var savedOk: Bool = false
+    @State private var savedError: String?
 
     var body: some View {
         ScrollView {
@@ -24,8 +25,10 @@ struct AccountTab: View {
                             Button(saving ? "Saving…" : "Save") { save(user: user) }
                                 .disabled(saving || shortName.trimmingCharacters(in: .whitespaces).isEmpty)
                         }
-                        if let msg = savedMessage {
-                            Text(msg).foregroundStyle(Tokens.greenAccent).font(.sans(11))
+                        if savedOk {
+                            Text("Saved.").foregroundStyle(Tokens.greenAccent).font(.sans(11))
+                        } else if let err = savedError {
+                            Text(err).foregroundStyle(Tokens.danger).font(.sans(11))
                         }
                     }
                     Button("Sign out", role: .destructive) {
@@ -50,11 +53,13 @@ struct AccountTab: View {
             defer { saving = false }
             do {
                 _ = try await auth.updateMe(shortName: trimmed, name: nil)
-                savedMessage = "Saved."
+                savedError = nil
+                savedOk = true
                 try? await Task.sleep(nanoseconds: 1_500_000_000)
-                savedMessage = nil
+                savedOk = false
             } catch {
-                savedMessage = error.localizedDescription
+                savedOk = false
+                savedError = error.localizedDescription
             }
         }
     }
