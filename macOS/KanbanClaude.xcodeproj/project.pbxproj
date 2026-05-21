@@ -65,6 +65,7 @@
 		1C1ECB9B3BB3AE9BABF5D7A5 /* KnowledgeDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE1D9DC62A84A836C49C262 /* KnowledgeDetailSheet.swift */; };
 		ABE9334AC7C88BD0E6072101 /* ServerTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59128523BFDC3A8F9EA326C /* ServerTime.swift */; };
 		ACDEEE37870E861E7AEEB57E /* WindowCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C9D6DE25C9A454A2F6F01C4 /* WindowCoordinator.swift */; };
+		A1B2C3D4E5F6A1B2C3D4E5F6 /* SettingsOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E5D4C3B2A1F6E5D4C3B2A1 /* SettingsOpener.swift */; };
 		AD5C8CCDF3AF169ECDBEF408 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA9661A9ED14D59483B00031 /* PreferencesView.swift */; };
 		ADAEB54E0842C8CEFCD49836 /* QRPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133DEF92B27F2E28B8A57839 /* QRPopover.swift */; };
 		AEEC42C6C9B7C5CE65FF4E8A /* Attachment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9423699E6AC8AD3F52A342 /* Attachment.swift */; };
@@ -108,6 +109,7 @@
 		1A931D07E618AEEA4C819D06 /* BoardColumnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardColumnView.swift; sourceTree = "<group>"; };
 		1C587714AC58E27900AFBB65 /* Insight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Insight.swift; sourceTree = "<group>"; };
 		1C9D6DE25C9A454A2F6F01C4 /* WindowCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCoordinator.swift; sourceTree = "<group>"; };
+		F6E5D4C3B2A1F6E5D4C3B2A1 /* SettingsOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsOpener.swift; sourceTree = "<group>"; };
 		202DC6CD8086A92EDB79E7B6 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
 		2C26C5C1DE4E230F13D4A7AF /* PillButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PillButton.swift; sourceTree = "<group>"; };
 		2E9423699E6AC8AD3F52A342 /* Attachment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Attachment.swift; sourceTree = "<group>"; };
@@ -234,6 +236,7 @@
 				202DC6CD8086A92EDB79E7B6 /* Typography.swift */,
 				560780A23AADBEC704FED0A2 /* URLSchemeHandler.swift */,
 				1C9D6DE25C9A454A2F6F01C4 /* WindowCoordinator.swift */,
+				F6E5D4C3B2A1F6E5D4C3B2A1 /* SettingsOpener.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -603,6 +606,7 @@
 				69F303230842EAAC29D99343 /* WebSocketClient.swift in Sources */,
 				29213D32A04FEF06E60327A5 /* WeeklyReviewSheet.swift in Sources */,
 				ACDEEE37870E861E7AEEB57E /* WindowCoordinator.swift in Sources */,
+				A1B2C3D4E5F6A1B2C3D4E5F6 /* SettingsOpener.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

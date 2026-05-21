@@ -34,7 +34,7 @@ struct MainView: View {
                 auth: auth,
                 unread: unread,
                 onCapture: { WindowCoordinator.shared.openCapture(initialStatus: .today) },
-                onOpenSettings: { NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil) },
+                onOpenSettings: { SettingsOpener.open() },
                 onOpenNotifications: { WindowCoordinator.shared.openNotificationsPopover() },
                 onOpenWeeklyReview: { showReview = true }
             )

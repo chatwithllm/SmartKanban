@@ -97,7 +97,8 @@ Specific change:
 Acceptance: clicking a knowledge-without-URL related item opens the read-only `KnowledgeDetailSheet` showing that knowledge note.
 Effort: M (≈ 1.5 hr — most of the cost is verifying `WindowCoordinator` plumbing)
 
-### FIX-V2-003: Settings selector may silently no-op on macOS 13+ (Ventura+)
+### ✅ FIX-V2-003: Settings selector may silently no-op on macOS 13+ (Ventura+)
+**Done:** added `App/SettingsOpener.swift` with `showSettingsWindow:` → `showPreferencesWindow:` fallback. BoardToolbar.swift:251 and MainView.swift:37 both call `SettingsOpener.open()`. Build green, app launched, log clean.
 Found by: CA2-006 (A) only — both call sites confirmed using legacy selector
 Files:
 - `macOS/KanbanClaude/UI/Main/BoardToolbar.swift:251` — profile-row Settings button

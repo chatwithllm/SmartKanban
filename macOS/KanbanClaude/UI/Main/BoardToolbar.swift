@@ -248,7 +248,7 @@ struct ProfileChip: View {
                     Divider()
                     Button {
                         open = false
-                        NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+                        SettingsOpener.open()
                     } label: {
                         HStack {
                             Image(systemName: "gearshape")
