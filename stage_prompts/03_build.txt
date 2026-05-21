@@ -1,0 +1,150 @@
+## Session Setup
+Read these files completely before writing a single line of code:
+  1. agent-rules.md  (binding rules from production incidents — non-negotiable)
+  2. MACOS_APP_PLAN.md
+  3. VETO_RESOLUTION_PATCH.md   (OVERRIDES plan where they conflict)
+  4. FEATURE_PARITY_REGISTRY.md (your screen-by-screen task list)
+  5. AGENT_LEARNINGS.md (if it exists; create when first incident occurs)
+
+You are the build agent for a macOS Apple Silicon app for KanbanClaude.
+All Rules 0–18 from agent-rules.md are active. No exceptions.
+
+Build the macOS app phase by phase per §5.8 of the plan.
+For each phase: execute all tasks. Do NOT stop for confirmation between phases.
+For each screen: run all 4 gates (data / decompose / behavior / visual).
+  If a gate fails: retry up to 3 times. If still failing, mark ⚠ and continue.
+
+Project paths:
+- Web frontend: `web/` (reference only — read for parity, do not modify)
+- Web backend:  `server/` (reference only — read for endpoint shapes)
+- macOS app source: create under a single dedicated directory at project root
+  matching the framework decision in §4.1 (e.g. `KanbanClaude.macOS/` for SwiftUI
+  or `src-tauri/` + `src-macos/` for Tauri).
+
+---
+
+## Non-Negotiable Rules (from agent-rules.md — apply every task)
+
+### Before writing ANY endpoint client code (Rule 1)
+Run ALL FOUR pre-flight bash checks:
+```bash
+grep -nE "@.*\.route|@router\.(get|post|put|delete|patch)|app\.(get|post|put|delete|patch)" server/<file> | grep -i "<feature>"
+grep -nE "Blueprint\(|APIRouter\(|express\.Router" server/<file>
+grep -n "return jsonify\|return.*json\(\)\|res\.json\|res\.send" server/<file>
+grep -nE "fetch\(|api\(|await fetch" web/index.html | grep -i "<feature>"
+```
+If any returns zero matches — STOP. Re-read; ask only if truly ambiguous after slow-read.
+Never invent a path or shape.
+
+### Before writing ANY Codable struct / response model (Rule 2)
+Read the actual `return jsonify({...})` or `res.json({...})` in backend.
+Mirror every key VERBATIM. snake_case in backend → CodingKeys mapping to camelCase.
+If backend returns `{"items": [...], "count": N}` write a wrapper struct.
+Never decode bare array.
+
+### Swift concurrency — banned patterns (Rule 3)
+  NEVER: `async let _ = foo()`          — use `withTaskGroup` instead
+  NEVER: `.task { await heavyWork() }`  — use `.onAppear { Task.detached { ... } }`
+  ALWAYS: catch CancellationError silently
+
+### For every screen (Rule 5 + Rule 9 + Rule 13)
+  1. `awk '/Screen: <name>/,/^---/' FEATURE_PARITY_REGISTRY.md` — get task list
+  2. If any row contains "renderX", "container", "tile", "card", or "row component":
+     DECOMPOSE first — read the web render function (Rule 13), list every element,
+     create per-element sub-rows in the registry BEFORE writing Swift.
+  3. Implement every ❌ row.
+  4. Verb-check every row before marking ✅ (Rule 9):
+     button → Button { } label: { }   NOT Text
+     toggle/expand → @State + Button   NOT static display
+     swipe → .swipeActions
+     tap/navigate → NavigationLink or Button { navigate() }
+  5. Run post-build validation (below).
+  6. Update registry: ❌ → ✅ / 🔄 (adapted, note justification) / 🚫 (out of scope, justify).
+  7. Report: ✅ <ScreenName> — N implemented, M adapted, K out-of-scope, 0 ❌ remaining
+
+### Post-build validation — run before every done claim (Rule 6)
+For SwiftUI:
+```bash
+xcodebuild -scheme KanbanClaude -configuration Release \
+  -derivedDataPath ./DerivedData \
+  -destination 'platform=macOS,arch=arm64' build 2>&1 | grep -E "error:|\*\* BUILD"
+pkill -x KanbanClaude; sleep 1
+rm -rf /Applications/KanbanClaude.app
+cp -R ./DerivedData/Build/Products/Release/KanbanClaude.app /Applications/
+xattr -dr com.apple.quarantine /Applications/KanbanClaude.app
+open -a /Applications/KanbanClaude.app; sleep 6
+/usr/bin/log show --last 30s --predicate 'subsystem CONTAINS "kanbanclaude"' --info --debug 2>&1 | tail -80
+```
+
+For Tauri:
+```bash
+cd src-tauri && cargo tauri build --target aarch64-apple-darwin 2>&1 | tail -40
+# Install and tail Console.app for the bundle id "com.kanbanclaude.kanbanclaude"
+```
+
+Failure conditions (any of these = NOT done — fix first):
+- `cancelled` more than once → fix concurrency (Rule 3)
+- `failed:` → read full error, fix root cause
+- `401|403` → fix auth header injection
+- `404` → fix endpoint path (Rule 1)
+- `decode|DecodingError` → fix Codable (Rule 2)
+- No "loaded N <thing>" line for new screen → endpoint never returned data
+
+`xcodebuild SUCCEEDED` / `cargo build --release` success is compile proof ONLY.
+
+### Rule 14 — Screenshot match before next screen
+After build + log validation: screenshot macOS screen + corresponding web screen,
+read both with the Read tool, list every visible difference, fix every difference,
+re-screenshot, confirm zero gaps. Do NOT move to next screen until match.
+
+### Rule 18 — Never reload authenticated web reference window
+If using a Chrome window to compare layouts, only `nav()` or hash-set. Never reload.
+
+### Rule 16 — Touched files get a full rule-grep pass before commit
+After every Edit/Write, re-grep the entire file for active banned patterns:
+```bash
+grep -n "async let _ =" <file>
+grep -nE "try (decoder|JSONDecoder\(\))\.decode\(\[" <file>
+grep -nE "\.task \{ await refreshAll|loadAll|fetchAll" <file>
+```
+Remediate any live match in the SAME commit.
+
+### Learning Loop (after every incident the agent catches itself)
+1. Append I-N to AGENT_LEARNINGS.md
+2. Add RULE N to agent-rules.md (project root)
+3. Add anti-pattern row to Rule 7 table
+4. `git commit -am "learning: I-N locked in — <title>"`
+
+---
+
+## Build state — write after every screen / phase
+Write `build_status.json` in project root:
+```json
+{
+  "screens_done": ["..."],
+  "current_screen": "<next>",
+  "phase_complete": <N>,
+  "timestamp": "HH:MM:SS"
+}
+```
+After each phase: write `PHASE_<N>_COMPLETE` marker (touch the file).
+
+---
+
+## Build Constraints
+- Install ONLY packages in MACOS_APP_PLAN.md §4.3 dependency list
+- Bundle ID: com.kanbanclaude.kanbanclaude everywhere — no variation
+- Local install only — unsigned + `xattr -cr`
+- Token storage: Keychain — NEVER UserDefaults
+- Do NOT modify files under `web/` or `server/`
+- After each completed task: ✅ marker with files created/modified
+- Do NOT stop between phases. Do NOT ask for confirmation.
+- Ambiguity — stop and quote the exact text before acting
+
+---
+
+## When ALL phases (1-9 per §5.8) complete
+Print the final line, exact format (orchestrator polls for this):
+  STAGE_COMPLETE: build screens=<N>
+
+Then touch `BUILD_COMPLETE` in project root.

@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Native App Orchestrator</title>
+<style>
+:root {
+  --bg: #0b0d10;
+  --panel: #14171c;
+  --panel-2: #1b1f26;
+  --border: #262b33;
+  --text: #e6e8eb;
+  --muted: #8a93a0;
+  --green: #2ea043;
+  --green-bg: #0f2d18;
+  --amber: #d29922;
+  --amber-bg: #3a2a07;
+  --red: #f85149;
+  --blue: #58a6ff;
+  --purple: #a371f7;
+  --pink: #ff6ec7;
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 -apple-system,"SF Pro Text",Segoe UI,Helvetica,Arial,sans-serif; }
+.wrap { max-width:1400px; margin:0 auto; padding:24px; }
+header { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:16px; margin-bottom:20px; }
+header h1 { margin:0; font-size:22px; font-weight:600; }
+header .meta { color:var(--muted); font-size:13px; }
+header .meta b { color:var(--text); font-weight:600; }
+.banner { border-radius:10px; padding:16px 20px; margin-bottom:18px; font-weight:600; font-size:16px; }
+.banner.ship { background:var(--green-bg); border:1px solid var(--green); color:#aff5b4; }
+.banner.paused { background:var(--amber-bg); border:1px solid var(--amber); color:#ffdf9e; }
+.banner small { display:block; font-weight:400; font-size:13px; margin-top:4px; opacity:0.85; }
+.pipeline { display:flex; align-items:center; gap:4px; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:18px; overflow-x:auto; }
+.pipeline .step { display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:6px; white-space:nowrap; font-size:13px; }
+.pipeline .step.active { background:var(--panel-2); }
+.pipeline .dot { width:10px; height:10px; border-radius:50%; background:#3a414d; }
+.pipeline .dot.pending { background:#3a414d; }
+.pipeline .dot.running { background:var(--blue); box-shadow:0 0 0 3px rgba(88,166,255,0.18); animation:pulse 1.2s ease-in-out infinite; }
+.pipeline .dot.done { background:var(--green); }
+.pipeline .dot.error { background:var(--red); }
+.pipeline .arrow { color:var(--muted); font-size:13px; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.55;} }
+.grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px; margin-bottom:18px; }
+.card { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+.card h3 { margin:0 0 10px; font-size:14px; font-weight:600; color:var(--text); display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.card .status-pill { font-size:11px; padding:3px 8px; border-radius:999px; font-weight:500; background:#2a313a; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+.card .status-pill.pending { background:#2a313a; color:var(--muted); }
+.card .status-pill.running { background:rgba(88,166,255,0.2); color:var(--blue); }
+.card .status-pill.done { background:rgba(46,160,67,0.2); color:var(--green); }
+.card .status-pill.error { background:rgba(248,81,73,0.2); color:var(--red); }
+.card .row { display:flex; justify-content:space-between; padding:4px 0; font-size:13px; }
+.card .row .k { color:var(--muted); }
+.card .row .v { font-variant-numeric:tabular-nums; }
+.qa-card { grid-column:1/-1; }
+.qa-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:18px; margin-bottom:10px; }
+.qa-round-counter { font-size:28px; font-weight:700; }
+.qa-round-counter small { font-size:14px; color:var(--muted); font-weight:400; margin-left:4px; }
+.agent-badge { display:inline-block; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; letter-spacing:0.3px; }
+.agent-badge.fix { background:rgba(255,110,199,0.16); color:var(--pink); }
+.agent-badge.a   { background:rgba(88,166,255,0.18); color:var(--blue); }
+.agent-badge.b   { background:rgba(163,113,247,0.18); color:var(--purple); }
+.agent-badge.ab  { background:rgba(46,160,67,0.18); color:var(--green); }
+.agent-badge.c   { background:rgba(210,153,34,0.18); color:var(--amber); }
+.agent-badge.idle{ background:#2a313a; color:var(--muted); }
+table.rounds { width:100%; border-collapse:collapse; font-size:13px; margin-top:6px; }
+table.rounds th, table.rounds td { padding:6px 10px; text-align:left; border-bottom:1px solid var(--border); }
+table.rounds th { color:var(--muted); font-weight:500; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; }
+table.rounds td.center { text-align:center; }
+.verdict-ship { color:var(--green); font-weight:600; }
+.verdict-fix { color:var(--amber); font-weight:600; }
+.logfeed { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:12px 14px; font:12px/1.5 "SF Mono",Menlo,Consolas,monospace; max-height:340px; overflow-y:auto; }
+.logfeed h3 { margin:0 0 8px; color:var(--text); font:13px/1.4 -apple-system,sans-serif; font-weight:600; }
+.logfeed .line { display:block; color:var(--muted); white-space:pre-wrap; word-break:break-word; }
+.logfeed .line .ts { color:var(--blue); }
+.logfeed .line .stage { color:var(--purple); }
+.scr-list { font-size:12px; color:var(--muted); margin-top:4px; max-height:80px; overflow-y:auto; }
+.scr-list span { display:inline-block; background:var(--panel-2); padding:2px 6px; border-radius:4px; margin:2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 id="proj">Loading...</h1>
+      <div class="meta">
+        Target: <b id="target">-</b> ·
+        Branch: <b id="branch">-</b> ·
+        Stage: <b id="stage">-</b> ·
+        Elapsed: <b id="elapsed">-</b>
+      </div>
+    </div>
+    <div class="meta" id="started">started: -</div>
+  </header>
+
+  <div id="banner-ship" class="banner ship" style="display:none;">
+    <span>✅ SHIP READY</span><small id="banner-ship-sub"></small>
+  </div>
+  <div id="banner-paused" class="banner paused" style="display:none;">
+    <span>⚠ PAUSED</span><small id="banner-paused-reason"></small>
+  </div>
+
+  <div class="pipeline" id="pipeline"></div>
+
+  <div class="grid" id="stage-cards"></div>
+
+  <div class="card qa-card">
+    <h3><span>QA Loop</span><span class="status-pill" id="qa-pill">pending</span></h3>
+    <div class="qa-head">
+      <div class="qa-round-counter">
+        Round <span id="qa-round">0</span><small>/ <span id="qa-max">6</span></small>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">Active agent</div>
+        <span class="agent-badge idle" id="qa-active">idle</span>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">Verdict</div>
+        <span id="qa-verdict" style="font-weight:600;">—</span>
+      </div>
+    </div>
+    <table class="rounds">
+      <thead>
+        <tr><th>Round</th><th>Started</th><th>Fix</th><th>Agent A</th><th>Agent B</th><th>Agent C</th><th>Verdict</th></tr>
+      </thead>
+      <tbody id="qa-tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="logfeed">
+    <h3>Live log (last 20)</h3>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script>
+const STAGES = [
+  {key:'branch',label:'Branch'},
+  {key:'audit', label:'Audit'},
+  {key:'plan',  label:'Plan'},
+  {key:'vetoes',label:'Vetoes'},
+  {key:'build', label:'Build'},
+  {key:'qa',    label:'QA'},
+  {key:'ship',  label:'Ship'},
+];
+
+function el(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  if (props) for (const k in props) {
+    if (k === 'class') e.className = props[k];
+    else if (k === 'style') e.setAttribute('style', props[k]);
+    else if (k === 'text') e.textContent = props[k];
+    else e.setAttribute(k, props[k]);
+  }
+  for (const kid of kids) {
+    if (kid == null) continue;
+    e.appendChild(typeof kid === 'string' ? document.createTextNode(kid) : kid);
+  }
+  return e;
+}
+
+function statusOf(s, key) {
+  if (key === 'branch') return s.branch ? 'done' : (s.stage === 'starting' ? 'running' : 'pending');
+  if (key === 'ship')   return s.verdict === 'SHIP_READY' ? 'done' : 'pending';
+  const st = s.stages && s.stages[key];
+  if (!st) return 'pending';
+  return st.status || 'pending';
+}
+
+function icon(st) {
+  if (st === 'done')    return '✅';
+  if (st === 'running') return '🔄';
+  if (st === 'error')   return '⚠';
+  return '⏳';
+}
+
+function fmtElapsed(started) {
+  if (!started) return '—';
+  const now = new Date();
+  const parts = started.split(':').map(Number);
+  if (parts.length < 3) return '—';
+  const startDate = new Date(now);
+  startDate.setHours(parts[0], parts[1], parts[2], 0);
+  let diff = Math.floor((now - startDate) / 1000);
+  if (diff < 0) diff += 86400;
+  const h = Math.floor(diff / 3600);
+  const m = Math.floor((diff % 3600) / 60);
+  const sec = diff % 60;
+  return h + 'h ' + m + 'm ' + sec + 's';
+}
+
+function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+function renderPipeline(s) {
+  const wrap = document.getElementById('pipeline');
+  clear(wrap);
+  STAGES.forEach((st, i) => {
+    if (i > 0) wrap.appendChild(el('span', {class:'arrow', text:'→'}));
+    const cur = statusOf(s, st.key);
+    const active = (s.stage === st.key) ||
+                   (st.key === 'qa' && s.stage === 'qa') ||
+                   (st.key === 'ship' && s.verdict === 'SHIP_READY');
+    const step = el('div', {class: 'step' + (active ? ' active' : '')},
+      el('span', {class: 'dot ' + cur}),
+      el('span', {text: st.label})
+    );
+    wrap.appendChild(step);
+  });
+}
+
+function card(title, status, rows) {
+  const e = el('div', {class:'card'});
+  const head = el('h3', null,
+    el('span', {text: title}),
+    el('span', {class: 'status-pill ' + (status||'pending'), text: (status||'pending')})
+  );
+  e.appendChild(head);
+  rows.forEach(([k,v]) => {
+    e.appendChild(el('div', {class:'row'},
+      el('span', {class:'k', text: k}),
+      el('span', {class:'v', text: String(v)})
+    ));
+  });
+  return e;
+}
+
+function renderStageCards(s) {
+  const wrap = document.getElementById('stage-cards');
+  clear(wrap);
+  const stages = s.stages || {};
+  const audit = stages.audit || {};
+  wrap.appendChild(card('Audit', audit.status, [
+    ['Output', audit.output || 'FEATURE_PARITY_REGISTRY.md'],
+    ['Rows', audit.rows ?? '—'],
+    ['Screens', audit.screens ?? '—'],
+  ]));
+  const plan = stages.plan || {};
+  wrap.appendChild(card('Plan (7 agents)', plan.status, [
+    ['Output', plan.output || 'MACOS_APP_PLAN.md'],
+    ['Vetoes raised', plan.vetoes ?? '—'],
+    ['Confidence', plan.confidence ?? '—'],
+  ]));
+  const v = stages.vetoes || {};
+  wrap.appendChild(card('Vetoes', v.status, [
+    ['Output', v.output || 'VETO_RESOLUTION_PATCH.md'],
+    ['Resolved', v.resolved ?? '—'],
+    ['Process gates', v.process_gates ?? '—'],
+  ]));
+  const b = stages.build || {};
+  const bcard = card('Build', b.status, [
+    ['Phases', (b.phases_done ?? 0) + ' / ' + (b.phases_total ?? 9)],
+    ['Screens done', (b.screens_done || []).length],
+    ['Current screen', b.current_screen || '—'],
+  ]);
+  const scrDone = b.screens_done || [];
+  if (scrDone.length) {
+    const list = el('div', {class:'scr-list'});
+    scrDone.forEach(x => list.appendChild(el('span', {text: x})));
+    bcard.appendChild(list);
+  }
+  wrap.appendChild(bcard);
+}
+
+function renderQA(s) {
+  const qa = (s.stages && s.stages.qa) || {};
+  const pill = document.getElementById('qa-pill');
+  pill.className = 'status-pill ' + (qa.status || 'pending');
+  pill.textContent = qa.status || 'pending';
+  document.getElementById('qa-round').textContent = qa.total_rounds || qa.round || 0;
+  const active = qa.current_agent || '';
+  const badge = document.getElementById('qa-active');
+  let cls = 'idle', text = 'idle';
+  if (active) {
+    text = active;
+    const al = active.toLowerCase();
+    if (al.indexOf('fix') === 0) cls = 'fix';
+    else if (al.indexOf('a+b') === 0) cls = 'ab';
+    else if (al.indexOf('a') === 0) cls = 'a';
+    else if (al.indexOf('b') === 0) cls = 'b';
+    else if (al.indexOf('c') === 0) cls = 'c';
+  }
+  badge.className = 'agent-badge ' + cls;
+  badge.textContent = text;
+  const verdict = qa.verdict || '—';
+  const vEl = document.getElementById('qa-verdict');
+  vEl.textContent = verdict;
+  vEl.className = verdict === 'SHIP_READY' ? 'verdict-ship' : (verdict === 'needs_fixes' ? 'verdict-fix' : '');
+  const tbody = document.getElementById('qa-tbody');
+  clear(tbody);
+  const rounds = qa.rounds_detail || [];
+  if (!rounds.length) {
+    tbody.appendChild(el('tr', null,
+      el('td', {colspan:'7', style:'color:var(--muted);text-align:center;padding:14px;', text:'No rounds yet'})
+    ));
+    return;
+  }
+  rounds.forEach(r => {
+    const verd = r.verdict || '';
+    const vclass = verd === 'SHIP_READY' ? 'verdict-ship' : (verd === 'needs_fixes' ? 'verdict-fix' : '');
+    tbody.appendChild(el('tr', null,
+      el('td', {text: String(r.round)}),
+      el('td', {text: r.started || ''}),
+      el('td', {class:'center', text: icon(r.fix)}),
+      el('td', {class:'center', text: icon(r.a)}),
+      el('td', {class:'center', text: icon(r.b)}),
+      el('td', {class:'center', text: icon(r.c)}),
+      el('td', {class: vclass, text: verd || '—'})
+    ));
+  });
+}
+
+function renderBanners(s) {
+  document.getElementById('banner-ship').style.display   = s.verdict === 'SHIP_READY' ? 'block' : 'none';
+  document.getElementById('banner-paused').style.display = s.paused ? 'block' : 'none';
+  document.getElementById('banner-ship-sub').textContent = s.completed ? ('Completed at ' + s.completed + ' (' + (s.elapsed || '') + ')') : '';
+  document.getElementById('banner-paused-reason').textContent = s.pause_reason || '';
+}
+
+function renderLog(s) {
+  const wrap = document.getElementById('log');
+  clear(wrap);
+  const lines = (s.log || []).slice(-20);
+  if (!lines.length) {
+    wrap.appendChild(el('div', {class:'line', text:'(no log yet)'}));
+    return;
+  }
+  lines.forEach(l => {
+    const m = l.match(/^\[(\d\d:\d\d:\d\d)\]\[([^\]]+)\]\s?(.*)$/);
+    const line = el('div', {class:'line'});
+    if (m) {
+      line.appendChild(el('span', {class:'ts', text: '[' + m[1] + ']'}));
+      line.appendChild(el('span', {class:'stage', text: '[' + m[2] + ']'}));
+      line.appendChild(document.createTextNode(' ' + m[3]));
+    } else {
+      line.textContent = l;
+    }
+    wrap.appendChild(line);
+  });
+}
+
+async function refresh() {
+  try {
+    const r = await fetch('orchestrator_status.json?t=' + Date.now());
+    const s = await r.json();
+    document.getElementById('proj').textContent    = (s.project || '').split('/').pop() || 'Project';
+    document.getElementById('target').textContent  = s.target || '—';
+    document.getElementById('branch').textContent  = s.branch || '—';
+    document.getElementById('stage').textContent   = s.stage || '—';
+    document.getElementById('started').textContent = 'started: ' + (s.started || '—');
+    document.getElementById('elapsed').textContent = fmtElapsed(s.started);
+    renderBanners(s);
+    renderPipeline(s);
+    renderStageCards(s);
+    renderQA(s);
+    renderLog(s);
+  } catch (e) {}
+}
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>

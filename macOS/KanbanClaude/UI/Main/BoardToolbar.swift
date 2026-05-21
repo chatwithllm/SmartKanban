@@ -123,6 +123,7 @@ struct ScopePicker: View {
 struct SearchField: View {
     @Binding var query: String
     let section: Section
+    @FocusState private var focused: Bool
 
     var placeholder: String {
         section == .knowledge ? "Search knowledge…" : "Search cards…"
@@ -134,6 +135,14 @@ struct SearchField: View {
             TextField(placeholder, text: $query)
                 .textFieldStyle(.plain)
                 .font(.sans(12))
+                .focused($focused)
+                .onExitCommand {
+                    if !query.isEmpty {
+                        query = ""
+                    } else {
+                        focused = false
+                    }
+                }
             if query.isEmpty {
                 Text("⌘K")
                     .font(.mono(10))
@@ -147,6 +156,9 @@ struct SearchField: View {
         .background(Tokens.canvas)
         .clipShape(Capsule())
         .overlay(Capsule().strokeBorder(Tokens.hairline, lineWidth: 1))
+        .onReceive(NotificationCenter.default.publisher(for: GlobalKeyMonitor.focusSearch)) { _ in
+            focused = true
+        }
     }
 }
 

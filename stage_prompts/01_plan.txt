@@ -1,0 +1,170 @@
+Read agent-rules.md before doing anything else. All rules active.
+
+## Build constants (auto-detected; if BUILD_CONSTANTS.md exists, prefer values from that file)
+Bundle ID:       com.kanbanclaude.kanbanclaude
+App name:        KanbanClaude
+URL scheme:      kanbanclaude://
+Min OS:          macOS 13.3+ (Apple Silicon)
+Distribution:    direct-dmg (unsigned local install + xattr -cr)
+Auth strategy:   read the web app's auth code under `server/` before deciding token storage
+Prod URL:        https://kanban.npalakurla.com
+
+If `BUILD_CONSTANTS.md` exists in the project root, read it first and override the
+above with any values it specifies.
+
+---
+
+## Objective
+Read the complete web project in this repository and produce a single exhaustive document —
+MACOS_APP_PLAN.md — that is detailed enough for a separate Claude Code agent to build a
+native macOS Apple Silicon app from 0 to 100% without any human clarification.
+Think carefully and step-by-step before starting.
+
+The web frontend lives under `web/`. Backend lives under `server/`.
+
+## Your Role as Orchestrator
+You will sequentially embody seven specialist agents. Each agent reads all prior agents'
+output before contributing its section. Do not skip or merge.
+
+AGENT ROSTER (exact order):
+  [AGENT 1] 🔍 Project Analyst
+  [AGENT 2] 📋 Product Manager
+  [AGENT 3] 🎨 macOS Design Lead
+  [AGENT 4] 🏗  Solutions Architect
+  [AGENT 5] 👩‍💻 macOS Frontend Engineer
+  [AGENT 6] 🧪 QA Engineer
+  [AGENT 7] 🔎 Senior Reviewer
+
+Announce each agent: ✅ [AGENT N — NAME] Starting ...
+And when it ends: ✅ [AGENT N — NAME] Complete. Conflicts found: [none | list]
+
+---
+
+## Context — What Exists Now
+The web project is in the current working directory.
+Frontend: `web/` (index.html + supporting files). Backend: `server/`.
+Discover stack, routing, data fetching, UI patterns by reading code.
+Target: macOS 13 Ventura+ on Apple Silicon (M1/M2/M3/M4).
+
+## Target State
+A single file MACOS_APP_PLAN.md exists in the project root containing all 7 sections,
+populated with project-specific details — no generic placeholders.
+Every web screen accounted for. Every API endpoint mapped. Every component spec'd.
+Menu bar, keyboard shortcuts, window management, native macOS integrations specified.
+
+## Scope
+Read: ALL files — source code, config, env.example, README, migrations, schema files,
+  API routes, components, pages, store/state files, tests, AND FEATURE_PARITY_REGISTRY.md.
+Write: MACOS_APP_PLAN.md in the project root ONLY.
+Do NOT modify any existing project file.
+Do NOT install packages or run servers.
+
+---
+
+## AGENT INSTRUCTIONS
+
+─────────────────────────────────────────────────────────
+[AGENT 1] 🔍 PROJECT ANALYST
+─────────────────────────────────────────────────────────
+Read every file. Produce Section 1 of MACOS_APP_PLAN.md:
+
+### 1. PROJECT INVENTORY
+1.1 TECH STACK — frontend, backend, db, auth, API style, realtime, storage, integrations, build tooling, CSS approach. Exact versions from package.json / requirements.txt.
+1.2 FULL SCREEN / PAGE INVENTORY — every route/view found. Modals/sidepanels/drawers as sub-rows. No route omitted.
+1.3 DATA MODELS — every entity, fields (name: type), relations, screens used on.
+1.4 API ENDPOINTS — method, endpoint, auth, request payload, response shape, used by.
+1.5 STATE MANAGEMENT — global state, server state caching, form state.
+1.6 AUTHENTICATION FLOW — login, token/session storage, refresh, protected routes, logout.
+1.7 BUSINESS RULES & DOMAIN LOGIC — every non-trivial rule in code.
+1.8 COMPLEXITY FLAGS FOR DESKTOP PORTING — features needing special macOS treatment.
+1.9 ASSETS INVENTORY — fonts, icons, images, sounds.
+
+─────────────────────────────────────────────────────────
+[AGENT 2] 📋 PRODUCT MANAGER
+─────────────────────────────────────────────────────────
+### 2. PRODUCT STRATEGY
+2.1 PLATFORM DECISION — macOS 13+ Apple Silicon. Intel as stretch. Distribution: direct-dmg unsigned (per constants). App type (menubar | window | both).
+2.2 FEATURE PARITY MATRIX — every screen from 1.2 with desktop disposition.
+2.3 DESKTOP-EXCLUSIVE FEATURES — menubar status icon, global shortcuts, Dock badge, Notification Center, multi-window, Quick Look, Share extension, drag-from-Finder, Open/Save panels.
+2.4 MVP SCOPE — exact v1.0 feature set.
+2.5 USER JOURNEY MAPS — desktop critical paths for each user type.
+2.6 ACCEPTANCE CRITERIA — minimum 12 binary pass/fail criteria.
+
+─────────────────────────────────────────────────────────
+[AGENT 3] 🎨 macOS DESIGN LEAD
+─────────────────────────────────────────────────────────
+### 3. DESIGN SYSTEM & VIEW SPECS
+3.1 DESIGN TOKENS — macOS adapted. Colors mapped to NSColor semantic where possible. Typography mapped to macOS type scale. Spacing, corner radius, vibrancy, animation.
+3.2 WINDOW ARCHITECTURE — every window: type, style mask, default/min/max size, autosave name, toolbar, sidebar, split view, full screen.
+3.3 APPLICATION MENU SPEC — every menu item: shortcut, action, enabled-when.
+3.4 KEYBOARD SHORTCUTS MASTER LIST — every shortcut, scope, conflict check.
+3.5 CONTEXT MENU SPECS — every right-clickable element.
+3.6 COMPONENT LIBRARY — macOS native equivalents for every reusable component.
+3.7 VIEW-BY-VIEW DESIGN SPECS — every MVP view. Do NOT abbreviate any view.
+3.8 PREFERENCES WINDOW SPEC.
+3.9 MACOS-NATIVE INTERACTION PATTERNS — drag-and-drop, Finder integration, undo/redo, auto-save.
+
+─────────────────────────────────────────────────────────
+[AGENT 4] 🏗 SOLUTIONS ARCHITECT
+─────────────────────────────────────────────────────────
+### 4. TECHNICAL ARCHITECTURE
+4.1 FRAMEWORK DECISION — evaluate Tauri 2 / Electron / SwiftUI+AppKit against this stack. Justify choice (4-6 sentences citing Section 1). Lock language(s) and exact versions.
+4.2 PROJECT STRUCTURE — exact directory + file tree the build agent MUST create. Every folder and key file with purpose comment.
+4.3 DEPENDENCY LIST — LOCKED — every package/crate with version + purpose + justification.
+4.4 ENVIRONMENT CONFIGURATION — variables, secrets to Keychain (NOT .env at runtime).
+4.5 API INTEGRATION STRATEGY — base URL, auth header, token storage (Keychain only), refresh, interceptors, error handling, offline strategy.
+4.6 NATIVE macOS INTEGRATION PLAN — every native capability with API, Rust/Swift file, frontend trigger, permissions, fallback.
+4.7 WINDOW MANAGEMENT IMPLEMENTATION — every window from 3.2 with implementation details.
+4.8 BUILD & DISTRIBUTION PLAN — dev / build-for-testing / production / signing / notarization / DMG.
+
+─────────────────────────────────────────────────────────
+[AGENT 5] 👩‍💻 macOS FRONTEND ENGINEER
+─────────────────────────────────────────────────────────
+### 5. IMPLEMENTATION SPEC
+5.1 COMPONENT IMPLEMENTATION SPECS — every component from 3.6: file, props, state, hover, focus, keyboard, render, dark mode, a11y, tests.
+5.2 VIEW IMPLEMENTATION SPECS — every MVP view from 3.7: file, navigation, toolbar, data fetching (query key, hook, branches), mutations, local state, keyboard, drag-drop, context menu, selection, tree.
+5.3 TAURI COMMAND / APPKIT DELEGATE SPECS — every native operation.
+5.4 MENU IMPLEMENTATION — every item from 3.3 with ID constant + handler.
+5.5 KEYBOARD SHORTCUT IMPLEMENTATION — every shortcut from 3.4.
+5.6 STATE MANAGEMENT — file paths, store spec, persisted UserDefaults keys, in-memory state.
+5.7 DESKTOP LAYOUT WRAPPER.
+5.8 BUILD ORDER — PHASE PLAN — Phase 0-9 (Prereqs, Foundation, Design System, Auth, Core MVP Views, Native Integrations, Preferences, Polish, Testing, Build & Ship).
+
+─────────────────────────────────────────────────────────
+[AGENT 6] 🧪 QA ENGINEER
+─────────────────────────────────────────────────────────
+### 6. TEST PLAN
+6.1 TEST MATRIX — Mac models, chips, macOS versions, displays.
+6.2 UNIT TESTS — components.
+6.3 INTEGRATION TESTS — views.
+6.4 E2E TEST SCRIPTS — framework choice + critical paths.
+6.5 MACOS-SPECIFIC SCENARIOS — cold start, sleep resume, resize, full-screen, shortcuts, context menus, dark/light, external display, notch, VoiceOver, large text, drag-from-Finder, deep links.
+6.6 PERFORMANCE BENCHMARKS — cold launch < 2s on M1, list scroll 60fps, memory, CPU, binary size.
+6.7 ACCESSIBILITY CHECKLIST.
+
+─────────────────────────────────────────────────────────
+[AGENT 7] 🔎 SENIOR REVIEWER
+─────────────────────────────────────────────────────────
+### 7. REVIEW & CONFLICT RESOLUTION
+7.1 CONFLICTS FOUND — table of conflicts + resolution. If none: "No conflicts found".
+7.2 GAPS FOUND — table of gaps + resolution. If none: "No gaps".
+7.3 MACOS-SPECIFIC RISK REGISTER — sandbox, framework compatibility, WebView limits, signing, Apple Silicon vs Rosetta, Keychain access group, NSWindow leaks, WKWebView CSS quirks.
+7.4 HANDOFF CHECKLIST — every box checkable; list any UNCHECKED as veto items.
+7.5 FINAL CONFIDENCE SCORE — Completeness / Buildability / Risk (1-10 each). If any < 7: list what to add.
+
+---
+
+## Final Output
+After all 7 agents complete:
+1. Write the full MACOS_APP_PLAN.md.
+2. Print:
+   ✅ MACOS_APP_PLAN.md written — <X> views | <Y> components | <Z> native operations mapped
+   🎯 Confidence: Completeness <N>/10 | Buildability <N>/10 | Risk <N>/10
+3. Final line, exact format (orchestrator polls for this):
+   STAGE_COMPLETE: plan vetoes=<N_from_7.4> confidence=<overall_N>
+
+## Constraints
+- State only what you can verify in the source. Mark uncertain as [UNCONFIRMED — verify before building].
+- Do not add features beyond the web app unless listed in Section 2.3.
+- Do not refactor any existing web app files.
+- All package/crate names must be real published packages.

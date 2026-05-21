@@ -11,17 +11,30 @@ struct BoardView: View {
 
     var body: some View {
         ZStack {
-            HStack(spacing: 0) {
-                ForEach(CardStatus.allCases, id: \.self) { status in
-                    BoardColumnView(
-                        status: status,
-                        cards: filtered(in: status),
-                        onAdd: { onCreateCard(status) },
-                        onOpen: { onOpenCard($0.id) },
-                        onMove: { id, newStatus, idx in handleMove(id: id, status: newStatus, idx: idx) }
-                    )
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 0) {
+                        ForEach(CardStatus.allCases, id: \.self) { status in
+                            BoardColumnView(
+                                status: status,
+                                cards: filtered(in: status),
+                                onAdd: { onCreateCard(status) },
+                                onOpen: { onOpenCard($0.id) },
+                                onMove: { id, newStatus, idx in handleMove(id: id, status: newStatus, idx: idx) }
+                            )
+                            .frame(minWidth: 280, maxWidth: .infinity)
+                            .id(status)
+                            if status != .done { divider }
+                        }
+                    }
                     .frame(maxWidth: .infinity)
-                    if status != .done { divider }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: GlobalKeyMonitor.scrollToColumn)) { note in
+                    if let status = note.userInfo?[GlobalKeyMonitor.scrollToColumnKey] as? CardStatus {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            proxy.scrollTo(status, anchor: .center)
+                        }
+                    }
                 }
             }
             TrashDropZoneOverlay(drag: DragStore.shared) { id in

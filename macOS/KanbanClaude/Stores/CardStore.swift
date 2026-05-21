@@ -182,6 +182,41 @@ final class CardStore: ObservableObject {
         }
     }
 
+    func attachImageData(cardId: UUID, data: Data, mime: String, filename: String = "pasted.png") async {
+        do {
+            let raw = try await Uploader.uploadImage(
+                endpointPath: "/api/cards/\(cardId.lowered)/attachments",
+                imageData: data,
+                originalFilename: filename,
+                mimeType: mime
+            )
+            let card = try JSONDecoder.kanban.decode(Card.self, from: raw)
+            upsert(card)
+            ToastStore.shared.success("Image pasted")
+        } catch {
+            ToastStore.shared.error("Couldn't attach: \(error.localizedDescription)")
+        }
+    }
+
+    func createFromImageData(data: Data, mime: String, status: CardStatus = .today, filename: String = "pasted.png") async -> Card? {
+        do {
+            let raw = try await Uploader.uploadImage(
+                endpointPath: "/api/cards/from-image",
+                imageData: data,
+                originalFilename: filename,
+                mimeType: mime,
+                extraFields: ["status": status.rawValue]
+            )
+            let card = try JSONDecoder.kanban.decode(Card.self, from: raw)
+            upsert(card)
+            ToastStore.shared.success("Card created from image")
+            return card
+        } catch {
+            ToastStore.shared.error("Couldn't create card from image: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
     func archive(id: UUID) async {
         let previous = cards.first(where: { $0.id == id })
         remove(id: id)

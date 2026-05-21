@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         URLSchemeHandler.shared.install()
         NotificationCenterBridge.shared.attach()
         StatusItemController.shared.install()
+        GlobalKeyMonitor.shared.install()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
