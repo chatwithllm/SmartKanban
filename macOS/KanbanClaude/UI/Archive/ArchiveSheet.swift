@@ -9,7 +9,7 @@ struct ArchiveSheet: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ModalHeaderStrip(title: "Archive") {
+            ModalHeaderStrip(title: "Archived cards") {
                 HStack(spacing: 8) {
                     Text("\(archived.count)")
                         .font(.mono(11, weight: .semibold))
@@ -88,7 +88,13 @@ struct ArchiveSheet: View {
 
     private func archivedRow(_ card: Card) -> some View {
         HStack(alignment: .top, spacing: 10) {
-            Circle().fill(statusColor(card.status)).frame(width: 8, height: 8).padding(.top, 6)
+            Text(card.status.label.uppercased())
+                .font(.mono(10, weight: .semibold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 7).padding(.vertical, 2)
+                .background(statusColor(card.status))
+                .clipShape(Capsule())
+                .padding(.top, 2)
             VStack(alignment: .leading, spacing: 2) {
                 Text(card.title).font(.serif(14, weight: .semibold)).foregroundStyle(Tokens.ink)
                 Text("Archived \(rel(card.updatedAt)) • was \(card.status.label)")

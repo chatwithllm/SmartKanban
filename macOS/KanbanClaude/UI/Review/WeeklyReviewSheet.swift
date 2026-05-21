@@ -81,13 +81,17 @@ struct WeeklyReviewSheet: View {
 
     @ViewBuilder private func section(title: String, rows: [ReviewRow], empty: String, accent: Color) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.sans(13, weight: .semibold)).foregroundStyle(accent)
+            Text(title.uppercased())
+                .font(.mono(10, weight: .semibold))
+                .tracking(1.2)
+                .foregroundStyle(Tokens.ink3)
             if rows.isEmpty {
                 Text(empty).font(.sans(12)).foregroundStyle(Tokens.ink3)
                     .padding(.vertical, 4)
             } else {
                 ForEach(rows) { r in
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("·").font(.sans(12)).foregroundStyle(Tokens.ink3)
                         Text(r.title).font(.sans(12)).foregroundStyle(Tokens.ink)
                         Spacer()
                         if !r.tags.isEmpty {
@@ -106,7 +110,7 @@ struct WeeklyReviewSheet: View {
 
     private var footer: some View {
         HStack {
-            Button("Generate again") {
+            Button(loading ? "Generating…" : "Generate again") {
                 Task { await refresh() }
             }
             .disabled(loading)

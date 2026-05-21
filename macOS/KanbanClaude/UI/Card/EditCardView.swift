@@ -291,48 +291,44 @@ struct EditCardView: View {
     }
 
     private func knowledgeSection() -> some View {
-        DisclosureGroup {
-            VStack(alignment: .leading, spacing: 6) {
-                if linkedKnowledge.isEmpty {
-                    Text("No linked notes yet.")
-                        .font(.sans(11)).foregroundStyle(Tokens.ink3)
-                } else {
-                    ForEach(linkedKnowledge) { item in
-                        linkedRow(item)
-                    }
+        VStack(alignment: .leading, spacing: 6) {
+            SectionLabel("Knowledge")
+            if linkedKnowledge.isEmpty {
+                Text("No linked notes yet.")
+                    .font(.sans(11)).foregroundStyle(Tokens.ink3)
+            } else {
+                ForEach(linkedKnowledge) { item in
+                    linkedRow(item)
                 }
-                HStack(spacing: 8) {
+            }
+            HStack(spacing: 8) {
+                Button {
+                    withAnimation { knowledgePicking.toggle() }
+                    if !knowledgePicking { knowledgeQuery = ""; knowledgeResults = [] }
+                } label: {
+                    Label(knowledgePicking ? "Cancel" : "+ Attach", systemImage: "link")
+                        .font(.sans(11, weight: .semibold))
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Tokens.ceramic)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                if shouldShowSaveAsKnowledge() {
                     Button {
-                        withAnimation { knowledgePicking.toggle() }
-                        if !knowledgePicking { knowledgeQuery = ""; knowledgeResults = [] }
+                        Task { await saveCardAsKnowledge() }
                     } label: {
-                        Label(knowledgePicking ? "Cancel" : "+ Attach", systemImage: "link")
+                        Label("Save as knowledge", systemImage: "tray.and.arrow.down")
                             .font(.sans(11, weight: .semibold))
                             .padding(.horizontal, 8).padding(.vertical, 4)
-                            .background(Tokens.ceramic)
+                            .background(Tokens.violetTint)
                             .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
-                    if shouldShowSaveAsKnowledge() {
-                        Button {
-                            Task { await saveCardAsKnowledge() }
-                        } label: {
-                            Label("Save as knowledge", systemImage: "tray.and.arrow.down")
-                                .font(.sans(11, weight: .semibold))
-                                .padding(.horizontal, 8).padding(.vertical, 4)
-                                .background(Tokens.violetTint)
-                                .clipShape(Capsule())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                if knowledgePicking {
-                    knowledgePicker
                 }
             }
-            .padding(.vertical, 4)
-        } label: {
-            SectionLabel("Knowledge")
+            if knowledgePicking {
+                knowledgePicker
+            }
         }
     }
 
