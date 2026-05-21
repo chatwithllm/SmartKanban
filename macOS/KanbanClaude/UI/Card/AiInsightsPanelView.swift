@@ -82,7 +82,7 @@ struct AiInsightsPanelView: View {
                 }
                 if let steps = latest.body?.nextSteps, !steps.isEmpty {
                     sectionTitle("Next steps")
-                    ForEach(Array(steps.prefix(4).enumerated()), id: \.offset) { idx, step in
+                    ForEach(Array(steps.enumerated()), id: \.offset) { idx, step in
                         Text("\(idx + 1). \(step)").font(.sans(12))
                     }
                 }
