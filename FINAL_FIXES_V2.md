@@ -178,7 +178,8 @@ Effort: S (≈ 5 min)
 
 Each is a small file-level edit. Group into a single follow-up "polish round 2" commit if convenient.
 
-### FIX-V2-006: Weekly Review copy + per-row metadata — re-sync with web
+### ✅ FIX-V2-006: Weekly Review copy + per-row metadata — re-sync with web
+**Done:** WeeklyReviewSheet section titles include counts (`Shipped (N)`, `Stale (N)`, `Stuck in progress (N)`). Empty copy now matches web: `No stale cards.`, `Nothing stuck.`. Per-row metadata renders `#tag` list instead of `rel(updatedAt)`.
 Found by: CA2-002 (A) — copy spec in original FIX-012 itself diverged from web
 File: `macOS/KanbanClaude/UI/Review/WeeklyReviewSheet.swift:28–45, 57–79`
 Specific change:

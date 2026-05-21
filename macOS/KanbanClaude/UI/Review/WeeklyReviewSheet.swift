@@ -26,21 +26,21 @@ struct WeeklyReviewSheet: View {
                             }
                         }
                         section(
-                            title: "✅ Done this week",
+                            title: "Shipped (\(data.done.count))",
                             rows: data.done,
                             empty: "Nothing closed this week.",
                             accent: Tokens.greenAccent
                         )
                         section(
-                            title: "🪨 Stale (no update >7d)",
+                            title: "Stale (\(data.stale.count))",
                             rows: data.stale,
-                            empty: "Nothing aging right now.",
+                            empty: "No stale cards.",
                             accent: Tokens.gold
                         )
                         section(
-                            title: "⚠️ Stuck in flight (>3d)",
+                            title: "Stuck in progress (\(data.stuck.count))",
                             rows: data.stuck,
-                            empty: "Nothing flagged stuck.",
+                            empty: "Nothing stuck.",
                             accent: Tokens.danger
                         )
                     }
@@ -89,7 +89,12 @@ struct WeeklyReviewSheet: View {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(r.title).font(.sans(12)).foregroundStyle(Tokens.ink)
                         Spacer()
-                        Text(rel(r.updatedAt)).font(.mono(10)).foregroundStyle(Tokens.ink3)
+                        if !r.tags.isEmpty {
+                            Text(r.tags.map { "#\($0)" }.joined(separator: ", "))
+                                .font(.mono(10))
+                                .foregroundStyle(Tokens.ink3)
+                                .lineLimit(1)
+                        }
                     }
                     .padding(.vertical, 4)
                     Divider()
