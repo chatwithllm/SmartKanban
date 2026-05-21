@@ -4,6 +4,7 @@ struct CardTimelineView: View {
     let cardId: UUID
     @StateObject private var store: CardEventsStore
     @State private var expanded = true
+    @State private var appliedKeys: Set<String> = []
 
     init(cardId: UUID) {
         self.cardId = cardId
@@ -47,7 +48,11 @@ struct CardTimelineView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 8) {
                             ForEach(store.events) { ev in
-                                TimelineRow(event: ev).id(ev.id)
+                                TimelineRow(
+                                    event: ev,
+                                    cardId: cardId,
+                                    appliedKeys: $appliedKeys
+                                ).id(ev.id)
                             }
                         }
                         .padding(.vertical, 4)
@@ -64,6 +69,14 @@ struct CardTimelineView: View {
 
 private struct TimelineRow: View {
     let event: CardEvent
+    let cardId: UUID
+    @Binding var appliedKeys: Set<String>
+
+    init(event: CardEvent, cardId: UUID = UUID(), appliedKeys: Binding<Set<String>> = .constant([])) {
+        self.event = event
+        self.cardId = cardId
+        self._appliedKeys = appliedKeys
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
@@ -117,14 +130,60 @@ private struct TimelineRow: View {
 
     private func suggestionPills(_ suggestions: [AiSuggestion]) -> some View {
         FlowLayout(spacing: 4) {
-            ForEach(Array(suggestions.enumerated()), id: \.offset) { _, s in
-                Text(s.label)
-                    .font(.mono(10, weight: .semibold))
-                    .foregroundStyle(Tokens.violet)
-                    .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(Tokens.violetTint)
-                    .clipShape(Capsule())
+            ForEach(Array(suggestions.enumerated()), id: \.offset) { idx, s in
+                let key = "\(event.id)-\(idx)"
+                let isApplied = appliedKeys.contains(key)
+                Button {
+                    guard !isApplied else { return }
+                    Task { await apply(s, key: key) }
+                } label: {
+                    Text(isApplied ? "✓ \(s.label)" : s.label)
+                        .font(.mono(10, weight: .semibold))
+                        .foregroundStyle(Tokens.violet)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(Tokens.violetTint)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .disabled(isApplied)
             }
+        }
+    }
+
+    private func apply(_ s: AiSuggestion, key: String) async {
+        do {
+            switch s.action {
+            case .updateStatus:
+                if let raw = s.params["status"]?.stringValue, let st = CardStatus(rawValue: raw) {
+                    var patch = CardPatch(); patch.status = st
+                    await CardStore.shared.patch(cardId, patch)
+                    ToastStore.shared.success("Status → \(st.label)")
+                }
+            case .setDueDate:
+                if let due = s.params["due_date"]?.stringValue {
+                    var patch = CardPatch(); patch.dueDate = due
+                    await CardStore.shared.patch(cardId, patch)
+                    ToastStore.shared.success("Due date set")
+                }
+            case .assignUser:
+                if let uid = s.params["user_id"]?.stringValue, let userId = UUID(uuidString: uid) {
+                    if var card = CardStore.shared.card(id: cardId) {
+                        if !card.assignees.contains(userId) { card.assignees.append(userId) }
+                        var patch = CardPatch(); patch.assignees = card.assignees
+                        await CardStore.shared.patch(cardId, patch)
+                        ToastStore.shared.success("Assigned")
+                    }
+                }
+            case .createCard:
+                let title = s.params["title"]?.stringValue ?? "Untitled"
+                let statusRaw = s.params["status"]?.stringValue ?? "backlog"
+                let status = CardStatus(rawValue: statusRaw) ?? .backlog
+                let create = CardCreate(title: title, description: nil, status: status,
+                                        tags: nil, dueDate: nil, assignees: nil,
+                                        source: .manual, project: nil)
+                _ = await CardStore.shared.create(create)
+            }
+            appliedKeys.insert(key)
         }
     }
 

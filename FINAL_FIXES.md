@@ -71,7 +71,7 @@ Specific change: Replace the `Text("Knowledge linking lands in Phase 7.")` place
 - Endpoint cases already exist in `Networking/Endpoint.swift` — verify with `grep -n "knowledgeForCard\|linkKnowledgeToCard\|unlinkKnowledgeFromCard\|knowledgeFromCard" macOS/KanbanClaude/Networking/`.
 Effort: L (≈ 4 hr)
 
-### FIX-002: CardTimeline AI-suggestion pills must be real Buttons that hit endpoints
+### FIX-002: CardTimeline AI-suggestion pills must be real Buttons that hit endpoints ✅ UI/Card/CardTimelineView.swift:128
 Found by: CA-002 (RULE 9 violation)
 File: `macOS/KanbanClaude/UI/Card/CardTimelineView.swift`
 Line / fn: `suggestionPills()` (the row that currently renders suggestions as `Text` capsules)
