@@ -35,22 +35,8 @@ struct BootView: View {
     }
 }
 
-// AuthedRootView is overwritten by Phase 4a (board shell); Phase 1 placeholder.
 struct AuthedRootView: View {
-    @StateObject private var auth = AuthStore.shared
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Welcome \(auth.currentUser?.shortName ?? "—")")
-                .font(.serif(24, weight: .semibold))
-            Text("Phase 1 — board UI lands in Phase 4a.")
-                .font(.sans(13)).foregroundStyle(Tokens.ink2)
-            Button("Sign out") {
-                Task { await auth.logout() }
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .padding(40)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Tokens.canvas)
+        MainView()
     }
 }
