@@ -110,6 +110,13 @@ final class APIClient {
             throw KanbanError.validation(fields, msg)
         }
 
+        // Knowledge routes emit a flat shape: `{ "error": "<msg>", "field": "<key>" }` (server/src/routes/knowledge.ts:26,185).
+        if (400..<500).contains(http.statusCode),
+           let flat = try? JSONDecoder().decode(FlatValidationEnvelope.self, from: data),
+           let field = flat.field, let msg = flat.error {
+            throw KanbanError.validation([field: msg], msg)
+        }
+
         let snippet: String
         if let s = try? JSONDecoder().decode(ErrorEnvelope.self, from: data) {
             snippet = s.error ?? s.message ?? String(data: data, encoding: .utf8) ?? "(no body)"
@@ -131,5 +138,10 @@ final class APIClient {
         }
         let error: Detail?
         let message: String?
+    }
+
+    struct FlatValidationEnvelope: Decodable {
+        let error: String?
+        let field: String?
     }
 }
