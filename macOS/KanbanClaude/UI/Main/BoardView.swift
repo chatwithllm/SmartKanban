@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct BoardView: View {
     @StateObject private var cards = CardStore.shared
@@ -29,6 +30,10 @@ struct BoardView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Tokens.canvas)
+        .onDrop(of: [.fileURL, .image], isTargeted: nil) { providers in
+            handleFinderDrop(providers)
+            return true
+        }
         .onAppear {
             // Rule 3: heavy fetch fan-out runs via Task.detached(priority:.userInitiated)
             // so SwiftUI re-renders don't cancel the network calls.
@@ -46,6 +51,19 @@ struct BoardView: View {
             group.addTask { @MainActor in await self.cards.refresh(scope: self.scope.scope) }
             group.addTask { @MainActor in await self.users.refresh() }
             group.addTask { @MainActor in await self.unread.refresh() }
+        }
+    }
+
+    private func handleFinderDrop(_ providers: [NSItemProvider]) {
+        for provider in providers {
+            if provider.canLoadObject(ofClass: URL.self) {
+                _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                    guard let url else { return }
+                    Task { @MainActor in
+                        _ = await CardStore.shared.createFromImage(fileURL: url)
+                    }
+                }
+            }
         }
     }
 

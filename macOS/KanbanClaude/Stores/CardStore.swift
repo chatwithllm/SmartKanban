@@ -137,6 +137,51 @@ final class CardStore: ObservableObject {
         }
     }
 
+    func createFromImage(fileURL: URL, status: CardStatus = .today) async -> Card? {
+        guard let mime = Uploader.mimeType(for: fileURL) else {
+            ToastStore.shared.error("Only images may be attached.")
+            return nil
+        }
+        do {
+            let data = try Data(contentsOf: fileURL)
+            let raw = try await Uploader.uploadImage(
+                endpointPath: "/api/cards/from-image",
+                imageData: data,
+                originalFilename: fileURL.lastPathComponent,
+                mimeType: mime,
+                extraFields: ["status": status.rawValue]
+            )
+            let card = try JSONDecoder.kanban.decode(Card.self, from: raw)
+            upsert(card)
+            ToastStore.shared.success("Card created from image")
+            return card
+        } catch {
+            ToastStore.shared.error("Couldn't create card from image: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    func attachImage(cardId: UUID, fileURL: URL) async {
+        guard let mime = Uploader.mimeType(for: fileURL) else {
+            ToastStore.shared.error("Only images may be attached.")
+            return
+        }
+        do {
+            let data = try Data(contentsOf: fileURL)
+            let raw = try await Uploader.uploadImage(
+                endpointPath: "/api/cards/\(cardId.lowered)/attachments",
+                imageData: data,
+                originalFilename: fileURL.lastPathComponent,
+                mimeType: mime
+            )
+            let card = try JSONDecoder.kanban.decode(Card.self, from: raw)
+            upsert(card)
+            ToastStore.shared.success("Attachment added")
+        } catch {
+            ToastStore.shared.error("Couldn't attach: \(error.localizedDescription)")
+        }
+    }
+
     func archive(id: UUID) async {
         let previous = cards.first(where: { $0.id == id })
         remove(id: id)

@@ -10,6 +10,10 @@ final class WindowCoordinator {
     private var captureController: NSWindowController?
     private var notificationsPopover: NSPopover?
 
+    func editWindow(id: UUID) -> NSWindow? {
+        editCardControllers[id]?.window
+    }
+
     func openEditCard(id: UUID) {
         if let existing = editCardControllers[id] {
             existing.window?.makeKeyAndOrderFront(nil)

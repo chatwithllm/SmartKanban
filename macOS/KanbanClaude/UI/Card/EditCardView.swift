@@ -28,6 +28,17 @@ struct EditCardView: View {
         }
         .frame(minWidth: 560, minHeight: 600)
         .background(Tokens.canvas)
+        .onDrop(of: [.fileURL, .image], isTargeted: nil) { providers in
+            for provider in providers {
+                if provider.canLoadObject(ofClass: URL.self) {
+                    _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                        guard let url else { return }
+                        Task { @MainActor in await cards.attachImage(cardId: cardId, fileURL: url) }
+                    }
+                }
+            }
+            return true
+        }
         .onAppear {
             draft = cards.card(id: cardId)
             Task.detached(priority: .userInitiated) {
