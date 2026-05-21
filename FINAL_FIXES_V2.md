@@ -36,6 +36,14 @@ Estimated total effort: ~6 hours (P0 + P1 ≈ 2.5 hr; P2 polish ≈ 3.5 hr)
 - fix_verification_failures = 2 (FIX-009 ⚠ both rounds, FIX-022 ⚠ in B / "color note" in A)
 - SHIP_READY = false (p0 + p1 + fix_verification_failures > 0)
 
+## Round 2 Fix Execution — 2026-05-21
+
+- 17 fixes ✅ landed across 11 commits (cef387c..b172cc7).
+- 0 partials, 0 deferred.
+- Rule 14 visual diff deferred per I-1 (screen locked at session start).
+- Rule 16 grep clean on every touched file before each commit.
+- New gates: APIError.validation path, KnowledgeDetailWindowController standalone window, SettingsOpener dual fallback.
+
 ---
 
 ## P0 — Fix Immediately (both auditors found)
