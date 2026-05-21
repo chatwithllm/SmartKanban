@@ -7,6 +7,9 @@ struct MainView: View {
     @StateObject private var section = SectionRouter.shared
     @StateObject private var unread = UnreadStore.shared
 
+    @State private var showArchive = false
+    @State private var showReview = false
+
     var body: some View {
         Group {
             switch section.section {
@@ -18,7 +21,10 @@ struct MainView: View {
             case .knowledge:
                 KnowledgeListView()
             case .archive:
-                ArchivePlaceholderView()
+                Color.clear.onAppear {
+                    showArchive = true
+                    section.section = .board
+                }
             }
         }
         .toolbar {
@@ -30,25 +36,16 @@ struct MainView: View {
                 onCapture: { WindowCoordinator.shared.openCapture(initialStatus: .today) },
                 onOpenSettings: { NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil) },
                 onOpenNotifications: { WindowCoordinator.shared.openNotificationsPopover() },
-                onOpenWeeklyReview: { WindowCoordinator.shared.openWeeklyReview() }
+                onOpenWeeklyReview: { showReview = true }
             )
         }
         .background(Tokens.canvas)
+        .sheet(isPresented: $showArchive) {
+            ArchiveSheet { showArchive = false }
+        }
+        .sheet(isPresented: $showReview) {
+            WeeklyReviewSheet { showReview = false }
+        }
     }
 }
 
-// Placeholder for Phase 8 archive sheet hook.
-struct ArchivePlaceholderView: View {
-    var body: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "archivebox").font(.system(size: 32)).foregroundStyle(Tokens.ink3)
-            Text("Archive opens as a sheet — coming in Phase 8.")
-                .font(.sans(13)).foregroundStyle(Tokens.ink2)
-            PillButton(title: "Back to board", variant: .ghost) {
-                SectionRouter.shared.section = .board
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Tokens.canvas)
-    }
-}
