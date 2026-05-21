@@ -164,7 +164,8 @@ Effort: M (≈ 2 hr — APIError type extension + store throw plumbing + sheet c
 
 ## P2 — Verify Then Fix (visual only, now confirmed real)
 
-### FIX-V2-005: Knowledge view subtitle copy
+### ✅ FIX-V2-005: Knowledge view subtitle copy
+**Done:** KnowledgeListView.swift:118 → `"URLs, snippets, notes — all linked back to cards"`.
 Found by: NEW-GAP-B2-001 (B) only — spot-check confirms copy literal in code
 File: `macOS/KanbanClaude/UI/Knowledge/KnowledgeListView.swift:118`
 Current: `"Notes, links, and references shared across the household."`
@@ -239,7 +240,8 @@ File: `macOS/KanbanClaude/UI/Card/CardTimelineView.swift:6, 34`
 Specific change: flip `@State private var expanded = true` to `false`. Adjust `onAppear` so events only load when the user expands. This drops the per-edit timeline-load network cost and matches `web/src/components/CardTimeline.tsx:119`.
 Effort: S (≈ 10 min)
 
-### FIX-V2-015: Knowledge view — green-house feature band header
+### ✅ FIX-V2-015: Knowledge view — green-house feature band header
+**Done:** KnowledgeListView header wrapped in `Tokens.greenAccent.opacity(0.12)` padded block with rounded 12pt border. F-302 marked ✅ in FEATURE_PARITY_REGISTRY.md.
 Found by: CA2-012 (A) — F-302 still ❌ in FEATURE_PARITY_REGISTRY (not a closed 🔄)
 File: `macOS/KanbanClaude/UI/Knowledge/KnowledgeListView.swift:114–124`
 Specific change: wrap the title + subtitle + `+ New note` button in a green-house tinted block (`Tokens.greenAccent.opacity(0.12)` or matching token, rounded 12pt corner, padding 16) matching `web/src/KnowledgeView.tsx:36–47`. Combine with FIX-V2-005 subtitle copy fix.

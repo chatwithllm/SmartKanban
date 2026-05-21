@@ -115,11 +115,16 @@ struct KnowledgeListView: View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Knowledge").font(.serif(24, weight: .semibold))
-                Text("Notes, links, and references shared across the household.")
+                Text("URLs, snippets, notes — all linked back to cards")
                     .font(.sans(12)).foregroundStyle(Tokens.ink2)
             }
             Spacer()
             PillButton(title: "+ New note", icon: nil) { showCreate = true }
         }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Tokens.greenAccent.opacity(0.12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Tokens.greenAccent.opacity(0.25), lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }

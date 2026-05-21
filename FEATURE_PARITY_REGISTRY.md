@@ -539,7 +539,7 @@ seeing the app surface. The fix is a follow-up run with an unlocked display.
 
 | ID | Feature | UI Element | Sub-tab / Modal | API Call | Business Rule | macOS Impl | Status |
 |----|---------|-----------|-----------------|----------|---------------|------------|--------|
-| F-302 | Green-house feature band: "Knowledge" h1 + subtitle + "+ New note" button | section | KnowledgeView | — | — | TBD | ❌ |
+| F-302 | Green-house feature band: "Knowledge" h1 + subtitle + "+ New note" button | section | KnowledgeView | KnowledgeListView.swift:114-130 — title + violet "+ New note" pill wrapped in green-tinted padded block | KnowledgeListView | code-verified (locked-session, Rule 14 deferred) | ✅ |
 | F-303 | Scope select: mine / inbox / all | select | KnowledgeView | GET /api/knowledge?scope= | — | TBD | ❌ |
 | F-304 | Search input (deferred via useDeferredValue) | input | KnowledgeView | GET /api/knowledge?q= | FTS via plainto_tsquery English | TBD | ❌ |
 | F-305 | Top-20 tag chip cloud (sorted by usage) | buttons | KnowledgeView | — | toggles tag filter | TBD | ❌ |
