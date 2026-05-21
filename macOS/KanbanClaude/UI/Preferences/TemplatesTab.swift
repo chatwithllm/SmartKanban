@@ -40,7 +40,11 @@ struct TemplatesTab: View {
             .listStyle(.bordered)
         }
         .padding(20)
-        .task { await refresh() }
+        .onAppear {
+            Task.detached(priority: .userInitiated) {
+                await refresh()
+            }
+        }
     }
 
     private func instantiate(_ tpl: Template) async {

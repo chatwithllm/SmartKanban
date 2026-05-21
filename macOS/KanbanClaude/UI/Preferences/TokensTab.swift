@@ -54,7 +54,11 @@ struct TokensTab: View {
             }
         }
         .padding(20)
-        .task { await refresh() }
+        .onAppear {
+            Task.detached(priority: .userInitiated) {
+                await refresh()
+            }
+        }
     }
 
     private func mirrorSuccessPanel(_ m: MirrorToken) -> some View {
