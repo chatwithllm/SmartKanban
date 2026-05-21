@@ -2,7 +2,7 @@ import SwiftUI
 
 struct KnowledgeListView: View {
     @StateObject private var store = KnowledgeStore.shared
-    @State private var editing: KnowledgeItem?
+    @State private var detail: KnowledgeItem?
     @State private var showCreate = false
 
     var body: some View {
@@ -41,7 +41,7 @@ struct KnowledgeListView: View {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: 12)], spacing: 12) {
                     ForEach(store.items) { item in
                         KnowledgeRowView(item: item)
-                            .onTapGesture { editing = item }
+                            .onTapGesture { detail = item }
                     }
                     if store.items.isEmpty && !store.loading {
                         Text("No knowledge yet.")
@@ -62,9 +62,9 @@ struct KnowledgeListView: View {
                 showCreate = false
             }
         }
-        .sheet(item: $editing) { item in
-            KnowledgeEditSheet(initial: item) {
-                editing = nil
+        .sheet(item: $detail) { item in
+            KnowledgeDetailSheet(item: item) {
+                detail = nil
             }
         }
     }

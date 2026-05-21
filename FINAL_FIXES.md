@@ -120,7 +120,7 @@ if title.hasPrefix("/") {
 Preload `templates` via `.task` on the capture window. Add `instantiateTemplate` to `Endpoint.swift` if absent — confirm with `grep -n "instantiateTemplate\|/templates/" macOS/KanbanClaude/Networking/Endpoint.swift`.
 Effort: M (≈ 2 hr)
 
-### FIX-005: Knowledge detail read-only modal missing
+### FIX-005: Knowledge detail read-only modal missing ✅ UI/Knowledge/KnowledgeDetailSheet.swift (new) + KnowledgeListView.swift:44
 Found by: CA-005
 File: NEW `macOS/KanbanClaude/UI/Knowledge/KnowledgeDetailSheet.swift` + edit hook in `KnowledgeListView.swift`
 Specific change:
