@@ -83,7 +83,7 @@ Effort: S (≈20 min including build + log validation)
 
 All P2 rows in this round are code-only findings from A. B's locked-screen audit did not surface them because they are sub-pixel copy/structure drifts not visible at the captured composition level. All are confirmed by source-file read in this synthesis.
 
-### FIX-V3-003: Drop `SectionLabel("Title")` and `SectionLabel("Tags")` in EditCardView
+### ✅ FIX-V3-003: Drop SectionLabel("Title") and SectionLabel("Tags") in EditCardView (EditCardView.swift:149, ~567)
 Found by: CA3-003 (A only — code-verified)
 File: `macOS/KanbanClaude/UI/Card/EditCardView.swift`
 Line: 150 (title), 570 (tags inside `TagsEditorRow`)

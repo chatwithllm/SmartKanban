@@ -146,15 +146,12 @@ struct EditCardView: View {
     }
 
     private func titleSection(card: Binding<Card>) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            SectionLabel("Title")
-            TextField("", text: card.title)
-                .textFieldStyle(.plain)
-                .font(.serif(18, weight: .semibold))
-                .padding(.vertical, 8).padding(.horizontal, 10)
-                .background(Tokens.surface)
-                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Tokens.hairline, lineWidth: 1))
-        }
+        TextField("Title", text: card.title)
+            .textFieldStyle(.plain)
+            .font(.serif(18, weight: .semibold))
+            .padding(.vertical, 8).padding(.horizontal, 10)
+            .background(Tokens.surface)
+            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Tokens.hairline, lineWidth: 1))
     }
 
     private func statusSection(card: Binding<Card>) -> some View {
@@ -567,7 +564,6 @@ private struct TagsEditorRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            SectionLabel("Tags")
             FlowLayout(spacing: 6) {
                 ForEach(tags, id: \.self) { tag in
                     HStack(spacing: 4) {
