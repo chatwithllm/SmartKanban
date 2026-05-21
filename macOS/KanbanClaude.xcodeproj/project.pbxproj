@@ -1,0 +1,503 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3960872E7CD85187846B61C9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 32FAD60E9C3B97E09C622A87 /* Assets.xcassets */; };
+		3B3570C66C25A8B31DF420E4 /* KanbanClaudeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5582F45A9B578CD960A323AE /* KanbanClaudeApp.swift */; };
+		4AA9F96292723B7B5AED8CEE /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 202DC6CD8086A92EDB79E7B6 /* Typography.swift */; };
+		7745DDFA7A42F36355FC5C69 /* ColorTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D44ACE213B6D91728D9D096 /* ColorTokens.swift */; };
+		AADED05FA5BF95E300FC46EF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9ADF24F67A29324165CAD9 /* AppDelegate.swift */; };
+		B814CAF2288F34F61C395FED /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7D8A4B8109C41A91487891C /* Constants.swift */; };
+		D9827C1BAE20D1B5DC1C4C90 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AFC02102EB9C7C0698DBBD6 /* ThemeManager.swift */; };
+		EFA941E64E1D709503BAC985 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FE6A6AD74A59A38FA9B854 /* RootView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		050175A70FDD33A3BA88655B /* KanbanClaude.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KanbanClaude.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		202DC6CD8086A92EDB79E7B6 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		32FAD60E9C3B97E09C622A87 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5582F45A9B578CD960A323AE /* KanbanClaudeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanbanClaudeApp.swift; sourceTree = "<group>"; };
+		6AFC02102EB9C7C0698DBBD6 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
+		6E9ADF24F67A29324165CAD9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		8D44ACE213B6D91728D9D096 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
+		A3FE6A6AD74A59A38FA9B854 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		F7D8A4B8109C41A91487891C /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		01B5A43CCD0AA9BF88D2698B /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A5069C8D36C80DCCDD6F5977 /* Fonts */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		0598B9D84DC4CBBB3836EC69 /* Menus */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Menus;
+			sourceTree = "<group>";
+		};
+		1A13C301907C7DEDC3DE2CC1 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				A7360824B3AB02AAED1A84C4 /* Codables */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		36DF78E2ACCB95702885CAEE /* Keychain */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Keychain;
+			sourceTree = "<group>";
+		};
+		5206AB3F65BF6E7A89E20ECD /* App */ = {
+			isa = PBXGroup;
+			children = (
+				6E9ADF24F67A29324165CAD9 /* AppDelegate.swift */,
+				8D44ACE213B6D91728D9D096 /* ColorTokens.swift */,
+				F7D8A4B8109C41A91487891C /* Constants.swift */,
+				6AFC02102EB9C7C0698DBBD6 /* ThemeManager.swift */,
+				202DC6CD8086A92EDB79E7B6 /* Typography.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		582D5C7C52A7121440453CBA /* Archive */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Archive;
+			sourceTree = "<group>";
+		};
+		5BDA7751CDC60E993CF9583B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				050175A70FDD33A3BA88655B /* KanbanClaude.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		5E03D8C98D83500EB65B4434 /* Capture */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Capture;
+			sourceTree = "<group>";
+		};
+		873BCDE647A2978344E0EEB8 /* PreviewSupport */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = PreviewSupport;
+			sourceTree = "<group>";
+		};
+		95DD6809D98A4C2CEC74722F /* Main */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Main;
+			sourceTree = "<group>";
+		};
+		A5069C8D36C80DCCDD6F5977 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		A6E9487A3EE4881D5D32221A /* Preferences */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Preferences;
+			sourceTree = "<group>";
+		};
+		A7360824B3AB02AAED1A84C4 /* Codables */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Codables;
+			sourceTree = "<group>";
+		};
+		C46E62A1C01990BB9F41D5BA /* Mirror */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Mirror;
+			sourceTree = "<group>";
+		};
+		C6C05EA544613547BA02DBEE /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				582D5C7C52A7121440453CBA /* Archive */,
+				E710B4EB26D4E8DFDD943597 /* Auth */,
+				5E03D8C98D83500EB65B4434 /* Capture */,
+				CF39BF722690C9B37034F772 /* Card */,
+				D88DC2C62EEB3872BBD01060 /* Components */,
+				C77B0DA219C3CA7D0F8866FE /* Knowledge */,
+				95DD6809D98A4C2CEC74722F /* Main */,
+				C46E62A1C01990BB9F41D5BA /* Mirror */,
+				A6E9487A3EE4881D5D32221A /* Preferences */,
+				ED1B5ABF743567C5412FA562 /* Review */,
+				A3FE6A6AD74A59A38FA9B854 /* RootView.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		C77B0DA219C3CA7D0F8866FE /* Knowledge */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Knowledge;
+			sourceTree = "<group>";
+		};
+		CF39BF722690C9B37034F772 /* Card */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Card;
+			sourceTree = "<group>";
+		};
+		D054575C42BC1F109CD75514 = {
+			isa = PBXGroup;
+			children = (
+				E2A2DA6847F0F5A74854943E /* KanbanClaude */,
+				5BDA7751CDC60E993CF9583B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D88DC2C62EEB3872BBD01060 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		E2A2DA6847F0F5A74854943E /* KanbanClaude */ = {
+			isa = PBXGroup;
+			children = (
+				5206AB3F65BF6E7A89E20ECD /* App */,
+				36DF78E2ACCB95702885CAEE /* Keychain */,
+				0598B9D84DC4CBBB3836EC69 /* Menus */,
+				1A13C301907C7DEDC3DE2CC1 /* Networking */,
+				873BCDE647A2978344E0EEB8 /* PreviewSupport */,
+				01B5A43CCD0AA9BF88D2698B /* Resources */,
+				E66307603DDF6269F6D39A05 /* Stores */,
+				C6C05EA544613547BA02DBEE /* UI */,
+				32FAD60E9C3B97E09C622A87 /* Assets.xcassets */,
+				5582F45A9B578CD960A323AE /* KanbanClaudeApp.swift */,
+			);
+			path = KanbanClaude;
+			sourceTree = "<group>";
+		};
+		E66307603DDF6269F6D39A05 /* Stores */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Stores;
+			sourceTree = "<group>";
+		};
+		E710B4EB26D4E8DFDD943597 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		ED1B5ABF743567C5412FA562 /* Review */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Review;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		992AE84C44474371B6D4753F /* KanbanClaude */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0A6165DB8BE01F0346C449CA /* Build configuration list for PBXNativeTarget "KanbanClaude" */;
+			buildPhases = (
+				125BAC74E678168FA52696C8 /* Sources */,
+				533ECFC31093A6E29E384A1F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KanbanClaude;
+			packageProductDependencies = (
+			);
+			productName = KanbanClaude;
+			productReference = 050175A70FDD33A3BA88655B /* KanbanClaude.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		ACEAFEAFC2EA627B623CE808 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					992AE84C44474371B6D4753F = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 70AF66B617360D74435DB007 /* Build configuration list for PBXProject "KanbanClaude" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = D054575C42BC1F109CD75514;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 5BDA7751CDC60E993CF9583B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				992AE84C44474371B6D4753F /* KanbanClaude */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		533ECFC31093A6E29E384A1F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3960872E7CD85187846B61C9 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		125BAC74E678168FA52696C8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AADED05FA5BF95E300FC46EF /* AppDelegate.swift in Sources */,
+				7745DDFA7A42F36355FC5C69 /* ColorTokens.swift in Sources */,
+				B814CAF2288F34F61C395FED /* Constants.swift in Sources */,
+				3B3570C66C25A8B31DF420E4 /* KanbanClaudeApp.swift in Sources */,
+				EFA941E64E1D709503BAC985 /* RootView.swift in Sources */,
+				D9827C1BAE20D1B5DC1C4C90 /* ThemeManager.swift in Sources */,
+				4AA9F96292723B7B5AED8CEE /* Typography.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		5E100524C04A872460F44F1E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kanbanclaude.kanbanclaude;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.10;
+			};
+			name = Debug;
+		};
+		8BAFA5AAFB4E6A86D25CF63D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = KanbanClaude/KanbanClaude.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = KanbanClaude/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		BE4762E0AB80789ED10D926D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kanbanclaude.kanbanclaude;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.10;
+			};
+			name = Release;
+		};
+		FE636C58BE94652BE53872F4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = KanbanClaude/KanbanClaude.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = KanbanClaude/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0A6165DB8BE01F0346C449CA /* Build configuration list for PBXNativeTarget "KanbanClaude" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8BAFA5AAFB4E6A86D25CF63D /* Debug */,
+				FE636C58BE94652BE53872F4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		70AF66B617360D74435DB007 /* Build configuration list for PBXProject "KanbanClaude" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5E100524C04A872460F44F1E /* Debug */,
+				BE4762E0AB80789ED10D926D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = ACEAFEAFC2EA627B623CE808 /* Project object */;
+}
