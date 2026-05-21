@@ -272,13 +272,7 @@ struct EditCardView: View {
     }
 
     private func chatPlaceholder() -> some View {
-        DisclosureGroup {
-            Text("Chat & activity timeline lands in Phase 4f.")
-                .font(.sans(11)).foregroundStyle(Tokens.ink3)
-                .padding(.vertical, 4)
-        } label: {
-            SectionLabel("Chat & Activity")
-        }
+        CardTimelineView(cardId: cardId)
     }
 
     private func footer(card: Card) -> some View {

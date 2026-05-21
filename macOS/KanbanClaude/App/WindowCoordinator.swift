@@ -28,7 +28,16 @@ final class WindowCoordinator {
     }
 
     func openCapture(initialStatus: CardStatus) {
-        ToastStore.shared.info("Capture panel lands in Phase 4e (\(initialStatus.label))")
+        if let existing = captureController, existing.window?.isVisible == true {
+            existing.window?.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        let controller = CaptureWindowController(initialStatus: initialStatus)
+        captureController = controller
+        controller.showWindow(nil)
+        controller.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     func openWeeklyReview() {
