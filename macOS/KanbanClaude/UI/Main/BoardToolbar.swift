@@ -248,10 +248,24 @@ struct ProfileChip: View {
                     Divider()
                     Button {
                         open = false
+                        NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+                    } label: {
+                        HStack {
+                            Image(systemName: "gearshape")
+                            Text("Settings")
+                            Spacer()
+                        }
+                        .padding(.horizontal, 10).padding(.vertical, 8)
+                        .font(.sans(12))
+                    }
+                    .buttonStyle(.plain)
+                    Divider()
+                    Button {
+                        open = false
                         Task { await auth.logout() }
                     } label: {
                         HStack {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                            Image(systemName: "arrow.turn.down.left")
                             Text("Sign out")
                             Spacer()
                         }

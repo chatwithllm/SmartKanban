@@ -42,6 +42,9 @@ struct DueDateChip: View {
         let tone: Color
         let label: String
         switch days {
+        case -1:
+            tone = Tokens.danger
+            label = "Yesterday"
         case ..<0:
             tone = Tokens.danger
             label = "\(-days)d overdue"

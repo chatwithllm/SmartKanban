@@ -3,6 +3,8 @@ import SwiftUI
 struct ArchiveSheet: View {
     @State private var archived: [Card] = []
     @State private var loading = false
+    @State private var confirmingPurge = false
+    @State private var confirmingDeleteId: UUID?
     var onClose: () -> Void
 
     var body: some View {
@@ -21,13 +23,6 @@ struct ArchiveSheet: View {
                 Text("\(archived.count) archived card\(archived.count == 1 ? "" : "s")")
                     .font(.sans(11)).foregroundStyle(Tokens.ink2)
                 Spacer()
-                Button(role: .destructive) {
-                    Task { await purgeAll() }
-                } label: {
-                    Label("Delete all", systemImage: "trash")
-                        .font(.sans(11))
-                }
-                .disabled(archived.isEmpty)
             }
             .padding(.horizontal, 16).padding(.vertical, 10)
             Divider()
@@ -39,14 +34,49 @@ struct ArchiveSheet: View {
                         Divider()
                     }
                     if !loading && archived.isEmpty {
-                        Text("Archive is empty.").foregroundStyle(Tokens.ink3).font(.sans(12)).padding(40)
+                        VStack(spacing: 6) {
+                            Text("🗑️")
+                                .font(.system(size: 32))
+                            Text("No archived cards")
+                                .foregroundStyle(Tokens.ink3).font(.sans(12))
+                        }
+                        .padding(40)
                     }
                 }
             }
+            footerBand
         }
-        .frame(width: 640, height: 560)
+        .frame(width: 640, height: 600)
         .background(Tokens.canvas)
         .task { await refresh() }
+    }
+
+    private var footerBand: some View {
+        HStack {
+            Button(role: .destructive) {
+                confirmingPurge = true
+            } label: {
+                Label("Delete all (\(archived.count))", systemImage: "trash")
+                    .font(.sans(11, weight: .semibold))
+            }
+            .disabled(archived.isEmpty)
+            .confirmationDialog(
+                "Delete all \(archived.count) cards forever?",
+                isPresented: $confirmingPurge,
+                titleVisibility: .visible
+            ) {
+                Button("Delete forever", role: .destructive) { Task { await purgeAll() } }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This cannot be undone.")
+            }
+            Spacer()
+            Button("Close", action: onClose)
+                .keyboardShortcut(.cancelAction)
+        }
+        .padding(.horizontal, 16).padding(.vertical, 10)
+        .background(Tokens.danger.opacity(0.08))
+        .overlay(Rectangle().fill(Tokens.hairline).frame(height: 1), alignment: .top)
     }
 
     private func archivedRow(_ card: Card) -> some View {
@@ -62,9 +92,22 @@ struct ArchiveSheet: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
             Button(role: .destructive) {
-                Task { await deleteForever(card.id) }
+                confirmingDeleteId = card.id
             } label: { Image(systemName: "trash") }
             .buttonStyle(.borderless)
+            .confirmationDialog(
+                "Delete this card forever?",
+                isPresented: Binding(
+                    get: { confirmingDeleteId == card.id },
+                    set: { if !$0 { confirmingDeleteId = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                Button("Delete forever", role: .destructive) { Task { await deleteForever(card.id) } }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This cannot be undone.")
+            }
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
     }

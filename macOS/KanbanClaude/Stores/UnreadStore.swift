@@ -36,10 +36,9 @@ final class UnreadStore: ObservableObject {
     private func apply(_ event: BroadcastEvent) {
         switch event {
         case .cardMessage(let ev, let cardId, _), .cardAiResponse(let ev, let cardId, _):
-            // Don't increment for events authored by current user.
-            if ev.actorId != AuthStore.shared.currentUser?.id {
-                bump(cardId: cardId)
-            }
+            if ev.actorId == AuthStore.shared.currentUser?.id { return }
+            if let win = WindowCoordinator.shared.editWindow(id: cardId), win.isKeyWindow { return }
+            bump(cardId: cardId)
         default:
             break
         }

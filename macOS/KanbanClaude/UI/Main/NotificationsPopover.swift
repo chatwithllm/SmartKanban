@@ -26,9 +26,7 @@ struct NotificationsPopoverContent: View {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if store.notifications.isEmpty {
                         VStack(spacing: 6) {
-                            Image(systemName: "bell.slash")
-                                .font(.system(size: 22))
-                                .foregroundStyle(Tokens.ink3)
+                            Text("🔔").font(.system(size: 22))
                             Text("No new notifications")
                                 .font(.sans(12)).foregroundStyle(Tokens.ink3)
                         }

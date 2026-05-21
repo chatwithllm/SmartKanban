@@ -6,12 +6,18 @@ import SwiftUI
 struct TemplatesTab: View {
     @State private var templates: [Template] = []
     @State private var busy = false
+    @State private var lastError: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Templates are managed in the web app for MVP. macOS surfaces them here so you can instantiate from your menu bar.")
                 .font(.sans(11))
                 .foregroundStyle(Tokens.ink3)
+            if let err = lastError {
+                Text(err)
+                    .foregroundStyle(Tokens.danger)
+                    .font(.sans(11))
+            }
             List {
                 ForEach(templates) { tpl in
                     HStack {
@@ -41,17 +47,20 @@ struct TemplatesTab: View {
         do {
             let card = try await APIClient.shared.send(.instantiateTemplate(id: tpl.id, statusOverride: nil), as: Card.self)
             CardStore.shared.upsert(card)
+            lastError = nil
             ToastStore.shared.success("Instantiated \(tpl.name)")
         } catch {
-            ToastStore.shared.error("Couldn't instantiate: \(error.localizedDescription)")
+            lastError = "Couldn't instantiate: \(error.localizedDescription)"
+            ToastStore.shared.error(lastError ?? "")
         }
     }
 
     private func refresh() async {
         do {
             templates = try await APIClient.shared.send(.listTemplates, as: [Template].self)
+            lastError = nil
         } catch {
-            // soft
+            lastError = "Couldn't load templates: \(error.localizedDescription)"
         }
     }
 }

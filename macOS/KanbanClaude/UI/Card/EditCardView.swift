@@ -264,6 +264,9 @@ struct EditCardView: View {
         }
     }
 
+    @State private var showSharedConfirm = false
+    @State private var sharing = false
+
     private func sharesSection(card: Binding<Card>) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             SectionLabel("Shared with")
@@ -272,6 +275,24 @@ struct EditCardView: View {
                 selected: card.shares,
                 accent: Tokens.greenUplift
             )
+            HStack(spacing: 8) {
+                Button("Share now") {
+                    Task {
+                        sharing = true
+                        var p = CardPatch(); p.shares = card.wrappedValue.shares
+                        await cards.patch(cardId, p)
+                        sharing = false
+                        withAnimation { showSharedConfirm = true }
+                        try? await Task.sleep(nanoseconds: 2_000_000_000)
+                        showSharedConfirm = false
+                    }
+                }
+                .disabled(sharing)
+                if showSharedConfirm {
+                    Text("✓ Shared").font(.sans(11)).foregroundStyle(Tokens.greenAccent)
+                }
+                Spacer()
+            }
         }
     }
 

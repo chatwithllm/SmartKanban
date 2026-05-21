@@ -127,10 +127,10 @@ struct BoardColumnView: View {
 
     private var emptyMessage: String {
         switch status {
-        case .backlog: return "Idea graveyard — drop one to revive."
+        case .backlog: return "Nothing here yet."
         case .today: return "Nothing planned for today."
-        case .in_progress: return "Nothing in flight."
-        case .done: return "Recently completed cards land here."
+        case .in_progress: return "Quiet here."
+        case .done: return "Nothing finished yet."
         }
     }
 

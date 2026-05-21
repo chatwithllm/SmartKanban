@@ -32,6 +32,10 @@ struct CardTileView: View {
         }
     }
 
+    private static let relFmt: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter(); f.unitsStyle = .short; return f
+    }()
+
     private var accent: some View {
         RoundedRectangle(cornerRadius: 4, style: .continuous)
             .fill(accentColor)
@@ -117,20 +121,27 @@ struct CardTileView: View {
 
     private var footer: some View {
         HStack(spacing: 6) {
-            DueDateChip(dueDate: card.dueDate)
             let nonImage = card.attachments.filter { $0.kind != .image }.count
+            let unreadCount = unread.counts[card.id] ?? 0
+            let hasDue = card.dueDate != nil
+            let hasAny = hasDue || nonImage > 0 || unreadCount > 0
+            if hasDue { DueDateChip(dueDate: card.dueDate) }
             if nonImage > 0 {
                 Label("\(nonImage)", systemImage: "paperclip")
                     .labelStyle(.titleAndIcon)
                     .font(.mono(10))
                     .foregroundStyle(Tokens.ink3)
             }
-            let count = unread.counts[card.id] ?? 0
-            if count > 0 {
-                Label("\(count)", systemImage: "bubble.left.fill")
+            if unreadCount > 0 {
+                Label("\(unreadCount)", systemImage: "bubble.left.fill")
                     .labelStyle(.titleAndIcon)
                     .font(.mono(10, weight: .semibold))
                     .foregroundStyle(Tokens.violet)
+            }
+            if !hasAny {
+                Text(Self.relFmt.localizedString(for: card.updatedAt, relativeTo: ServerTime.now()))
+                    .font(.sans(11))
+                    .foregroundStyle(Tokens.ink3)
             }
             Spacer()
             if !card.assignees.isEmpty {
@@ -141,7 +152,14 @@ struct CardTileView: View {
                 }
             }
             if !card.shares.isEmpty {
-                ShareAvatar(size: 20)
+                ZStack(alignment: .leading) {
+                    ForEach(Array(card.shares.prefix(3).enumerated()), id: \.offset) { idx, uid in
+                        InitialsAvatar(userId: uid, name: users.shortName(for: uid), size: 20, border: true)
+                            .offset(x: CGFloat(idx) * 10)
+                            .help("Shared with \(users.shortName(for: uid) ?? "user")")
+                    }
+                }
+                .frame(width: 20 + CGFloat(max(0, min(card.shares.count, 3) - 1)) * 10)
             }
         }
     }

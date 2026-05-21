@@ -146,6 +146,8 @@ private struct LabeledInput: View {
     var secure: Bool = false
     var keyboard: KeyboardKind = .default
 
+    @FocusState private var isFocused: Bool
+
     enum KeyboardKind { case `default`, emailAddress }
 
     init(_ title: String, text: Binding<String>, autocomplete: String? = nil, secure: Bool = false, keyboard: KeyboardKind = .default) {
@@ -161,17 +163,25 @@ private struct LabeledInput: View {
             Text(title).font(.sans(11, weight: .medium)).foregroundStyle(Tokens.ink3)
             Group {
                 if secure {
-                    SecureField("", text: $text)
+                    SecureField("", text: $text).focused($isFocused)
                 } else {
                     TextField("", text: $text)
                         .textContentType(.username)
+                        .focused($isFocused)
                 }
             }
             .textFieldStyle(.plain)
             .padding(.vertical, 8).padding(.horizontal, 10)
             .background(Tokens.canvas)
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Tokens.hairline, lineWidth: 1))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(isFocused ? Tokens.violet : Tokens.hairline,
+                                  lineWidth: isFocused ? 1.5 : 1)
+            )
+            .shadow(color: isFocused ? Tokens.violet.opacity(0.25) : .clear,
+                    radius: isFocused ? 6 : 0)
+            .animation(.easeInOut(duration: 0.15), value: isFocused)
         }
     }
 }

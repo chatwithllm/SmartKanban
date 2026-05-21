@@ -226,7 +226,7 @@ File: `macOS/KanbanClaude/UI/Card/AiInsightsPanelView.swift`
 Specific change: For each `webFinding` row, after the existing title/LinkActions, render `Text(finding.why).font(.sans(11)).foregroundStyle(Tokens.ink3)` when non-empty (mirrors F-228).
 Effort: S (≈ 20 min)
 
-### FIX-015: Profile dropdown "⚙ Settings" row + sign-out glyph
+### FIX-015: Profile dropdown "⚙ Settings" row + sign-out glyph ✅ UI/Main/BoardToolbar.swift:243
 Found by: CA-017 + GAP-B-002
 File: `macOS/KanbanClaude/UI/Main/BoardToolbar.swift`
 Line / fn: ProfileChip popover (≈ lines 229–253)
@@ -267,7 +267,7 @@ Specific change:
 3. In the local key monitor: digit 1..4 (when not in text) → `proxy.scrollTo(status, anchor: .center)` (smooth animation via `withAnimation`).
 Effort: S (≈ 45 min)
 
-### FIX-020: EditDialog "Share now" instant-apply button
+### FIX-020: EditDialog "Share now" instant-apply button ✅ UI/Card/EditCardView.swift:277
 Found by: CA-023
 File: `macOS/KanbanClaude/UI/Card/EditCardView.swift` `sharesSection`
 Specific change: Below the shared-with grid, add:
@@ -286,7 +286,7 @@ if showSharedConfirm { Text("✓ Shared").font(.sans(11)).foregroundStyle(Tokens
 Independent of the outer Cancel — `shareIds` already in `@State`.
 Effort: S (≈ 45 min)
 
-### FIX-021: Archive destructive confirm + count in label + footer band
+### FIX-021: Archive destructive confirm + count in label + footer band ✅ UI/Archive/ArchiveSheet.swift:52 + 78
 Found by: CA-024 + GAP-B-008
 File: `macOS/KanbanClaude/UI/Archive/ArchiveSheet.swift`
 Specific change:
@@ -297,7 +297,7 @@ Specific change:
 5. Add separate `Button("Close") { dismiss() }` in the footer next to the destructive button.
 Effort: M (≈ 1.5 hr)
 
-### FIX-022: CardTile shared-with stacked InitialsAvatar row
+### FIX-022: CardTile shared-with stacked InitialsAvatar row ✅ UI/Main/CardTileView.swift:148
 Found by: CA-025 + GAP-B-006
 File: `macOS/KanbanClaude/UI/Main/CardTileView.swift` (footer at ≈ lines 143–145) + `UI/Components/InitialsAvatar.swift`
 Specific change: Replace the single `ShareAvatar` generic glyph with the stacked-avatar pattern used for assignees (F-153):
@@ -314,7 +314,7 @@ ZStack(alignment: .leading) {
 `InitialsAvatar` already exists per AUDIT_A. Violet background per F-154.
 Effort: M (≈ 1 hr)
 
-### FIX-023: UnreadStore: skip bump when card's EditCard window is open
+### FIX-023: UnreadStore: skip bump when card's EditCard window is open ✅ Stores/UnreadStore.swift:40
 Found by: CA-028
 File: `macOS/KanbanClaude/Stores/UnreadStore.swift`
 Specific change: In the WS subscription branch that handles `card.message`, before the `unreadCounts[cardId] += 1` increment, add:
@@ -340,19 +340,19 @@ File: `macOS/KanbanClaude/UI/Main/BoardToolbar.swift` (SearchField)
 Specific change: Add `.onKeyPress(.escape) { searchQuery = ""; focused = nil; return .handled }` on the `TextField`. If `searchQuery` is already empty, fall through (return `.ignored`) so global Esc behavior still closes any open dialog.
 Effort: S (≈ 20 min)
 
-### FIX-026: CardTile footer relTime fallback
+### FIX-026: CardTile footer relTime fallback ✅ UI/Main/CardTileView.swift:138
 Found by: CA-026 + GAP-B-007
 File: `macOS/KanbanClaude/UI/Main/CardTileView.swift` footer
 Specific change: After the existing `if let due / if attachments / if unread` branches, add `else { Text(relTime(card.updatedAt)).font(.sans(11)).foregroundStyle(Tokens.ink3) }`. Reuse the existing `relTime` helper (F-159 already implemented).
 Effort: S (≈ 20 min)
 
-### FIX-027: DueDateChip "Yesterday" label
+### FIX-027: DueDateChip "Yesterday" label ✅ UI/Components/DueDateChip.swift:45
 Found by: CA-027
 File: `macOS/KanbanClaude/UI/Components/DueDateChip.swift`
 Specific change: In `formatDue(_:)`, add an explicit `case daysFromNow == -1: return "Yesterday"` branch above the generic `"\(n)d overdue"` branch. Keep danger tone.
 Effort: S (≈ 10 min)
 
-### FIX-028: Column empty messages match web copy
+### FIX-028: Column empty messages match web copy ✅ UI/Main/BoardColumnView.swift:128
 Found by: CA-029 + GAP-B-009
 File: `macOS/KanbanClaude/UI/Main/BoardColumnView.swift` `emptyMessage`
 Specific change: Replace the four strings with the web copy from `web/src/components/Column.tsx`:
@@ -374,19 +374,19 @@ File: `macOS/KanbanClaude/UI/Card/AiInsightsPanelView.swift`
 Specific change: Below the Brainstorm CTA, if `store.lastError != nil`, render a single-line red pill `Text(err).font(.sans(11)).padding(.horizontal,8).padding(.vertical,4).background(Tokens.danger.opacity(0.12)).clipShape(Capsule())`. Clear on next submit. Toast still fires.
 Effort: S (≈ 20 min)
 
-### FIX-031: Templates tab inline error message
+### FIX-031: Templates tab inline error message ✅ UI/Preferences/TemplatesTab.swift:11
 Found by: CA-033
 File: `macOS/KanbanClaude/UI/Preferences/TemplatesTab.swift`
 Specific change: Add `@State var lastError: String?` and render `if let err = lastError { Text(err).foregroundStyle(Tokens.danger).font(.sans(11)) }` below the list. Set in `catch` of instantiate / save / delete. Keep toast as secondary surface.
 Effort: S (≈ 20 min)
 
-### FIX-032: API token revoke confirm dialog
+### FIX-032: API token revoke confirm dialog ✅ UI/Preferences/TokensTab.swift:130
 Found by: CA-034
 File: `macOS/KanbanClaude/UI/Preferences/TokensTab.swift`
 Specific change: Wrap each row's revoke button in `.confirmationDialog("Revoke token \"\(token.label)\"?", isPresented:)` with message `"Devices and integrations using it will stop working."` and a destructive "Revoke" button.
 Effort: S (≈ 20 min)
 
-### FIX-033: Mirror token create-success — full /my-day?token URL panel
+### FIX-033: Mirror token create-success — full /my-day?token URL panel ✅ UI/Preferences/TokensTab.swift:63
 Found by: CA-035
 File: `macOS/KanbanClaude/UI/Preferences/TokensTab.swift`
 Specific change: When `lastCreatedMirror` is non-nil, show a green band (`background(Tokens.greenAccent.opacity(0.18))`) containing:
@@ -395,20 +395,20 @@ Specific change: When `lastCreatedMirror` is non-nil, show a green band (`backgr
 - `Button("Dismiss") { lastCreatedMirror = nil }`
 Effort: S (≈ 30 min)
 
-### FIX-034: API token list rows — show suffix + created date
+### FIX-034: API token list rows — show suffix + created date ✅ UI/Preferences/TokensTab.swift:119
 Found by: CA-036
 File: `macOS/KanbanClaude/UI/Preferences/TokensTab.swift`
 Specific change: Each row → `HStack { Text(token.label); Spacer(); Text("…\(token.tokenSuffix)").font(.mono(11)).foregroundStyle(Tokens.ink3); Text(token.createdAt.relTime).font(.sans(11)).foregroundStyle(Tokens.ink3) }`. Backend already returns `token_suffix` and `created_at`; if `TokenItem` model is missing them, add them to `Codable` + `CodingKeys` (RULE 2 — mirror backend verbatim).
 Effort: S (≈ 30 min)
 
-### FIX-035: Notifications popover empty glyph — use 🔔 emoji
+### FIX-035: Notifications popover empty glyph — use 🔔 emoji ✅ UI/Main/NotificationsPopover.swift:29
 Found by: GAP-B-010
 File: `macOS/KanbanClaude/UI/Main/NotificationsPopover.swift`
 Line: 29
 Specific change: Replace `Image(systemName: "bell.slash").font(.system(size: 22))` with `Text("🔔").font(.system(size: 22))`. (Web uses the bell emoji as the empty-state glyph per F-076.)
 Effort: S (≈ 5 min)
 
-### FIX-036: Login input violet focus-glow ring
+### FIX-036: Login input violet focus-glow ring ✅ UI/Auth/LoginView.swift:155
 Found by: GAP-B-011
 File: `macOS/KanbanClaude/UI/Auth/LoginView.swift`
 Line / fn: `LabeledInput` struct (≈ lines 142–177), specifically the `.overlay(RoundedRectangle ... strokeBorder(Tokens.hairline, lineWidth: 1))` at line 174
