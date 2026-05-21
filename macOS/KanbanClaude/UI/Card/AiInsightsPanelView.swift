@@ -71,23 +71,13 @@ struct AiInsightsPanelView: View {
                 if let related = latest.body?.relatedItems, !related.isEmpty {
                     sectionTitle("Related items you have")
                     ForEach(related, id: \.id) { item in
-                        Text("• \(item.title)").font(.sans(12))
+                        relatedItemRow(item)
                     }
                 }
                 if let web = latest.body?.webFindings, !web.isEmpty {
                     sectionTitle("Web findings")
                     ForEach(web, id: \.url) { f in
-                        HStack(spacing: 6) {
-                            Link(f.title, destination: URL(string: f.url) ?? Constants.serverURL)
-                                .font(.sans(12, weight: .semibold))
-                            Button {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(f.url, forType: .string)
-                            } label: {
-                                Image(systemName: "doc.on.doc").font(.system(size: 10))
-                            }
-                            .buttonStyle(.plain)
-                        }
+                        webFindingRow(f)
                     }
                 }
                 if let steps = latest.body?.nextSteps, !steps.isEmpty {
@@ -119,6 +109,53 @@ struct AiInsightsPanelView: View {
             .buttonStyle(.plain)
             .disabled(busy)
             .keyboardShortcut("b", modifiers: [.command])
+            if let err = store.lastError, !err.isEmpty {
+                Text(err)
+                    .font(.sans(11))
+                    .foregroundStyle(Tokens.danger)
+                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .background(Tokens.danger.opacity(0.12))
+                    .clipShape(Capsule())
+            }
+        }
+    }
+
+    private func relatedItemRow(_ item: Insight.RelatedItem) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                Text("[\(item.kind)]")
+                    .font(.mono(10, weight: .semibold))
+                    .foregroundStyle(Tokens.ink3)
+                Text(item.title).font(.sans(12, weight: .semibold)).foregroundStyle(Tokens.ink)
+                Spacer()
+                if item.kind == "knowledge", let urlStr = item.url, let url = URL(string: urlStr) {
+                    LinkActions(url: url, urlString: urlStr)
+                } else if item.kind == "card" {
+                    Button {
+                        WindowCoordinator.shared.openEditCard(id: item.id)
+                    } label: {
+                        Text("Open").font(.sans(11, weight: .semibold)).foregroundStyle(Tokens.violet)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            if let why = item.why, !why.isEmpty {
+                Text(why).font(.sans(11)).foregroundStyle(Tokens.ink3)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+
+    private func webFindingRow(_ f: Insight.WebFinding) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                Link(f.title, destination: URL(string: f.url) ?? Constants.serverURL)
+                    .font(.sans(12, weight: .semibold))
+                LinkActions(url: URL(string: f.url) ?? Constants.serverURL, urlString: f.url)
+            }
+            if let why = f.why, !why.isEmpty {
+                Text(why).font(.sans(11)).foregroundStyle(Tokens.ink3)
+            }
         }
     }
 
@@ -135,6 +172,36 @@ struct AiInsightsPanelView: View {
         Task {
             await store.brainstorm(cardId: cardId)
             busy = false
+        }
+    }
+}
+
+struct LinkActions: View {
+    let url: URL
+    let urlString: String
+    @State private var copied = false
+    var body: some View {
+        HStack(spacing: 4) {
+            Link(destination: url) {
+                Image(systemName: "arrow.up.right.square").font(.system(size: 11))
+            }
+            Button {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(urlString, forType: .string)
+                copied = true
+                Task { try? await Task.sleep(nanoseconds: 1_200_000_000); copied = false }
+            } label: {
+                if copied {
+                    Text("✓ Copied").font(.mono(10, weight: .semibold)).foregroundStyle(Tokens.greenAccent)
+                } else {
+                    HStack(spacing: 3) {
+                        Image(systemName: "doc.on.doc").font(.system(size: 10))
+                        Text("Copy").font(.mono(10))
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(Tokens.violet)
         }
     }
 }

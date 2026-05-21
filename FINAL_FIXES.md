@@ -200,7 +200,7 @@ Label("\(item.linkedCardIds.count)", systemImage: "paperclip")
 `linkedCardIds` is already decoded per AUDIT_A but never surfaced.
 Effort: S (≈ 20 min)
 
-### FIX-012: Weekly Review 3-up stat grid + section placeholders + Generate-again
+### FIX-012: Weekly Review 3-up stat grid + section placeholders + Generate-again ✅ UI/Review/WeeklyReviewSheet.swift:21
 Found by: CA-014 + GAP-B-004
 File: `macOS/KanbanClaude/UI/Review/WeeklyReviewSheet.swift`
 Specific change:
@@ -209,7 +209,7 @@ Specific change:
 3. Footer row: `HStack { Button("Generate again") { try await store.refetch() }; Spacer(); Button("Got it") { dismiss() } }`.
 Effort: M (≈ 1.5 hr)
 
-### FIX-013: AI Insights related items — Open button + why + Copy on knowledge
+### FIX-013: AI Insights related items — Open button + why + Copy on knowledge ✅ UI/Card/AiInsightsPanelView.swift:85
 Found by: CA-015
 File: `macOS/KanbanClaude/UI/Card/AiInsightsPanelView.swift`
 Specific change: Replace `Text("• \(item.title)")` rows with a row that renders:
@@ -220,7 +220,7 @@ Specific change: Replace `Text("• \(item.title)")` rows with a row that render
 - Below, `Text(item.why).font(.sans(11)).foregroundStyle(Tokens.ink3)` (only if non-empty)
 Effort: M (≈ 1.5 hr)
 
-### FIX-014: AI Insights web findings — "why" reasoning text
+### FIX-014: AI Insights web findings — "why" reasoning text ✅ UI/Card/AiInsightsPanelView.swift:108
 Found by: CA-016
 File: `macOS/KanbanClaude/UI/Card/AiInsightsPanelView.swift`
 Specific change: For each `webFinding` row, after the existing title/LinkActions, render `Text(finding.why).font(.sans(11)).foregroundStyle(Tokens.ink3)` when non-empty (mirrors F-228).
@@ -362,13 +362,13 @@ Specific change: Replace the four strings with the web copy from `web/src/compon
 - `.done`: `"Nothing finished yet."`
 Effort: S (≈ 10 min)
 
-### FIX-029: AI Insights LinkActions "✓ Copied" feedback
+### FIX-029: AI Insights LinkActions "✓ Copied" feedback ✅ UI/Card/AiInsightsPanelView.swift:150
 Found by: CA-031
 File: `macOS/KanbanClaude/UI/Card/AiInsightsPanelView.swift` `LinkActions`
 Specific change: Add `@State var copied = false`. On Copy tap: `NSPasteboard.general.clearContents(); NSPasteboard.general.setString(url, forType: .string); copied = true; Task { try? await Task.sleep(nanoseconds: 1_200_000_000); copied = false }`. Render `copied ? "✓ Copied" : "Copy 📋"`.
 Effort: S (≈ 20 min)
 
-### FIX-030: AI Insights inline error pill for brainstorm failure
+### FIX-030: AI Insights inline error pill for brainstorm failure ✅ UI/Card/AiInsightsPanelView.swift:138 + InsightStore.swift:32
 Found by: CA-032
 File: `macOS/KanbanClaude/UI/Card/AiInsightsPanelView.swift`
 Specific change: Below the Brainstorm CTA, if `store.lastError != nil`, render a single-line red pill `Text(err).font(.sans(11)).padding(.horizontal,8).padding(.vertical,4).background(Tokens.danger.opacity(0.12)).clipShape(Capsule())`. Clear on next submit. Toast still fires.

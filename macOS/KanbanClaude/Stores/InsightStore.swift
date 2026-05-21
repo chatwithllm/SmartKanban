@@ -6,6 +6,7 @@ final class InsightStore: ObservableObject {
 
     // [cardId: insights newest-first]
     @Published private(set) var byCard: [UUID: [Insight]] = [:]
+    @Published var lastError: String?
     private var wsSub: UUID?
 
     init() {
@@ -26,14 +27,18 @@ final class InsightStore: ObservableObject {
     }
 
     func brainstorm(cardId: UUID) async {
+        lastError = nil
         do {
             _ = try await APIClient.shared.send(.brainstormCard(id: cardId), as: InsightQueuedResponse.self)
         } catch KanbanError.statusCode(let code, _) where code == 429 {
-            ToastStore.shared.error("Too many brainstorm requests, try again later")
+            lastError = "Too many brainstorm requests, try again later"
+            ToastStore.shared.error(lastError ?? "")
         } catch KanbanError.statusCode(let code, _) where code == 503 {
-            ToastStore.shared.error("AI is disabled on this server")
+            lastError = "AI is disabled on this server"
+            ToastStore.shared.error(lastError ?? "")
         } catch {
-            ToastStore.shared.error("Brainstorm failed: \(error.localizedDescription)")
+            lastError = "Brainstorm failed: \(error.localizedDescription)"
+            ToastStore.shared.error(lastError ?? "")
         }
     }
 
