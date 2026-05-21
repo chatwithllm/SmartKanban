@@ -228,7 +228,7 @@ struct ProfileChip: View {
         } label: {
             HStack(spacing: 6) {
                 if let u = auth.currentUser {
-                    InitialsAvatar(userId: u.id, name: u.shortName, size: 22, border: false)
+                    InitialsAvatar(userId: u.id, name: u.shortName, size: 22, border: false, colorOverride: Tokens.violet)
                     Text(u.shortName).font(.sans(12, weight: .semibold))
                     Image(systemName: "chevron.down").font(.system(size: 8))
                 } else {

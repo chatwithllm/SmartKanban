@@ -154,7 +154,7 @@ struct CardTileView: View {
             if !card.shares.isEmpty {
                 ZStack(alignment: .leading) {
                     ForEach(Array(card.shares.prefix(3).enumerated()), id: \.offset) { idx, uid in
-                        InitialsAvatar(userId: uid, name: users.shortName(for: uid), size: 20, border: true)
+                        InitialsAvatar(userId: uid, name: users.shortName(for: uid), size: 20, border: true, colorOverride: Tokens.violet)
                             .offset(x: CGFloat(idx) * 10)
                             .help("Shared with \(users.shortName(for: uid) ?? "user")")
                     }

@@ -5,6 +5,7 @@ struct InitialsAvatar: View {
     let name: String?
     var size: CGFloat = 22
     var border: Bool = true
+    var colorOverride: Color? = nil
 
     private static let palette: [UInt32] = [
         0xE5484D, 0x6F5BFF, 0x4FAE82, 0xD4A93F, 0x39A6B2, 0xC267D6,
@@ -17,6 +18,7 @@ struct InitialsAvatar: View {
     }
 
     var color: Color {
+        if let override = colorOverride { return override }
         var hash: UInt32 = 0
         for byte in userId.uuidString.utf8 {
             hash = (hash &* 31) &+ UInt32(byte)
