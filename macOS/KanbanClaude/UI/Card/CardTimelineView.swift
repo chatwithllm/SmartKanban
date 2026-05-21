@@ -33,12 +33,12 @@ struct CardTimelineView: View {
             }
         }
         .onChange(of: expanded) { isOpen in
+            store.setObserving(isOpen)
             if isOpen && !didLoad {
                 didLoad = true
                 Task { await store.load() }
             }
         }
-        .onAppear { store.setObserving(true) }
         .onDisappear { store.setObserving(false) }
     }
 

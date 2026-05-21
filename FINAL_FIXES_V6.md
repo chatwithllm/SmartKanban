@@ -148,7 +148,7 @@ Estimated effort: **S (~5 min)** for Path A; **S (~5 min)** for Path B (registry
 
 ---
 
-### FIX-V6-003: WS markRead fires while DisclosureGroup is collapsed (post-first-expansion)
+### FIX-V6-003: WS markRead fires while DisclosureGroup is collapsed (post-first-expansion) — ✅ DONE @ CardTimelineView.swift:35-41 (folded setObserving into onChange(expanded), dropped onAppear)
 Found by: CA6-003 (A only)
 File: `macOS/KanbanClaude/UI/Card/CardTimelineView.swift`
 Line: 35-42 (the `onChange(of: expanded)` block + the `.onAppear` / `.onDisappear` pair)
