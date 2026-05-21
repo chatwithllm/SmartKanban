@@ -149,6 +149,17 @@ struct SearchField: View {
                     .foregroundStyle(Tokens.ink3)
                     .padding(.horizontal, 4).padding(.vertical, 1)
                     .background(Tokens.ceramic).clipShape(RoundedRectangle(cornerRadius: 4))
+            } else {
+                Button {
+                    query = ""
+                    focused = true
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Tokens.ink3)
+                }
+                .buttonStyle(.plain)
+                .help("Clear search")
             }
         }
         .padding(.horizontal, 10).padding(.vertical, 5)

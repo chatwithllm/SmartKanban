@@ -171,16 +171,13 @@ struct EditCardView: View {
     }
 
     private func descriptionSection(card: Binding<Card>) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            SectionLabel("Description")
-            TextEditor(text: card.description)
-                .font(.sans(13))
-                .scrollContentBackground(.hidden)
-                .frame(minHeight: 120, maxHeight: 240)
-                .padding(8)
-                .background(Tokens.surface)
-                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Tokens.hairline, lineWidth: 1))
-        }
+        TextEditor(text: card.description)
+            .font(.sans(13))
+            .scrollContentBackground(.hidden)
+            .frame(minHeight: 120, maxHeight: 240)
+            .padding(8)
+            .background(Tokens.surface)
+            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Tokens.hairline, lineWidth: 1))
     }
 
     private func tagsSection(card: Binding<Card>) -> some View {

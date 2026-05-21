@@ -3,8 +3,9 @@ import SwiftUI
 struct CardTimelineView: View {
     let cardId: UUID
     @StateObject private var store: CardEventsStore
-    @State private var expanded = true
+    @State private var expanded = false
     @State private var appliedKeys: Set<String> = []
+    @State private var didLoad = false
 
     init(cardId: UUID) {
         self.cardId = cardId
@@ -31,7 +32,12 @@ struct CardTimelineView: View {
                 store.append(newEvent)
             }
         }
-        .onAppear { Task { await store.load() } }
+        .onChange(of: expanded) { isOpen in
+            if isOpen && !didLoad {
+                didLoad = true
+                Task { await store.load() }
+            }
+        }
     }
 
     private var content: some View {

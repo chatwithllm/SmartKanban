@@ -189,7 +189,8 @@ Specific change:
 Acceptance: section titles include counts; empty copy matches web; row metadata is tags not rel-time.
 Effort: M (≈ 1 hr)
 
-### FIX-V2-007: Search bar visual clear (✕) button when query is non-empty
+### ✅ FIX-V2-007: Search bar visual clear (✕) button when query is non-empty
+**Done:** BoardToolbar.swift search field — when `!query.isEmpty` renders trailing `xmark.circle.fill` button that clears `query` and refocuses field.
 Found by: CA2-004 (A)
 File: `macOS/KanbanClaude/UI/Main/BoardToolbar.swift:132–153`
 Specific change: inside the SearchField overlay, when `!query.isEmpty`, render a trailing `Button` with `Image(systemName: "xmark.circle.fill")` (Tokens.ink3) that clears `query` and keeps focus. Hide when `query.isEmpty` (so the ⌘K hint pill keeps its spot).
@@ -202,19 +203,22 @@ File: `macOS/KanbanClaude/UI/Main/BoardToolbar.swift:231`
 Specific change: same approach as FIX-V2-001 (P0) — either inline a violet Circle+initial or pass an explicit `color: Tokens.violet` overload to `InitialsAvatar`. Profile chip is a single instance, web pins it to `rgb(var(--violet))`.
 Effort: S (≈ 10 min — can ship with FIX-V2-001 in one commit)
 
-### FIX-V2-009: NotificationRow hover state
+### ✅ FIX-V2-009: NotificationRow hover state
+**Done:** NotificationRow @State hovered + .onHover; background tinted `Tokens.hairline.opacity(0.04)` on hover, layered below read/unread bg.
 Found by: CA2-007 (A)
 File: `macOS/KanbanClaude/UI/Main/NotificationsPopover.swift:60–79`
 Specific change: add `@State private var hovered = false` to `NotificationRow`; wrap the row in `.onHover { hovered = $0 }`; set row background to `Tokens.hairline.opacity(hovered ? 0.04 : 0)`. Read/unread bg layered above the hover bg.
 Effort: S (≈ 15 min)
 
-### FIX-V2-010: Archive footer band — hide entirely when no cards
+### ✅ FIX-V2-010: Archive footer band — hide entirely when no cards
+**Done:** ArchiveSheet wraps `footerBand` in `if !archived.isEmpty`.
 Found by: CA2-008 (A)
 File: `macOS/KanbanClaude/UI/Archive/ArchiveSheet.swift:54–80`
 Specific change: wrap `footerBand` body in `if !archived.isEmpty { ... }` so the red band doesn't render on empty state. Empty state already has `🗑️` glyph + close button (FIX-021).
 Effort: S (≈ 10 min)
 
-### FIX-V2-011: Capture template button — hide when no templates
+### ✅ FIX-V2-011: Capture template button — hide when no templates
+**Done:** CaptureView modeBar wraps Template ModeButton in `if !templates.isEmpty`.
 Found by: CA2-009 (A)
 File: `macOS/KanbanClaude/UI/Capture/CaptureView.swift:86–94`
 Specific change: wrap the Template `ModeButton` in `if !templates.isEmpty { ... }`. Slash-parser in `submit()` (193–200) is no-op when templates list is empty, so no regression.
@@ -229,13 +233,15 @@ Specific change: move `aiInsightsSection`, `knowledgeSection` ABOVE `due`/`attac
 Rationale: AI Insights + Knowledge are the high-signal sections; on web they're above the fold. macOS pushes them below, hurting their utility.
 Effort: M (≈ 45 min — careful section-block reordering plus visual smoke once unlocked)
 
-### FIX-V2-013: EditDialog — drop redundant "Description" section label
+### ✅ FIX-V2-013: EditDialog — drop redundant "Description" section label
+**Done:** EditCardView descriptionSection no longer renders SectionLabel; TextEditor floats under title row.
 Found by: CA2-011 (A)
 File: `macOS/KanbanClaude/UI/Card/EditCardView.swift:173–184`
 Specific change: remove the `SectionLabel("Description")` above the description `TextEditor`; let the textarea float directly under the title row, matching `web/src/components/EditDialog.tsx:246–259`.
 Effort: S (≈ 5 min)
 
-### FIX-V2-014: CardTimeline — start collapsed
+### ✅ FIX-V2-014: CardTimeline — start collapsed
+**Done:** CardTimelineView `expanded` defaults to `false`. Events load lazily on first expand via `didLoad` guard + `.onChange(of: expanded)`.
 Found by: CA2-003 (A)
 File: `macOS/KanbanClaude/UI/Card/CardTimelineView.swift:6, 34`
 Specific change: flip `@State private var expanded = true` to `false`. Adjust `onAppear` so events only load when the user expands. This drops the per-edit timeline-load network cost and matches `web/src/components/CardTimeline.tsx:119`.
@@ -248,13 +254,15 @@ File: `macOS/KanbanClaude/UI/Knowledge/KnowledgeListView.swift:114–124`
 Specific change: wrap the title + subtitle + `+ New note` button in a green-house tinted block (`Tokens.greenAccent.opacity(0.12)` or matching token, rounded 12pt corner, padding 16) matching `web/src/KnowledgeView.tsx:36–47`. Combine with FIX-V2-005 subtitle copy fix.
 Effort: M (≈ 30 min)
 
-### FIX-V2-016: Archive header — inline count badge instead of separate strip
+### ✅ FIX-V2-016: Archive header — inline count badge instead of separate strip
+**Done:** ArchiveSheet ModalHeaderStrip trailing carries count badge + close button. Separate "N archived cards" strip removed.
 Found by: CA2-013 (A)
 File: `macOS/KanbanClaude/UI/Archive/ArchiveSheet.swift:22–28`
 Specific change: remove the separate `"\(N) archived card(s)"` strip; render the count as an inline badge to the right of the title inside the violet header band, matching `web/src/components/ArchiveDialog.tsx:98–107`.
 Effort: S (≈ 20 min)
 
-### FIX-V2-017: `WindowCoordinator.openWeeklyReview()` — dead code with stale toast
+### ✅ FIX-V2-017: `WindowCoordinator.openWeeklyReview()` — dead code with stale toast
+**Done:** method deleted from WindowCoordinator. No call sites remain.
 Found by: CA2-015 (A)
 File: `macOS/KanbanClaude/App/WindowCoordinator.swift:47–49`
 Specific change: delete the method (no remaining call sites — toolbar calls `showReview = true` directly in `MainView`). The `ToastStore.shared.info("Weekly Review lands in Phase 8")` line is a stale dev placeholder.

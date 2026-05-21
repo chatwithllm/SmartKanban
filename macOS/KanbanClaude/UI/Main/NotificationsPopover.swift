@@ -55,6 +55,7 @@ struct NotificationsPopoverContent: View {
 struct NotificationRow: View {
     let n: AppNotification
     var onTap: () -> Void
+    @State private var hovered = false
 
     var body: some View {
         Button(action: onTap) {
@@ -70,12 +71,14 @@ struct NotificationRow: View {
                 }
             }
             .padding(.horizontal, 12).padding(.vertical, 10)
+            .background(Tokens.hairline.opacity(hovered ? 0.04 : 0))
             .background(n.read ? Color.clear : Tokens.violetTint)
             .overlay(alignment: .leading) {
                 Rectangle().fill(n.read ? Color.clear : Tokens.violet).frame(width: 3)
             }
         }
         .buttonStyle(.plain)
+        .onHover { hovered = $0 }
     }
 
     private static let fmt: RelativeDateTimeFormatter = {

@@ -83,15 +83,17 @@ struct CaptureView: View {
                     .background(Tokens.ceramic).clipShape(Capsule())
             }
             .buttonStyle(.plain)
-            Button {
-                showTemplates = true
-            } label: {
-                Label("Template", systemImage: "doc.text")
-                    .font(.sans(11, weight: .semibold))
-                    .padding(.horizontal, 10).padding(.vertical, 5)
-                    .background(Tokens.ceramic).clipShape(Capsule())
+            if !templates.isEmpty {
+                Button {
+                    showTemplates = true
+                } label: {
+                    Label("Template", systemImage: "doc.text")
+                        .font(.sans(11, weight: .semibold))
+                        .padding(.horizontal, 10).padding(.vertical, 5)
+                        .background(Tokens.ceramic).clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
             Button {
                 ToastStore.shared.info("Voice capture lands in V1")
             } label: {

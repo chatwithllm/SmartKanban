@@ -10,22 +10,23 @@ struct ArchiveSheet: View {
     var body: some View {
         VStack(spacing: 0) {
             ModalHeaderStrip(title: "Archive") {
-                Button(action: onClose) {
-                    Image(systemName: "xmark")
+                HStack(spacing: 8) {
+                    Text("\(archived.count)")
+                        .font(.mono(11, weight: .semibold))
                         .foregroundStyle(.white)
-                        .padding(6)
+                        .padding(.horizontal, 8).padding(.vertical, 2)
                         .background(.white.opacity(0.18))
-                        .clipShape(Circle())
+                        .clipShape(Capsule())
+                    Button(action: onClose) {
+                        Image(systemName: "xmark")
+                            .foregroundStyle(.white)
+                            .padding(6)
+                            .background(.white.opacity(0.18))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
-            HStack {
-                Text("\(archived.count) archived card\(archived.count == 1 ? "" : "s")")
-                    .font(.sans(11)).foregroundStyle(Tokens.ink2)
-                Spacer()
-            }
-            .padding(.horizontal, 16).padding(.vertical, 10)
-            Divider()
             ScrollView {
                 LazyVStack(spacing: 0) {
                     if loading { ProgressView().padding(40) }
@@ -44,7 +45,9 @@ struct ArchiveSheet: View {
                     }
                 }
             }
-            footerBand
+            if !archived.isEmpty {
+                footerBand
+            }
         }
         .frame(width: 640, height: 600)
         .background(Tokens.canvas)
