@@ -11,9 +11,20 @@ final class WindowCoordinator {
     private var notificationsPopover: NSPopover?
 
     func openEditCard(id: UUID) {
-        // Phase 4d fully implements EditCardWindowController. For Phase 4a we
-        // surface a hint so clicks don't no-op invisibly.
-        ToastStore.shared.info("Card editor lands in Phase 4d")
+        if let existing = editCardControllers[id] {
+            existing.window?.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        let controller = EditCardWindowController(cardId: id)
+        editCardControllers[id] = controller
+        controller.showWindow(nil)
+        controller.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    func didCloseEditCard(id: UUID) {
+        editCardControllers[id] = nil
     }
 
     func openCapture(initialStatus: CardStatus) {
