@@ -10,6 +10,7 @@ struct BoardColumnView: View {
 
     @StateObject private var drag = DragStore.shared
     @State private var hoverIndex: Int?
+    @State private var addHovered = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -102,13 +103,16 @@ struct BoardColumnView: View {
             Button(action: onAdd) {
                 Image(systemName: "plus")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Tokens.ink2)
+                    .foregroundStyle(addHovered ? Tokens.ink : Tokens.ink2)
+                    .rotationEffect(.degrees(addHovered ? 90 : 0))
+                    .animation(.spring(response: 0.28, dampingFraction: 0.85), value: addHovered)
                     .padding(6)
-                    .background(Tokens.canvas)
+                    .background(addHovered ? Tokens.hairline.opacity(0.06) : Tokens.canvas)
                     .clipShape(Circle())
                     .overlay(Circle().strokeBorder(Tokens.hairline, lineWidth: 1))
             }
             .buttonStyle(.plain)
+            .onHover { addHovered = $0 }
         }
         .padding(.horizontal, 2)
         .overlay(alignment: .bottom) {
