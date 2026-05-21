@@ -9,6 +9,7 @@ final class WindowCoordinator {
     private(set) var editCardControllers: [UUID: NSWindowController] = [:]
     private var captureController: NSWindowController?
     private var notificationsPopover: NSPopover?
+    private(set) var knowledgeDetailControllers: [UUID: NSWindowController] = [:]
 
     func editWindow(id: UUID) -> NSWindow? {
         editCardControllers[id]?.window
@@ -44,8 +45,32 @@ final class WindowCoordinator {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    func openWeeklyReview() {
-        ToastStore.shared.info("Weekly Review lands in Phase 8")
+    func openKnowledgeDetail(id: UUID) {
+        if let existing = knowledgeDetailControllers[id] {
+            existing.window?.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        Task { @MainActor in
+            var item = KnowledgeStore.shared.items.first(where: { $0.id == id })
+            if item == nil {
+                await KnowledgeStore.shared.refresh()
+                item = KnowledgeStore.shared.items.first(where: { $0.id == id })
+            }
+            guard let resolved = item else {
+                ToastStore.shared.error("Knowledge note not found")
+                return
+            }
+            let controller = KnowledgeDetailWindowController(item: resolved)
+            knowledgeDetailControllers[id] = controller
+            controller.showWindow(nil)
+            controller.window?.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+        }
+    }
+
+    func didCloseKnowledgeDetail(id: UUID) {
+        knowledgeDetailControllers[id] = nil
     }
 
     func openNotificationsPopover() {

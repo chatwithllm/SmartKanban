@@ -63,6 +63,7 @@
 		AADED05FA5BF95E300FC46EF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9ADF24F67A29324165CAD9 /* AppDelegate.swift */; };
 		8D92394D39243D7F980CF672 /* GlobalKeyMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BBCAFBBCD3192BC7CD1608 /* GlobalKeyMonitor.swift */; };
 		1C1ECB9B3BB3AE9BABF5D7A5 /* KnowledgeDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE1D9DC62A84A836C49C262 /* KnowledgeDetailSheet.swift */; };
+		B2C3D4E5F6A1B2C3D4E5F6A1 /* KnowledgeDetailWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6A1B2C3D4E5F6A1B2C3D4 /* KnowledgeDetailWindowController.swift */; };
 		ABE9334AC7C88BD0E6072101 /* ServerTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59128523BFDC3A8F9EA326C /* ServerTime.swift */; };
 		ACDEEE37870E861E7AEEB57E /* WindowCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C9D6DE25C9A454A2F6F01C4 /* WindowCoordinator.swift */; };
 		A1B2C3D4E5F6A1B2C3D4E5F6 /* SettingsOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E5D4C3B2A1F6E5D4C3B2A1 /* SettingsOpener.swift */; };
@@ -135,6 +136,7 @@
 		6E9ADF24F67A29324165CAD9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		49BBCAFBBCD3192BC7CD1608 /* GlobalKeyMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalKeyMonitor.swift; sourceTree = "<group>"; };
 		4AE1D9DC62A84A836C49C262 /* KnowledgeDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeDetailSheet.swift; sourceTree = "<group>"; };
+		E5F6A1B2C3D4E5F6A1B2C3D4 /* KnowledgeDetailWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeDetailWindowController.swift; sourceTree = "<group>"; };
 		773BC0C48E9DCB2C2C7EEF54 /* UnreadStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnreadStore.swift; sourceTree = "<group>"; };
 		782CDD281E87D65EB23671EE /* KnowledgeItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeItem.swift; sourceTree = "<group>"; };
 		79842E2C6B4BA69B1BB1D10F /* CardTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardTimelineView.swift; sourceTree = "<group>"; };
@@ -358,6 +360,7 @@
 			isa = PBXGroup;
 			children = (
 				4AE1D9DC62A84A836C49C262 /* KnowledgeDetailSheet.swift */,
+				E5F6A1B2C3D4E5F6A1B2C3D4 /* KnowledgeDetailWindowController.swift */,
 				B2639C14F60DF7A0215BE229 /* KnowledgeEditSheet.swift */,
 				8828F429022D2664229D0BD5 /* KnowledgeListView.swift */,
 				EF0A6F99A17D141F8C05C165 /* KnowledgeRowView.swift */,
@@ -530,6 +533,7 @@
 				AADED05FA5BF95E300FC46EF /* AppDelegate.swift in Sources */,
 				8D92394D39243D7F980CF672 /* GlobalKeyMonitor.swift in Sources */,
 				1C1ECB9B3BB3AE9BABF5D7A5 /* KnowledgeDetailSheet.swift in Sources */,
+				B2C3D4E5F6A1B2C3D4E5F6A1 /* KnowledgeDetailWindowController.swift in Sources */,
 				0A0344AEFB43EEBFF45C7556 /* ArchiveSheet.swift in Sources */,
 				AEEC42C6C9B7C5CE65FF4E8A /* Attachment.swift in Sources */,
 				534F4729AE3C4055DD38335D /* AttachmentDownloader.swift in Sources */,

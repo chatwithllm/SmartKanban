@@ -70,7 +70,8 @@ Effort: S (≈ 20 min)
 
 ## P1 — Fix Next (code confirms missing behavior)
 
-### FIX-V2-002: AI Insights — Related knowledge **without** URL has no Open affordance
+### ✅ FIX-V2-002: AI Insights — Related knowledge **without** URL has no Open affordance
+**Done:** added `KnowledgeDetailWindowController` (UI/Knowledge/) hosting `KnowledgeDetailSheet` in a standalone window. `WindowCoordinator.openKnowledgeDetail(id:)` resolves item from store (refresh fallback) and opens window. AiInsightsPanelView.swift:133 added knowledge-without-URL branch with violet `Open` button. Build green.
 Found by: CA2-001 (A) only — code spot-check confirms gap
 File: `macOS/KanbanClaude/UI/Card/AiInsightsPanelView.swift`
 Line/function: `relatedItemRow(_:)` lines 123–147, specifically the `if/else if` chain at 131–140

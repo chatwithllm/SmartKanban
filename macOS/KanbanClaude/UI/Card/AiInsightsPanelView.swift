@@ -130,6 +130,13 @@ struct AiInsightsPanelView: View {
                 Spacer()
                 if item.kind == "knowledge", let urlStr = item.url, let url = URL(string: urlStr) {
                     LinkActions(url: url, urlString: urlStr)
+                } else if item.kind == "knowledge" {
+                    Button {
+                        WindowCoordinator.shared.openKnowledgeDetail(id: item.id)
+                    } label: {
+                        Text("Open").font(.sans(11, weight: .semibold)).foregroundStyle(Tokens.violet)
+                    }
+                    .buttonStyle(.plain)
                 } else if item.kind == "card" {
                     Button {
                         WindowCoordinator.shared.openEditCard(id: item.id)
