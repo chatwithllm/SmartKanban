@@ -9,16 +9,22 @@ struct BoardView: View {
     var onCreateCard: (CardStatus) -> Void = { _ in }
 
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(CardStatus.allCases, id: \.self) { status in
-                BoardColumnView(
-                    status: status,
-                    cards: filtered(in: status),
-                    onAdd: { onCreateCard(status) },
-                    onOpen: { onOpenCard($0.id) }
-                )
-                .frame(maxWidth: .infinity)
-                if status != .done { divider }
+        ZStack {
+            HStack(spacing: 0) {
+                ForEach(CardStatus.allCases, id: \.self) { status in
+                    BoardColumnView(
+                        status: status,
+                        cards: filtered(in: status),
+                        onAdd: { onCreateCard(status) },
+                        onOpen: { onOpenCard($0.id) },
+                        onMove: { id, newStatus, idx in handleMove(id: id, status: newStatus, idx: idx) }
+                    )
+                    .frame(maxWidth: .infinity)
+                    if status != .done { divider }
+                }
+            }
+            TrashDropZoneOverlay(drag: DragStore.shared) { id in
+                Task { await CardStore.shared.archive(id: id) }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -41,6 +47,19 @@ struct BoardView: View {
             group.addTask { @MainActor in await self.users.refresh() }
             group.addTask { @MainActor in await self.unread.refresh() }
         }
+    }
+
+    private func handleMove(id: UUID, status newStatus: CardStatus, idx: Int) {
+        // Compute target position from the destination column's CURRENT cards
+        // minus the dragged card (so reordering inside same column maths correctly).
+        let dest = cards.cards(in: newStatus).filter { $0.id != id }
+        let pos = DragPositionCalculator.position(for: dest, at: idx)
+        guard let existing = cards.card(id: id) else { return }
+        if existing.status == newStatus && abs(existing.position - pos) < 1e-9 { return }
+        var patch = CardPatch()
+        patch.position = pos
+        if existing.status != newStatus { patch.status = newStatus }
+        Task { await cards.patch(id, patch) }
     }
 
     private func filtered(in status: CardStatus) -> [Card] {

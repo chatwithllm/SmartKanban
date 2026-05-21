@@ -1,22 +1,41 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct BoardColumnView: View {
     let status: CardStatus
     let cards: [Card]
     var onAdd: () -> Void = {}
     var onOpen: (Card) -> Void = { _ in }
+    var onMove: (UUID, CardStatus, Int) -> Void = { _, _, _ in }
+
+    @StateObject private var drag = DragStore.shared
+    @State private var hoverIndex: Int?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
             ScrollView {
                 LazyVStack(spacing: 10) {
-                    ForEach(cards) { card in
-                        CardTileView(card: card) { onOpen(card) }
-                    }
                     if cards.isEmpty {
-                        emptyState
-                            .padding(.top, 24)
+                        emptyDropZone
+                    } else {
+                        ForEach(Array(cards.enumerated()), id: \.element.id) { idx, card in
+                            CardSlotView(idx: idx, hovered: hoverIndex == idx)
+                                .frame(height: 4)
+                                .onDrop(of: [.text], isTargeted: nil) { providers in
+                                    handleDrop(providers, at: idx)
+                                }
+                            CardTileView(card: card) { onOpen(card) }
+                                .onDrop(of: [.text], isTargeted: nil) { providers in
+                                    handleDrop(providers, at: idx + 1)
+                                }
+                        }
+                        // Trailing slot — drop at bottom of column.
+                        CardSlotView(idx: cards.count, hovered: hoverIndex == cards.count)
+                            .frame(height: 16)
+                            .onDrop(of: [.text], isTargeted: nil) { providers in
+                                handleDrop(providers, at: cards.count)
+                            }
                     }
                 }
                 .padding(.horizontal, 2)
@@ -27,6 +46,44 @@ struct BoardColumnView: View {
         .padding(.top, 8)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(columnBloom)
+        .overlay(highlightRing)
+        .onDrop(of: [.text], isTargeted: Binding(
+            get: { drag.hoveredColumn == status },
+            set: { isOver in if isOver { drag.hoveredColumn = status } else if drag.hoveredColumn == status { drag.hoveredColumn = nil } }
+        )) { providers in
+            handleDrop(providers, at: cards.count)
+        }
+    }
+
+    private var emptyDropZone: some View {
+        emptyState
+            .padding(.top, 24)
+            .frame(maxWidth: .infinity, minHeight: 120)
+            .contentShape(Rectangle())
+            .onDrop(of: [.text], isTargeted: nil) { providers in
+                handleDrop(providers, at: 0)
+            }
+    }
+
+    private var highlightRing: some View {
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .strokeBorder(drag.hoveredColumn == status ? dotColor.opacity(0.6) : .clear, lineWidth: 2)
+            .padding(2)
+    }
+
+    private func handleDrop(_ providers: [NSItemProvider], at idx: Int) -> Bool {
+        guard let provider = providers.first else { return false }
+        let targetIdx = idx
+        let targetStatus = status
+        _ = provider.loadObject(ofClass: NSString.self) { obj, _ in
+            guard let s = obj as? String, let id = UUID(uuidString: s) else { return }
+            Task { @MainActor in
+                drag.activeCardId = nil
+                drag.hoveredColumn = nil
+                onMove(id, targetStatus, targetIdx)
+            }
+        }
+        return true
     }
 
     private var header: some View {
@@ -88,5 +145,15 @@ struct BoardColumnView: View {
     private var columnBloom: some View {
         RadialGradient(colors: [dotColor.opacity(0.06), .clear],
                        center: .top, startRadius: 0, endRadius: 220)
+    }
+}
+
+private struct CardSlotView: View {
+    let idx: Int
+    let hovered: Bool
+    var body: some View {
+        Rectangle()
+            .fill(hovered ? Tokens.violet.opacity(0.4) : .clear)
+            .frame(maxWidth: .infinity)
     }
 }

@@ -54,12 +54,14 @@
 		C445A71B9842F553FD78D26B /* CardTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1449F1F57769065F90DFD43D /* CardTileView.swift */; };
 		CD366D307AD20E6CCE6A0900 /* WeatherData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF4B97CE5CAAFC3AA1F3D2A9 /* WeatherData.swift */; };
 		CDD5213A3FB60C129D53134D /* ReviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF5B894AD6D604448314FB3 /* ReviewData.swift */; };
+		D09489FE05B0C07F7DDEDD44 /* TrashDropZoneOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E698D6F7EDE7B6A5F2C663A4 /* TrashDropZoneOverlay.swift */; };
 		D3D1524DF157B6BCB6933E68 /* Insight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C587714AC58E27900AFBB65 /* Insight.swift */; };
 		D3DFDFD3A82F4C4AEDFAC6E3 /* TagChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2BE6711FD8CEEBB12F84AF6 /* TagChip.swift */; };
 		D9827C1BAE20D1B5DC1C4C90 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AFC02102EB9C7C0698DBBD6 /* ThemeManager.swift */; };
 		E26114E3BAB5325D85BAF348 /* BoardScopeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00C59E7E4B809A278A8EEDB /* BoardScopeStore.swift */; };
 		ED496CAE8EAD9F1942C065D6 /* PillButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C26C5C1DE4E230F13D4A7AF /* PillButton.swift */; };
 		EFA941E64E1D709503BAC985 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FE6A6AD74A59A38FA9B854 /* RootView.swift */; };
+		F43DC80E223945F4BCBCEDB1 /* DragStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D45EDB276CFD3AAE0917CF51 /* DragStore.swift */; };
 		F88FAA16C0A96FA39C8D2AD3 /* ToastOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0ECA762C99FA001ABF76C6 /* ToastOverlay.swift */; };
 /* End PBXBuildFile section */
 
@@ -110,8 +112,10 @@
 		CC21D036F338F395728F4841 /* WebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketClient.swift; sourceTree = "<group>"; };
 		D00C59E7E4B809A278A8EEDB /* BoardScopeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardScopeStore.swift; sourceTree = "<group>"; };
 		D2DC760C601ACAD9AD6EDABB /* CardSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSurface.swift; sourceTree = "<group>"; };
+		D45EDB276CFD3AAE0917CF51 /* DragStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragStore.swift; sourceTree = "<group>"; };
 		D61F1671ABC0620D73FFB58D /* AiSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSuggestion.swift; sourceTree = "<group>"; };
 		E2BE6711FD8CEEBB12F84AF6 /* TagChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagChip.swift; sourceTree = "<group>"; };
+		E698D6F7EDE7B6A5F2C663A4 /* TrashDropZoneOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashDropZoneOverlay.swift; sourceTree = "<group>"; };
 		E7C17D7526A0C80AF64C7283 /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		E9356D8CC170F45F0D61F070 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		ECB0072855DCF669D2488118 /* BroadcastEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastEvent.swift; sourceTree = "<group>"; };
@@ -210,6 +214,7 @@
 				E7C17D7526A0C80AF64C7283 /* BoardView.swift */,
 				1449F1F57769065F90DFD43D /* CardTileView.swift */,
 				351B597EB5D18C72E3C4F1B1 /* MainView.swift */,
+				E698D6F7EDE7B6A5F2C663A4 /* TrashDropZoneOverlay.swift */,
 			);
 			path = Main;
 			sourceTree = "<group>";
@@ -336,6 +341,7 @@
 				6E298DEBC486F46162AB5617 /* AuthStore.swift */,
 				D00C59E7E4B809A278A8EEDB /* BoardScopeStore.swift */,
 				30888F32AB7A737228CCE83D /* CardStore.swift */,
+				D45EDB276CFD3AAE0917CF51 /* DragStore.swift */,
 				0BA207C8D6BC9A6883D358E4 /* InsightStore.swift */,
 				8C079804591FE0380E400B39 /* ToastStore.swift */,
 				773BC0C48E9DCB2C2C7EEF54 /* UnreadStore.swift */,
@@ -450,6 +456,7 @@
 				C445A71B9842F553FD78D26B /* CardTileView.swift in Sources */,
 				7745DDFA7A42F36355FC5C69 /* ColorTokens.swift in Sources */,
 				B814CAF2288F34F61C395FED /* Constants.swift in Sources */,
+				F43DC80E223945F4BCBCEDB1 /* DragStore.swift in Sources */,
 				A586253D11B020755B3DCE99 /* DueDateChip.swift in Sources */,
 				A7E0B4F083A997E19D244378 /* Endpoint.swift in Sources */,
 				B7430BC42A18277ED0B1ED60 /* Errors.swift in Sources */,
@@ -476,6 +483,7 @@
 				D9827C1BAE20D1B5DC1C4C90 /* ThemeManager.swift in Sources */,
 				F88FAA16C0A96FA39C8D2AD3 /* ToastOverlay.swift in Sources */,
 				293D4F5AF6F25A5832A0081A /* ToastStore.swift in Sources */,
+				D09489FE05B0C07F7DDEDD44 /* TrashDropZoneOverlay.swift in Sources */,
 				4AA9F96292723B7B5AED8CEE /* Typography.swift in Sources */,
 				57E59C92A28BA7E022A3CAF0 /* UnreadStore.swift in Sources */,
 				4DD52F275B38DDDC32D0C8F8 /* User.swift in Sources */,

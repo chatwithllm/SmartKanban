@@ -7,7 +7,10 @@ struct CardTileView: View {
     @StateObject private var insights = InsightStore.shared
     @StateObject private var unread = UnreadStore.shared
     @StateObject private var users = UserListStore.shared
+    @StateObject private var drag = DragStore.shared
     @State private var hover = false
+
+    private var isDraggingSelf: Bool { drag.activeCardId == card.id }
 
     var body: some View {
         Button(action: onOpen) {
@@ -18,10 +21,15 @@ struct CardTileView: View {
         }
         .buttonStyle(.plain)
         .overlay(accent, alignment: .leading)
-        .scaleEffect(hover ? 1.005 : 1.0)
+        .scaleEffect(hover && !drag.isDragging ? 1.005 : 1.0)
         .shadow(color: hover ? Tokens.violet.opacity(0.06) : .clear, radius: 6, y: 2)
+        .opacity(isDraggingSelf ? 0.4 : 1.0)
         .onHover { hover = $0 }
         .animation(.spring(response: 0.28, dampingFraction: 0.85), value: hover)
+        .onDrag {
+            drag.activeCardId = card.id
+            return NSItemProvider(object: card.id.uuidString as NSString)
+        }
     }
 
     private var accent: some View {
