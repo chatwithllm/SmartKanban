@@ -20,10 +20,7 @@ struct WeeklyReviewSheet: View {
                     if let data {
                         statGrid(data)
                         if let summary = data.summary, !summary.isEmpty {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Summary").font(.mono(10, weight: .semibold)).tracking(1.2).foregroundStyle(Tokens.ink3)
-                                Text(summary).font(.sans(13)).foregroundStyle(Tokens.ink)
-                            }
+                            Text(summary).font(.sans(13)).foregroundStyle(Tokens.ink)
                         }
                         section(
                             title: "Shipped (\(data.done.count))",
@@ -94,7 +91,7 @@ struct WeeklyReviewSheet: View {
                         Text(r.title).font(.sans(12)).foregroundStyle(Tokens.ink)
                         Spacer()
                         if !r.tags.isEmpty {
-                            Text(r.tags.map { "#\($0)" }.joined(separator: ", "))
+                            Text("#" + r.tags.joined(separator: " #"))
                                 .font(.mono(10))
                                 .foregroundStyle(Tokens.ink3)
                                 .lineLimit(1)

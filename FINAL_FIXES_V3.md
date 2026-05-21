@@ -91,7 +91,7 @@ Specific change: delete the `SectionLabel("Title")` line at 150 and the `Section
 Web reference: `web/src/components/EditDialog.tsx:215, 264` — bare inputs, no labels.
 Effort: S (≈10 min)
 
-### FIX-V3-004: Weekly Review row tag formatting — single `#` prefix, space-joined
+### ✅ FIX-V3-004: Weekly Review row tag formatting — single `#` prefix, space-joined (WeeklyReviewSheet.swift:88)
 Found by: CA3-004 (A only)
 File: `macOS/KanbanClaude/UI/Review/WeeklyReviewSheet.swift`
 Line: 93
@@ -105,7 +105,7 @@ Specific change:
 Web reference: `web/src/components/WeeklyReview.tsx:132-134` — `#${r.tags.join(' #')}`.
 Effort: S (≈5 min)
 
-### FIX-V3-005: Drop the "Summary" mono label above the Weekly Review AI summary
+### ✅ FIX-V3-005: Drop "Summary" mono label above Weekly Review AI summary (WeeklyReviewSheet.swift:22)
 Found by: CA3-005 (A only)
 File: `macOS/KanbanClaude/UI/Review/WeeklyReviewSheet.swift`
 Line: 23-26
