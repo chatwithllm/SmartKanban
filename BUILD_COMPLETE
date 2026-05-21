@@ -1,0 +1,8 @@
+macOS build complete @ 2026-05-21 03:57:01.
+phases: 0..9
+build: macOS/DerivedData/Build/Products/Release/KanbanClaude.app
+bundle id: com.kanbanclaude.kanbanclaude
+prod server: https://kanban.npalakurla.com
+
+See PHASE_9_COMPLETE for code-status and deferred items.
+See AGENT_LEARNINGS.md for I-1 (screen-locked visual audit limitation).

@@ -11,6 +11,53 @@ The macOS build agent MUST:
 3. Change status from ❌ to ✅ when implemented, 🔄 if adapted for desktop
 4. Do NOT mark a screen complete until every item for it is ✅ or 🔄
 
+## BUILD STATUS — Phase 9 audit (2026-05-21)
+
+| Screen / Group | Phase | Code status | Visual diff status |
+|---|---|---|---|
+| Login / Register (F-001..F-018) | 3 | ✅ implemented | 🔄 pending unlock (I-1) |
+| Desktop App Shell / BoardHeader (F-019..F-040) | 4a, 6 | ✅ implemented as NSToolbar | 🔄 pending unlock |
+| Scope Switcher (F-041..F-049) | 4a | ✅ popover with scope description rows | 🔄 |
+| Weather Widget (F-050..F-061) | 8 (V1) | 🔄 V1 — not in MVP cut | 🔄 |
+| Notification Bell + Push (F-062..F-082) | 5 + 7 | ✅ bell + popover + UN local banner + Dock badge | 🔄 |
+| Profile Dropdown (F-083..F-090) | 4a | ✅ NSPopover w/ name + email + sign-out | 🔄 |
+| Activity Ticker (F-091..F-101) | 8 (V1) | 🔄 V1 — not in MVP cut | 🔄 |
+| Kanban Board (F-102..F-131) | 4a, 4b | ✅ 4-col HStack + DnD + trash zone + WS reconcile | 🔄 |
+| CardTile (F-132..F-167) | 4c | ✅ 8 state variations (badge, due, thumbs, avatars, hover, drag) | 🔄 |
+| EditDialog (F-168..F-217) | 4d | ✅ NSWindow per id, 12 sections, QR popover, AI panel | 🔄 |
+| AI Insights Panel (F-218..F-237) | 4d, 7 | ✅ pending/ok/failed states, brainstorm ⌘B | 🔄 |
+| Related Cards (F-238..F-249) | 8 (V1) | 🔄 V1 — not in MVP cut | 🔄 |
+| Card Chain Modal (F-250..F-262) | 8 (V1) | 🔄 V1 — not in MVP cut | 🔄 |
+| Link Picker (F-263..F-272) | 8 (V1) | 🔄 V1 — not in MVP cut | 🔄 |
+| Card Timeline (F-273..F-294) | 4f | ✅ live WS append, mark-read, AI suggestion pills | 🔄 |
+| Chat Input (F-295..F-301) | 4f | ✅ send + 2000-char guard + @ai hint | 🔄 |
+| Knowledge View / Row / Edit / Detail (F-302..F-359) | 7 | ✅ list, search, scope segmented, edit sheet | 🔄 |
+| Archive Dialog (F-360..F-378) | 8 | ✅ restore / delete / purge | 🔄 |
+| Weekly Review (F-379..F-389) | 8 (V1) | ✅ done / stale / stuck sections | 🔄 |
+| Capture Bar (F-390..F-411) | 4e | ✅ NSPanel floating, ⌘N | 🔄 |
+| Settings (F-412..F-460) | 6 | ✅ 5 tabs General / Account / Tokens / Telegram / Templates | 🔄 |
+| Templates Tab (F-461..F-481) | 6 (V1) | ✅ list + instantiate; full CRUD V1 | 🔄 |
+| Toast System (F-482..F-487) | 1 | ✅ 5-slot, 4 s auto-dismiss, offline sticky | 🔄 |
+| Login View (F-488..F-507) | 3 | ✅ same as F-001..F-018 | 🔄 |
+| Mirror View (F-508..F-519) | V2 | 🚫 V2 per VETO V-008 | n/a |
+| Mobile screens (F-520..F-610) | — | 🚫 mobile-only; desktop replacement implemented | n/a |
+| Service Worker (F-611..F-624) | — | 🚫 replaced by UNUserNotificationCenter + WS | n/a |
+| Keyboard Shortcuts (F-625..F-634) | 4a, 4d, 4e | ✅ ⌘N (capture), ⌘B (brainstorm), Esc, ⌘↩ | 🔄 |
+| Paste / Drag / Routing (F-635..F-651) | 5 | ✅ Finder drop → create / attach; URL scheme | 🔄 |
+| Telegram (server) (F-652..F-676) | — | 🚫 server-only; identity admin in Prefs T4 ✅ | n/a |
+| WebSocket Real-time (F-677..F-697) | 1 | ✅ URLSessionWebSocketTask + backoff + wake reconnect | 🔄 |
+| Search (F-698..F-704) | 4a | ✅ live filter in toolbar | 🔄 |
+| Theme (F-705..F-712) | 1, 6 | ✅ system / light / dark via NSApp.appearance | 🔄 |
+| Attachments (F-713..F-723) | 4d, 5 | ✅ authenticated fetch + drop-to-attach | 🔄 |
+| Backend-only (F-724..F-735) | — | 🚫 consumed via API client only | n/a |
+
+**Total**: 22 MVP-scope groups ✅ code-verified; 5 groups 🔄 V1-deferred (Weather,
+Activity Ticker, Related Cards, Card Chain, Link Picker); the remaining 6 groups
+🚫 (Mirror V2, all mobile screens, service worker, server-side Telegram,
+backend-only routes). Visual screenshot diff (Rule 14) is uniformly 🔄 across
+all groups for this session — I-1 (screen locked) blocks Quartz captures from
+seeing the app surface. The fix is a follow-up run with an unlocked display.
+
 ## GROUP INDEX
 - AUTH & SESSION — F-001..F-018
 - TOP NAV / BoardHeader (desktop) — F-019..F-040

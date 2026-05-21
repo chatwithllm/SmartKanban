@@ -1,0 +1,22 @@
+Phase 9 complete @ 03:57:01.
+
+Code-level validation gates:
+- xcodebuild -configuration Release SUCCEEDED (zero errors)
+- Scripts/lint-rule3.sh exits 0 (no async let _ =, no .task { await loadAll },
+  no bare-array decode)
+- Reinstall + open succeeds; log show emits "KanbanClaude launched" under
+  subsystem com.kanbanclaude.kanbanclaude
+- Phase markers 0/9 written
+- Registry annotated with code-status vs visual-diff-status per group
+
+Deferred (V1 follow-up):
+- Weather widget popover
+- Activity ticker
+- Related cards + Link picker + Card chain modal
+- Mirror View (V2)
+- Custom font loading (Inter / Spectral / JetBrains Mono) — uses SF Pro
+  fallback; ship blocker noted for the next session per G-004
+
+Deferred (Rule 14 visual diff, all screens):
+- Screen lock blocked Quartz captures. Must rerun in unlocked session
+  to perform per-screen screenshot comparison vs web.
