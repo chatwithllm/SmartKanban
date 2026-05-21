@@ -98,7 +98,13 @@ private struct TimelineRow: View {
                         .font(.mono(10))
                         .foregroundStyle(Tokens.ink3)
                 }
-                if let content = event.content, !content.isEmpty {
+                if event.entryType == .system, let body = systemBody {
+                    Text(body)
+                        .font(.sans(12))
+                        .foregroundStyle(Tokens.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .multilineTextAlignment(.leading)
+                } else if let content = event.content, !content.isEmpty {
                     Text(content)
                         .font(.sans(12))
                         .foregroundStyle(Tokens.ink)
@@ -112,9 +118,20 @@ private struct TimelineRow: View {
         }
     }
 
+    private var systemBody: String? {
+        guard event.entryType == .system else { return nil }
+        let body = event.details["body"]?.stringValue
+        let trimmed = body?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return (trimmed?.isEmpty == false) ? trimmed : nil
+    }
+
     private var label: String {
         switch event.entryType {
-        case .system: return "\(event.actorName ?? "Someone") \(event.action ?? "updated")"
+        case .system:
+            if systemBody != nil {
+                return event.actorName ?? "Someone"
+            }
+            return "\(event.actorName ?? "Someone") \(event.action ?? "updated")"
         case .message: return event.actorName ?? "Anonymous"
         case .ai: return "AI"
         case .share: return "Shared by \(event.actorName ?? "")"
