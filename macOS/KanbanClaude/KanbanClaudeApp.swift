@@ -11,5 +11,9 @@ struct KanbanClaudeApp: App {
                 .frame(minWidth: 960, minHeight: 600)
         }
         .windowToolbarStyle(.unifiedCompact)
+
+        Settings {
+            PreferencesView()
+        }
     }
 }

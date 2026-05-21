@@ -23,14 +23,17 @@
 		34E114C8D8CF11C8D593E62D /* BoardToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92B42FC7D4327D1F82369DC7 /* BoardToolbar.swift */; };
 		36BA53625A6B87A5A368A38E /* CardSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DC760C601ACAD9AD6EDABB /* CardSurface.swift */; };
 		3960872E7CD85187846B61C9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 32FAD60E9C3B97E09C622A87 /* Assets.xcassets */; };
+		3A32F39A28471E0B1C7CB83E /* GeneralTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 039EC349FAAF73227F9F62B5 /* GeneralTab.swift */; };
 		3B3570C66C25A8B31DF420E4 /* KanbanClaudeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5582F45A9B578CD960A323AE /* KanbanClaudeApp.swift */; };
 		4550B678651DC1FCFAD21F86 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9356D8CC170F45F0D61F070 /* KeychainStore.swift */; };
+		47C7890096498C49D9A84705 /* TokensTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED207933E9D1892748EC80D7 /* TokensTab.swift */; };
 		4A60C2DF53DBB40147ECCDD5 /* CardStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30888F32AB7A737228CCE83D /* CardStore.swift */; };
 		4AA9F96292723B7B5AED8CEE /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 202DC6CD8086A92EDB79E7B6 /* Typography.swift */; };
 		4DD52F275B38DDDC32D0C8F8 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D1C14609FF4BEA59531C0F3 /* User.swift */; };
 		534F4729AE3C4055DD38335D /* AttachmentDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53319598BA23B9FA6218F1F4 /* AttachmentDownloader.swift */; };
 		57E59C92A28BA7E022A3CAF0 /* UnreadStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 773BC0C48E9DCB2C2C7EEF54 /* UnreadStore.swift */; };
 		5B0519F70F2E9A5A2291C707 /* CardEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C8C56D87D09526B53D08191 /* CardEvent.swift */; };
+		5BF25BEE2436F7D468AF186D /* TemplatesTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3C71BDA0F811CBA68D2AE7 /* TemplatesTab.swift */; };
 		62C5559AA50703426FE355A4 /* KnowledgeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8828F429022D2664229D0BD5 /* KnowledgeListView.swift */; };
 		64697E4B9C1D517B58C9BB18 /* Template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E08922700FB9D4E21AA716 /* Template.swift */; };
 		66F364C8FEF20E3621392738 /* EditCardWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CC7C58A0BE8B62FB671B5C /* EditCardWindowController.swift */; };
@@ -40,6 +43,7 @@
 		70E63F79EC4942DA10DBD5F1 /* ChatInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C63756131DBD129EB0E3736A /* ChatInputView.swift */; };
 		7745DDFA7A42F36355FC5C69 /* ColorTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D44ACE213B6D91728D9D096 /* ColorTokens.swift */; };
 		7905DEF4EF346A38D34051BB /* NotificationCenterBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885B6937FD8524093723349B /* NotificationCenterBridge.swift */; };
+		810EAC46B7BF0AE217104B79 /* TelegramTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 408B2FEB0700A43C42C5DE44 /* TelegramTab.swift */; };
 		819C60959DB32578CB00F38B /* Uploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F6283E8B1DD437081BA8EC /* Uploader.swift */; };
 		89277AF7188143E94C56D9A3 /* QRGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8676FC6BB1978546CD132ECB /* QRGenerator.swift */; };
 		89953DA207CFBB576E18D09B /* TelegramIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D927EF8463962520EF9D21 /* TelegramIdentity.swift */; };
@@ -54,6 +58,7 @@
 		AADED05FA5BF95E300FC46EF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9ADF24F67A29324165CAD9 /* AppDelegate.swift */; };
 		ABE9334AC7C88BD0E6072101 /* ServerTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59128523BFDC3A8F9EA326C /* ServerTime.swift */; };
 		ACDEEE37870E861E7AEEB57E /* WindowCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C9D6DE25C9A454A2F6F01C4 /* WindowCoordinator.swift */; };
+		AD5C8CCDF3AF169ECDBEF408 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA9661A9ED14D59483B00031 /* PreferencesView.swift */; };
 		ADAEB54E0842C8CEFCD49836 /* QRPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133DEF92B27F2E28B8A57839 /* QRPopover.swift */; };
 		AEEC42C6C9B7C5CE65FF4E8A /* Attachment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9423699E6AC8AD3F52A342 /* Attachment.swift */; };
 		B7430BC42A18277ED0B1ED60 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0003E866170D3A627D0C78E0 /* Errors.swift */; };
@@ -70,6 +75,7 @@
 		D5093B0ED853B583A30D8BA9 /* URLSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560780A23AADBEC704FED0A2 /* URLSchemeHandler.swift */; };
 		D9827C1BAE20D1B5DC1C4C90 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AFC02102EB9C7C0698DBBD6 /* ThemeManager.swift */; };
 		E26114E3BAB5325D85BAF348 /* BoardScopeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00C59E7E4B809A278A8EEDB /* BoardScopeStore.swift */; };
+		ECFA8E4224E565E91C532F36 /* AccountTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5BD15C00ACBA8F750DB0969 /* AccountTab.swift */; };
 		ED496CAE8EAD9F1942C065D6 /* PillButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C26C5C1DE4E230F13D4A7AF /* PillButton.swift */; };
 		EFA941E64E1D709503BAC985 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FE6A6AD74A59A38FA9B854 /* RootView.swift */; };
 		F43DC80E223945F4BCBCEDB1 /* DragStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D45EDB276CFD3AAE0917CF51 /* DragStore.swift */; };
@@ -80,6 +86,7 @@
 
 /* Begin PBXFileReference section */
 		0003E866170D3A627D0C78E0 /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
+		039EC349FAAF73227F9F62B5 /* GeneralTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralTab.swift; sourceTree = "<group>"; };
 		050175A70FDD33A3BA88655B /* KanbanClaude.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KanbanClaude.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		07F6283E8B1DD437081BA8EC /* Uploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Uploader.swift; sourceTree = "<group>"; };
 		0BA207C8D6BC9A6883D358E4 /* InsightStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightStore.swift; sourceTree = "<group>"; };
@@ -100,6 +107,7 @@
 		351B597EB5D18C72E3C4F1B1 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		3D14E4A21849130041C1DCE4 /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
 		3D1C14609FF4BEA59531C0F3 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		408B2FEB0700A43C42C5DE44 /* TelegramTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramTab.swift; sourceTree = "<group>"; };
 		4547A844DB6F135A84687903 /* CardEventsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardEventsStore.swift; sourceTree = "<group>"; };
 		4AF5B894AD6D604448314FB3 /* ReviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewData.swift; sourceTree = "<group>"; };
 		4E7E635978543E3E2BE04A57 /* UserListStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserListStore.swift; sourceTree = "<group>"; };
@@ -130,7 +138,9 @@
 		A3FE6A6AD74A59A38FA9B854 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		A4682CBC1E6A44AC8BF3DF7E /* CardLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardLink.swift; sourceTree = "<group>"; };
 		A59128523BFDC3A8F9EA326C /* ServerTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerTime.swift; sourceTree = "<group>"; };
+		A5BD15C00ACBA8F750DB0969 /* AccountTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTab.swift; sourceTree = "<group>"; };
 		B8278213F25D8E266525504F /* DueDateChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueDateChip.swift; sourceTree = "<group>"; };
+		BA9661A9ED14D59483B00031 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		C63756131DBD129EB0E3736A /* ChatInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputView.swift; sourceTree = "<group>"; };
 		C7ED2BFAF11835037B6FE6B4 /* MirrorToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorToken.swift; sourceTree = "<group>"; };
 		CC21D036F338F395728F4841 /* WebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketClient.swift; sourceTree = "<group>"; };
@@ -143,7 +153,9 @@
 		E698D6F7EDE7B6A5F2C663A4 /* TrashDropZoneOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashDropZoneOverlay.swift; sourceTree = "<group>"; };
 		E7C17D7526A0C80AF64C7283 /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		E9356D8CC170F45F0D61F070 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		EA3C71BDA0F811CBA68D2AE7 /* TemplatesTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatesTab.swift; sourceTree = "<group>"; };
 		ECB0072855DCF669D2488118 /* BroadcastEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastEvent.swift; sourceTree = "<group>"; };
+		ED207933E9D1892748EC80D7 /* TokensTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokensTab.swift; sourceTree = "<group>"; };
 		EFC04BA3D3DB3D5122B71124 /* InitialsAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialsAvatar.swift; sourceTree = "<group>"; };
 		F5402D469B6F412504C3ED44 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		F7D8A4B8109C41A91487891C /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
@@ -261,6 +273,12 @@
 		A6E9487A3EE4881D5D32221A /* Preferences */ = {
 			isa = PBXGroup;
 			children = (
+				A5BD15C00ACBA8F750DB0969 /* AccountTab.swift */,
+				039EC349FAAF73227F9F62B5 /* GeneralTab.swift */,
+				BA9661A9ED14D59483B00031 /* PreferencesView.swift */,
+				408B2FEB0700A43C42C5DE44 /* TelegramTab.swift */,
+				EA3C71BDA0F811CBA68D2AE7 /* TemplatesTab.swift */,
+				ED207933E9D1892748EC80D7 /* TokensTab.swift */,
 			);
 			path = Preferences;
 			sourceTree = "<group>";
@@ -476,6 +494,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				128BA80F3E743324C53ED096 /* APIClient.swift in Sources */,
+				ECFA8E4224E565E91C532F36 /* AccountTab.swift in Sources */,
 				A81AA59A95540C62B16F49FE /* AiInsightsPanelView.swift in Sources */,
 				1D8338CAE3D3B240D14F7701 /* AiSuggestion.swift in Sources */,
 				AADED05FA5BF95E300FC46EF /* AppDelegate.swift in Sources */,
@@ -507,6 +526,7 @@
 				66F364C8FEF20E3621392738 /* EditCardWindowController.swift in Sources */,
 				A7E0B4F083A997E19D244378 /* Endpoint.swift in Sources */,
 				B7430BC42A18277ED0B1ED60 /* Errors.swift in Sources */,
+				3A32F39A28471E0B1C7CB83E /* GeneralTab.swift in Sources */,
 				8F4E0B9FA6BF015A5589F6D9 /* InitialsAvatar.swift in Sources */,
 				D3D1524DF157B6BCB6933E68 /* Insight.swift in Sources */,
 				32C653C3EB5473B1A99DCD82 /* InsightStore.swift in Sources */,
@@ -520,6 +540,7 @@
 				BA5A510812912BEC2F538FA8 /* Notification.swift in Sources */,
 				7905DEF4EF346A38D34051BB /* NotificationCenterBridge.swift in Sources */,
 				ED496CAE8EAD9F1942C065D6 /* PillButton.swift in Sources */,
+				AD5C8CCDF3AF169ECDBEF408 /* PreferencesView.swift in Sources */,
 				89277AF7188143E94C56D9A3 /* QRGenerator.swift in Sources */,
 				ADAEB54E0842C8CEFCD49836 /* QRPopover.swift in Sources */,
 				CDD5213A3FB60C129D53134D /* ReviewData.swift in Sources */,
@@ -529,10 +550,13 @@
 				FBBD31A0E39BB51BABE49477 /* StatusItemController.swift in Sources */,
 				D3DFDFD3A82F4C4AEDFAC6E3 /* TagChip.swift in Sources */,
 				89953DA207CFBB576E18D09B /* TelegramIdentity.swift in Sources */,
+				810EAC46B7BF0AE217104B79 /* TelegramTab.swift in Sources */,
 				64697E4B9C1D517B58C9BB18 /* Template.swift in Sources */,
+				5BF25BEE2436F7D468AF186D /* TemplatesTab.swift in Sources */,
 				D9827C1BAE20D1B5DC1C4C90 /* ThemeManager.swift in Sources */,
 				F88FAA16C0A96FA39C8D2AD3 /* ToastOverlay.swift in Sources */,
 				293D4F5AF6F25A5832A0081A /* ToastStore.swift in Sources */,
+				47C7890096498C49D9A84705 /* TokensTab.swift in Sources */,
 				D09489FE05B0C07F7DDEDD44 /* TrashDropZoneOverlay.swift in Sources */,
 				4AA9F96292723B7B5AED8CEE /* Typography.swift in Sources */,
 				D5093B0ED853B583A30D8BA9 /* URLSchemeHandler.swift in Sources */,
