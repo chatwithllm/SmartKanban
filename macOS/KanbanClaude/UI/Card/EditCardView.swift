@@ -15,6 +15,12 @@ struct EditCardView: View {
     @State private var showQR = false
     @State private var copiedId = false
 
+    @State private var linkedKnowledge: [KnowledgeItem] = []
+    @State private var knowledgePicking = false
+    @State private var knowledgeQuery: String = ""
+    @State private var knowledgeResults: [KnowledgeItem] = []
+    @State private var knowledgeBusy = false
+
     var body: some View {
         Group {
             if let draft {
@@ -45,6 +51,7 @@ struct EditCardView: View {
                 await users.refresh()
                 await insights.refresh(cardId: cardId)
             }
+            Task { await loadLinkedKnowledge() }
         }
         .onChange(of: cards.cards) { _ in
             if draft == nil, let c = cards.card(id: cardId) {
@@ -270,11 +277,197 @@ struct EditCardView: View {
 
     private func knowledgeSection() -> some View {
         DisclosureGroup {
-            Text("Knowledge linking lands in Phase 7.")
-                .font(.sans(11)).foregroundStyle(Tokens.ink3)
-                .padding(.vertical, 4)
+            VStack(alignment: .leading, spacing: 6) {
+                if linkedKnowledge.isEmpty {
+                    Text("No linked notes yet.")
+                        .font(.sans(11)).foregroundStyle(Tokens.ink3)
+                } else {
+                    ForEach(linkedKnowledge) { item in
+                        linkedRow(item)
+                    }
+                }
+                HStack(spacing: 8) {
+                    Button {
+                        withAnimation { knowledgePicking.toggle() }
+                        if !knowledgePicking { knowledgeQuery = ""; knowledgeResults = [] }
+                    } label: {
+                        Label(knowledgePicking ? "Cancel" : "+ Attach", systemImage: "link")
+                            .font(.sans(11, weight: .semibold))
+                            .padding(.horizontal, 8).padding(.vertical, 4)
+                            .background(Tokens.ceramic)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    if shouldShowSaveAsKnowledge() {
+                        Button {
+                            Task { await saveCardAsKnowledge() }
+                        } label: {
+                            Label("Save as knowledge", systemImage: "tray.and.arrow.down")
+                                .font(.sans(11, weight: .semibold))
+                                .padding(.horizontal, 8).padding(.vertical, 4)
+                                .background(Tokens.violetTint)
+                                .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                if knowledgePicking {
+                    knowledgePicker
+                }
+            }
+            .padding(.vertical, 4)
         } label: {
             SectionLabel("Knowledge")
+        }
+    }
+
+    private func linkedRow(_ item: KnowledgeItem) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: visibilityIcon(item.visibility))
+                .font(.system(size: 10))
+                .foregroundStyle(Tokens.ink3)
+            if item.url != nil {
+                Text("🔗 \(item.title)").font(.sans(12)).foregroundStyle(Tokens.ink)
+            } else {
+                Text(item.title).font(.sans(12)).foregroundStyle(Tokens.ink)
+            }
+            Spacer()
+            Button {
+                Task { await unlinkKnowledge(item) }
+            } label: {
+                Text("remove").font(.sans(11)).foregroundStyle(Tokens.danger)
+            }
+            .buttonStyle(.plain)
+            .disabled(knowledgeBusy)
+        }
+        .padding(.vertical, 3)
+    }
+
+    private var knowledgePicker: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            TextField("Search knowledge…", text: $knowledgeQuery)
+                .textFieldStyle(.plain)
+                .padding(.vertical, 6).padding(.horizontal, 8)
+                .background(Tokens.surface)
+                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Tokens.hairline, lineWidth: 1))
+                .onSubmit { Task { await searchKnowledge() } }
+                .onChange(of: knowledgeQuery) { _ in
+                    Task { await searchKnowledge() }
+                }
+            VStack(spacing: 0) {
+                ForEach(knowledgeResults.prefix(12)) { result in
+                    Button {
+                        Task { await linkKnowledge(result) }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: visibilityIcon(result.visibility))
+                                .font(.system(size: 9))
+                                .foregroundStyle(Tokens.ink3)
+                            Text(result.url != nil ? "🔗 \(result.title)" : result.title)
+                                .font(.sans(12))
+                                .foregroundStyle(Tokens.ink)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 6).padding(.vertical, 4)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Tokens.ceramic.opacity(0.4))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(knowledgeBusy)
+                }
+            }
+        }
+    }
+
+    private func visibilityIcon(_ vis: KnowledgeVisibility) -> String {
+        switch vis {
+        case .private: return "lock.fill"
+        case .inbox: return "tray.fill"
+        case .shared: return "person.2.fill"
+        }
+    }
+
+    private func loadLinkedKnowledge() async {
+        do {
+            let items = try await APIClient.shared.send(.knowledgeForCard(id: cardId), as: [KnowledgeItem].self)
+            linkedKnowledge = items
+        } catch {
+            // soft
+        }
+    }
+
+    private func searchKnowledge() async {
+        do {
+            let resp = try await APIClient.shared.send(
+                .listKnowledge(scope: .all, q: knowledgeQuery.isEmpty ? nil : knowledgeQuery, tag: nil, limit: 24, cursor: nil),
+                as: KnowledgeListResponse.self
+            )
+            let linkedIds = Set(linkedKnowledge.map(\.id))
+            knowledgeResults = resp.items.filter { !linkedIds.contains($0.id) }
+        } catch {
+            knowledgeResults = []
+        }
+    }
+
+    private func linkKnowledge(_ item: KnowledgeItem) async {
+        guard !knowledgeBusy else { return }
+        knowledgeBusy = true
+        defer { knowledgeBusy = false }
+        do {
+            try await APIClient.shared.sendVoid(.linkKnowledgeToCard(knowledgeId: item.id, cardId: cardId))
+            linkedKnowledge.append(item)
+            knowledgeResults.removeAll { $0.id == item.id }
+            knowledgeQuery = ""
+            knowledgePicking = false
+            ToastStore.shared.success("Linked “\(item.title)”")
+        } catch {
+            ToastStore.shared.error("Couldn't link: \(error.localizedDescription)")
+        }
+    }
+
+    private func unlinkKnowledge(_ item: KnowledgeItem) async {
+        guard !knowledgeBusy else { return }
+        knowledgeBusy = true
+        defer { knowledgeBusy = false }
+        do {
+            try await APIClient.shared.sendVoid(.unlinkKnowledgeFromCard(knowledgeId: item.id, cardId: cardId))
+            linkedKnowledge.removeAll { $0.id == item.id }
+        } catch {
+            ToastStore.shared.error("Couldn't unlink: \(error.localizedDescription)")
+        }
+    }
+
+    private func shouldShowSaveAsKnowledge() -> Bool {
+        guard let card = draft else { return false }
+        guard containsURL(card.description) else { return false }
+        let descUrls = extractURLs(card.description)
+        if descUrls.isEmpty { return false }
+        let linkedUrls = Set(linkedKnowledge.compactMap { $0.url?.lowercased() })
+        return descUrls.contains { !linkedUrls.contains($0.lowercased()) }
+    }
+
+    private func containsURL(_ s: String) -> Bool {
+        !extractURLs(s).isEmpty
+    }
+
+    private func extractURLs(_ s: String) -> [String] {
+        let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+        let range = NSRange(s.startIndex..., in: s)
+        let matches = detector?.matches(in: s, options: [], range: range) ?? []
+        return matches.compactMap { $0.url?.absoluteString }
+    }
+
+    private func saveCardAsKnowledge() async {
+        guard !knowledgeBusy else { return }
+        knowledgeBusy = true
+        defer { knowledgeBusy = false }
+        do {
+            let item = try await APIClient.shared.send(.knowledgeFromCard(cardId: cardId), as: KnowledgeItem.self)
+            linkedKnowledge.append(item)
+            ToastStore.shared.success("Saved as knowledge")
+        } catch {
+            ToastStore.shared.error("Couldn't save: \(error.localizedDescription)")
         }
     }
 

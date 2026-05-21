@@ -58,7 +58,7 @@ Estimated total effort: ≈ 35–40 hours
 
 ## P0 — Fix Immediately (workflow-blocking)
 
-### FIX-001: EditDialog Knowledge section is a "Phase 7" placeholder
+### FIX-001: EditDialog Knowledge section is a "Phase 7" placeholder ✅ UI/Card/EditCardView.swift:282
 Found by: CA-001
 File: `macOS/KanbanClaude/UI/Card/EditCardView.swift`
 Line / fn: `knowledgeSection()`
