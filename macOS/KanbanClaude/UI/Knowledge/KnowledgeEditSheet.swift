@@ -163,27 +163,37 @@ struct KnowledgeEditSheet: View {
         busy = true
         Task {
             defer { busy = false }
-            if let item = initial {
-                var patch = KnowledgePatch()
-                patch.title = title
-                patch.body = noteBody
-                patch.tags = parsedTags()
-                patch.visibility = visibility
-                await KnowledgeStore.shared.patch(item.id, patch)
-            } else {
-                let input = KnowledgeInput(
-                    title: title.isEmpty ? nil : title,
-                    titleAuto: titleAuto,
-                    url: url.isEmpty ? nil : url,
-                    body: noteBody.isEmpty ? nil : noteBody,
-                    tags: parsedTags(),
-                    visibility: visibility,
-                    source: .manual,
-                    autoFetch: !url.isEmpty && autoFetch
-                )
-                _ = await KnowledgeStore.shared.create(input)
+            do {
+                if let item = initial {
+                    var patch = KnowledgePatch()
+                    patch.title = title
+                    patch.body = noteBody
+                    patch.tags = parsedTags()
+                    patch.visibility = visibility
+                    try await KnowledgeStore.shared.patchThrowing(item.id, patch)
+                } else {
+                    let input = KnowledgeInput(
+                        title: title.isEmpty ? nil : title,
+                        titleAuto: titleAuto,
+                        url: url.isEmpty ? nil : url,
+                        body: noteBody.isEmpty ? nil : noteBody,
+                        tags: parsedTags(),
+                        visibility: visibility,
+                        source: .manual,
+                        autoFetch: !url.isEmpty && autoFetch
+                    )
+                    _ = try await KnowledgeStore.shared.createThrowing(input)
+                }
+                onClose()
+            } catch let KanbanError.validation(fields, _) {
+                fieldErrors = fields
+            } catch is CancellationError {
+                return
+            } catch KanbanError.cancelled {
+                return
+            } catch {
+                ToastStore.shared.error("Couldn't save: \(error.localizedDescription)")
             }
-            onClose()
         }
     }
 }

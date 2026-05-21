@@ -101,6 +101,15 @@ final class APIClient {
     static func assertSuccess(http: HTTPURLResponse, data: Data) throws {
         if (200..<300).contains(http.statusCode) { return }
         if http.statusCode == 401 { throw KanbanError.unauthorized }
+
+        // Web parses `{ error: { fields: {...}, message?: "..." } }` for 4xx validation responses.
+        if (400..<500).contains(http.statusCode),
+           let envelope = try? JSONDecoder().decode(ValidationEnvelope.self, from: data),
+           let fields = envelope.error?.fields, !fields.isEmpty {
+            let msg = envelope.error?.message ?? envelope.message ?? "Validation failed"
+            throw KanbanError.validation(fields, msg)
+        }
+
         let snippet: String
         if let s = try? JSONDecoder().decode(ErrorEnvelope.self, from: data) {
             snippet = s.error ?? s.message ?? String(data: data, encoding: .utf8) ?? "(no body)"
@@ -112,6 +121,15 @@ final class APIClient {
 
     struct ErrorEnvelope: Decodable {
         let error: String?
+        let message: String?
+    }
+
+    struct ValidationEnvelope: Decodable {
+        struct Detail: Decodable {
+            let fields: [String: String]?
+            let message: String?
+        }
+        let error: Detail?
         let message: String?
     }
 }

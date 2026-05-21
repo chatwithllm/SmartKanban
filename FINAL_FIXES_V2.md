@@ -125,7 +125,8 @@ Specific change:
 Acceptance: clicking Settings from either the toolbar gear or the profile-row opens the Preferences window on macOS 13+ and 14+.
 Effort: S (≈ 25 min, plus runtime verification user-side)
 
-### FIX-V2-004: KnowledgeEditSheet — surface server-side `error.fields` map
+### ✅ FIX-V2-004: KnowledgeEditSheet — surface server-side `error.fields` map
+**Done:** added `KanbanError.validation([String:String], String)` (Errors.swift:6). `APIClient.assertSuccess` now decodes `{ error: { fields, message } }` envelope for 4xx and throws the new case. `KnowledgeStore` exposes `createThrowing` / `patchThrowing`; legacy non-throwing wrappers suppress toast on `.validation`. `KnowledgeEditSheet.save()` catches `.validation` and merges fields into `fieldErrors`. Build green.
 Found by: AUDIT_A2 fix-verification (FIX-009 ⚠ partial) — B verified plumbing exists, A verified server-side population is missing. Code spot-check confirms `save()` has no `do/catch` that reads server errors back into `fieldErrors`.
 Files:
 - `macOS/KanbanClaude/Networking/APIClient.swift` — extend error type

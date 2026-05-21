@@ -34,22 +34,38 @@ final class KnowledgeStore: ObservableObject {
 
     func create(_ input: KnowledgeInput) async -> KnowledgeItem? {
         do {
-            let item = try await APIClient.shared.send(.createKnowledge(input), as: KnowledgeItem.self)
-            items.insert(item, at: 0)
-            return item
+            return try await createThrowing(input)
         } catch {
-            ToastStore.shared.error("Couldn't save: \(error.localizedDescription)")
+            if case KanbanError.validation = error {
+                // Caller is expected to surface field errors inline; suppress toast.
+            } else {
+                ToastStore.shared.error("Couldn't save: \(error.localizedDescription)")
+            }
             return nil
         }
     }
 
+    func createThrowing(_ input: KnowledgeInput) async throws -> KnowledgeItem {
+        let item = try await APIClient.shared.send(.createKnowledge(input), as: KnowledgeItem.self)
+        items.insert(item, at: 0)
+        return item
+    }
+
     func patch(_ id: UUID, _ patch: KnowledgePatch) async {
         do {
-            let updated = try await APIClient.shared.send(.updateKnowledge(id: id, patch), as: KnowledgeItem.self)
-            if let idx = items.firstIndex(where: { $0.id == id }) { items[idx] = updated }
+            try await patchThrowing(id, patch)
         } catch {
-            ToastStore.shared.error("Couldn't update: \(error.localizedDescription)")
+            if case KanbanError.validation = error {
+                // Caller surfaces field errors inline.
+            } else {
+                ToastStore.shared.error("Couldn't update: \(error.localizedDescription)")
+            }
         }
+    }
+
+    func patchThrowing(_ id: UUID, _ patch: KnowledgePatch) async throws {
+        let updated = try await APIClient.shared.send(.updateKnowledge(id: id, patch), as: KnowledgeItem.self)
+        if let idx = items.firstIndex(where: { $0.id == id }) { items[idx] = updated }
     }
 
     func archive(id: UUID) async {
