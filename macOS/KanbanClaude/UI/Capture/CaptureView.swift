@@ -104,7 +104,6 @@ struct CaptureView: View {
                     .background(Tokens.ceramic.opacity(0.5)).clipShape(Capsule())
             }
             .buttonStyle(.plain)
-            .help("Voice capture lands in V1")
             Spacer()
         }
     }

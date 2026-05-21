@@ -136,7 +136,7 @@ Specific change: drop the F-prefix (status is a macOS-only adaptation with no re
 Alternative: assign a new F-ID in FEATURE_PARITY_REGISTRY.md for the desktop adaptation and update the MARK to match. The drop-the-prefix path is cheaper.
 Effort: S (≈3 min)
 
-### FIX-V3-007: Drop the Voice button `.help()` tooltip in CaptureView
+### ✅ FIX-V3-007: Drop Voice button `.help()` tooltip in CaptureView (CaptureView.swift:107)
 Found by: CA3-007 (A only)
 File: `macOS/KanbanClaude/UI/Capture/CaptureView.swift`
 Line: 107
