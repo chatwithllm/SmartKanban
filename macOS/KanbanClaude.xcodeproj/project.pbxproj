@@ -7,26 +7,80 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		128BA80F3E743324C53ED096 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE4FC5F7360DC31A7B0564A /* APIClient.swift */; };
+		1D8338CAE3D3B240D14F7701 /* AiSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = D61F1671ABC0620D73FFB58D /* AiSuggestion.swift */; };
+		23005EC985F2638D48D5847E /* Card.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A01789809ADB29374A3759D /* Card.swift */; };
+		25391EC0A2E15EF4FC15E33A /* AuthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E298DEBC486F46162AB5617 /* AuthStore.swift */; };
+		278AF13C8E4CDB80A37E7028 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A7737371D98D496727B87B /* LoginView.swift */; };
+		293D4F5AF6F25A5832A0081A /* ToastStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C079804591FE0380E400B39 /* ToastStore.swift */; };
+		2F0214707E590F36F3DCA016 /* CardLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4682CBC1E6A44AC8BF3DF7E /* CardLink.swift */; };
+		2F67769F1370A561A24966B1 /* BroadcastEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB0072855DCF669D2488118 /* BroadcastEvent.swift */; };
 		3960872E7CD85187846B61C9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 32FAD60E9C3B97E09C622A87 /* Assets.xcassets */; };
 		3B3570C66C25A8B31DF420E4 /* KanbanClaudeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5582F45A9B578CD960A323AE /* KanbanClaudeApp.swift */; };
+		4550B678651DC1FCFAD21F86 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9356D8CC170F45F0D61F070 /* KeychainStore.swift */; };
 		4AA9F96292723B7B5AED8CEE /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 202DC6CD8086A92EDB79E7B6 /* Typography.swift */; };
+		4DD52F275B38DDDC32D0C8F8 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D1C14609FF4BEA59531C0F3 /* User.swift */; };
+		534F4729AE3C4055DD38335D /* AttachmentDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53319598BA23B9FA6218F1F4 /* AttachmentDownloader.swift */; };
+		5B0519F70F2E9A5A2291C707 /* CardEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C8C56D87D09526B53D08191 /* CardEvent.swift */; };
+		64697E4B9C1D517B58C9BB18 /* Template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E08922700FB9D4E21AA716 /* Template.swift */; };
+		69F303230842EAAC29D99343 /* WebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC21D036F338F395728F4841 /* WebSocketClient.swift */; };
 		7745DDFA7A42F36355FC5C69 /* ColorTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D44ACE213B6D91728D9D096 /* ColorTokens.swift */; };
+		89277AF7188143E94C56D9A3 /* QRGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8676FC6BB1978546CD132ECB /* QRGenerator.swift */; };
+		89953DA207CFBB576E18D09B /* TelegramIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D927EF8463962520EF9D21 /* TelegramIdentity.swift */; };
+		95D25F1450840B9C17040143 /* MirrorToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7ED2BFAF11835037B6FE6B4 /* MirrorToken.swift */; };
+		A7E0B4F083A997E19D244378 /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D14E4A21849130041C1DCE4 /* Endpoint.swift */; };
 		AADED05FA5BF95E300FC46EF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9ADF24F67A29324165CAD9 /* AppDelegate.swift */; };
+		ABE9334AC7C88BD0E6072101 /* ServerTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59128523BFDC3A8F9EA326C /* ServerTime.swift */; };
+		AEEC42C6C9B7C5CE65FF4E8A /* Attachment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9423699E6AC8AD3F52A342 /* Attachment.swift */; };
+		B7430BC42A18277ED0B1ED60 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0003E866170D3A627D0C78E0 /* Errors.swift */; };
 		B814CAF2288F34F61C395FED /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7D8A4B8109C41A91487891C /* Constants.swift */; };
+		B98E683F812B05E9524B481F /* KnowledgeItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 782CDD281E87D65EB23671EE /* KnowledgeItem.swift */; };
+		BA5A510812912BEC2F538FA8 /* Notification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FD1C33B51134A565291170 /* Notification.swift */; };
+		CD366D307AD20E6CCE6A0900 /* WeatherData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF4B97CE5CAAFC3AA1F3D2A9 /* WeatherData.swift */; };
+		CDD5213A3FB60C129D53134D /* ReviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF5B894AD6D604448314FB3 /* ReviewData.swift */; };
+		D3D1524DF157B6BCB6933E68 /* Insight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C587714AC58E27900AFBB65 /* Insight.swift */; };
 		D9827C1BAE20D1B5DC1C4C90 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AFC02102EB9C7C0698DBBD6 /* ThemeManager.swift */; };
 		EFA941E64E1D709503BAC985 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FE6A6AD74A59A38FA9B854 /* RootView.swift */; };
+		F88FAA16C0A96FA39C8D2AD3 /* ToastOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0ECA762C99FA001ABF76C6 /* ToastOverlay.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0003E866170D3A627D0C78E0 /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
 		050175A70FDD33A3BA88655B /* KanbanClaude.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KanbanClaude.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1C587714AC58E27900AFBB65 /* Insight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Insight.swift; sourceTree = "<group>"; };
 		202DC6CD8086A92EDB79E7B6 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		2E9423699E6AC8AD3F52A342 /* Attachment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Attachment.swift; sourceTree = "<group>"; };
 		32FAD60E9C3B97E09C622A87 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		33E08922700FB9D4E21AA716 /* Template.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Template.swift; sourceTree = "<group>"; };
+		3D14E4A21849130041C1DCE4 /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
+		3D1C14609FF4BEA59531C0F3 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		4AF5B894AD6D604448314FB3 /* ReviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewData.swift; sourceTree = "<group>"; };
+		52A7737371D98D496727B87B /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		53319598BA23B9FA6218F1F4 /* AttachmentDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentDownloader.swift; sourceTree = "<group>"; };
 		5582F45A9B578CD960A323AE /* KanbanClaudeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanbanClaudeApp.swift; sourceTree = "<group>"; };
+		5A01789809ADB29374A3759D /* Card.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Card.swift; sourceTree = "<group>"; };
+		5C8C56D87D09526B53D08191 /* CardEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardEvent.swift; sourceTree = "<group>"; };
 		6AFC02102EB9C7C0698DBBD6 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
+		6E298DEBC486F46162AB5617 /* AuthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStore.swift; sourceTree = "<group>"; };
 		6E9ADF24F67A29324165CAD9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		782CDD281E87D65EB23671EE /* KnowledgeItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeItem.swift; sourceTree = "<group>"; };
+		84D927EF8463962520EF9D21 /* TelegramIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramIdentity.swift; sourceTree = "<group>"; };
+		8676FC6BB1978546CD132ECB /* QRGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRGenerator.swift; sourceTree = "<group>"; };
+		8C079804591FE0380E400B39 /* ToastStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastStore.swift; sourceTree = "<group>"; };
 		8D44ACE213B6D91728D9D096 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
+		91FD1C33B51134A565291170 /* Notification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notification.swift; sourceTree = "<group>"; };
+		9DE4FC5F7360DC31A7B0564A /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		A3FE6A6AD74A59A38FA9B854 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		A4682CBC1E6A44AC8BF3DF7E /* CardLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardLink.swift; sourceTree = "<group>"; };
+		A59128523BFDC3A8F9EA326C /* ServerTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerTime.swift; sourceTree = "<group>"; };
+		C7ED2BFAF11835037B6FE6B4 /* MirrorToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorToken.swift; sourceTree = "<group>"; };
+		CC21D036F338F395728F4841 /* WebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketClient.swift; sourceTree = "<group>"; };
+		D61F1671ABC0620D73FFB58D /* AiSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AiSuggestion.swift; sourceTree = "<group>"; };
+		E9356D8CC170F45F0D61F070 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		ECB0072855DCF669D2488118 /* BroadcastEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastEvent.swift; sourceTree = "<group>"; };
 		F7D8A4B8109C41A91487891C /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		FF0ECA762C99FA001ABF76C6 /* ToastOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastOverlay.swift; sourceTree = "<group>"; };
+		FF4B97CE5CAAFC3AA1F3D2A9 /* WeatherData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -49,6 +103,12 @@
 			isa = PBXGroup;
 			children = (
 				A7360824B3AB02AAED1A84C4 /* Codables */,
+				9DE4FC5F7360DC31A7B0564A /* APIClient.swift */,
+				53319598BA23B9FA6218F1F4 /* AttachmentDownloader.swift */,
+				3D14E4A21849130041C1DCE4 /* Endpoint.swift */,
+				8676FC6BB1978546CD132ECB /* QRGenerator.swift */,
+				A59128523BFDC3A8F9EA326C /* ServerTime.swift */,
+				CC21D036F338F395728F4841 /* WebSocketClient.swift */,
 			);
 			path = Networking;
 			sourceTree = "<group>";
@@ -56,6 +116,7 @@
 		36DF78E2ACCB95702885CAEE /* Keychain */ = {
 			isa = PBXGroup;
 			children = (
+				E9356D8CC170F45F0D61F070 /* KeychainStore.swift */,
 			);
 			path = Keychain;
 			sourceTree = "<group>";
@@ -66,6 +127,7 @@
 				6E9ADF24F67A29324165CAD9 /* AppDelegate.swift */,
 				8D44ACE213B6D91728D9D096 /* ColorTokens.swift */,
 				F7D8A4B8109C41A91487891C /* Constants.swift */,
+				0003E866170D3A627D0C78E0 /* Errors.swift */,
 				6AFC02102EB9C7C0698DBBD6 /* ThemeManager.swift */,
 				202DC6CD8086A92EDB79E7B6 /* Typography.swift */,
 			);
@@ -125,6 +187,21 @@
 		A7360824B3AB02AAED1A84C4 /* Codables */ = {
 			isa = PBXGroup;
 			children = (
+				D61F1671ABC0620D73FFB58D /* AiSuggestion.swift */,
+				2E9423699E6AC8AD3F52A342 /* Attachment.swift */,
+				ECB0072855DCF669D2488118 /* BroadcastEvent.swift */,
+				5A01789809ADB29374A3759D /* Card.swift */,
+				5C8C56D87D09526B53D08191 /* CardEvent.swift */,
+				A4682CBC1E6A44AC8BF3DF7E /* CardLink.swift */,
+				1C587714AC58E27900AFBB65 /* Insight.swift */,
+				782CDD281E87D65EB23671EE /* KnowledgeItem.swift */,
+				C7ED2BFAF11835037B6FE6B4 /* MirrorToken.swift */,
+				91FD1C33B51134A565291170 /* Notification.swift */,
+				4AF5B894AD6D604448314FB3 /* ReviewData.swift */,
+				84D927EF8463962520EF9D21 /* TelegramIdentity.swift */,
+				33E08922700FB9D4E21AA716 /* Template.swift */,
+				3D1C14609FF4BEA59531C0F3 /* User.swift */,
+				FF4B97CE5CAAFC3AA1F3D2A9 /* WeatherData.swift */,
 			);
 			path = Codables;
 			sourceTree = "<group>";
@@ -179,6 +256,7 @@
 		D88DC2C62EEB3872BBD01060 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				FF0ECA762C99FA001ABF76C6 /* ToastOverlay.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -203,6 +281,8 @@
 		E66307603DDF6269F6D39A05 /* Stores */ = {
 			isa = PBXGroup;
 			children = (
+				6E298DEBC486F46162AB5617 /* AuthStore.swift */,
+				8C079804591FE0380E400B39 /* ToastStore.swift */,
 			);
 			path = Stores;
 			sourceTree = "<group>";
@@ -210,6 +290,7 @@
 		E710B4EB26D4E8DFDD943597 /* Auth */ = {
 			isa = PBXGroup;
 			children = (
+				52A7737371D98D496727B87B /* LoginView.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -292,13 +373,40 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				128BA80F3E743324C53ED096 /* APIClient.swift in Sources */,
+				1D8338CAE3D3B240D14F7701 /* AiSuggestion.swift in Sources */,
 				AADED05FA5BF95E300FC46EF /* AppDelegate.swift in Sources */,
+				AEEC42C6C9B7C5CE65FF4E8A /* Attachment.swift in Sources */,
+				534F4729AE3C4055DD38335D /* AttachmentDownloader.swift in Sources */,
+				25391EC0A2E15EF4FC15E33A /* AuthStore.swift in Sources */,
+				2F67769F1370A561A24966B1 /* BroadcastEvent.swift in Sources */,
+				23005EC985F2638D48D5847E /* Card.swift in Sources */,
+				5B0519F70F2E9A5A2291C707 /* CardEvent.swift in Sources */,
+				2F0214707E590F36F3DCA016 /* CardLink.swift in Sources */,
 				7745DDFA7A42F36355FC5C69 /* ColorTokens.swift in Sources */,
 				B814CAF2288F34F61C395FED /* Constants.swift in Sources */,
+				A7E0B4F083A997E19D244378 /* Endpoint.swift in Sources */,
+				B7430BC42A18277ED0B1ED60 /* Errors.swift in Sources */,
+				D3D1524DF157B6BCB6933E68 /* Insight.swift in Sources */,
 				3B3570C66C25A8B31DF420E4 /* KanbanClaudeApp.swift in Sources */,
+				4550B678651DC1FCFAD21F86 /* KeychainStore.swift in Sources */,
+				B98E683F812B05E9524B481F /* KnowledgeItem.swift in Sources */,
+				278AF13C8E4CDB80A37E7028 /* LoginView.swift in Sources */,
+				95D25F1450840B9C17040143 /* MirrorToken.swift in Sources */,
+				BA5A510812912BEC2F538FA8 /* Notification.swift in Sources */,
+				89277AF7188143E94C56D9A3 /* QRGenerator.swift in Sources */,
+				CDD5213A3FB60C129D53134D /* ReviewData.swift in Sources */,
 				EFA941E64E1D709503BAC985 /* RootView.swift in Sources */,
+				ABE9334AC7C88BD0E6072101 /* ServerTime.swift in Sources */,
+				89953DA207CFBB576E18D09B /* TelegramIdentity.swift in Sources */,
+				64697E4B9C1D517B58C9BB18 /* Template.swift in Sources */,
 				D9827C1BAE20D1B5DC1C4C90 /* ThemeManager.swift in Sources */,
+				F88FAA16C0A96FA39C8D2AD3 /* ToastOverlay.swift in Sources */,
+				293D4F5AF6F25A5832A0081A /* ToastStore.swift in Sources */,
 				4AA9F96292723B7B5AED8CEE /* Typography.swift in Sources */,
+				4DD52F275B38DDDC32D0C8F8 /* User.swift in Sources */,
+				CD366D307AD20E6CCE6A0900 /* WeatherData.swift in Sources */,
+				69F303230842EAAC29D99343 /* WebSocketClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
