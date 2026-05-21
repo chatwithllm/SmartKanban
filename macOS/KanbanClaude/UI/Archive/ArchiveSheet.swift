@@ -51,7 +51,11 @@ struct ArchiveSheet: View {
         }
         .frame(width: 640, height: 600)
         .background(Tokens.canvas)
-        .task { await refresh() }
+        .onAppear {
+            Task.detached(priority: .userInitiated) {
+                await refresh()
+            }
+        }
     }
 
     private var footerBand: some View {

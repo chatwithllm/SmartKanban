@@ -54,7 +54,7 @@ Specific change:
 3. Verify: trigger a knowledge POST/PATCH with an invalid field (e.g. empty title, malformed URL) — the inline red-bordered field error in `KnowledgeEditSheet` must now light up. Confirm `server/src/routes/knowledge.ts:26` and `:185` are the only two emit sites of this shape (already grepped — they are).
 Effort: S (≈30 min including smoke test)
 
-### FIX-V3-002: Swap `.task { await refresh() }` to onAppear + Task.detached in 3 R2-touched sheets
+### ✅ FIX-V3-002: Swap `.task { await refresh() }` to onAppear + Task.detached (ArchiveSheet.swift:54, NotificationsPopover.swift:51, WeeklyReviewSheet.swift:54)
 Found by: CA3-002 (A) — RULE 3 (banned for data fetches) + RULE 16 (same-commit remediation owed by R2 commits 9fb8c04 + 112767f)
 Files + lines:
 1. `macOS/KanbanClaude/UI/Archive/ArchiveSheet.swift:54`

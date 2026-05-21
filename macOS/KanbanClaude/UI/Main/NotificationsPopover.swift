@@ -48,7 +48,11 @@ struct NotificationsPopoverContent: View {
         }
         .frame(width: 380, height: 480)
         .background(Tokens.surface)
-        .task { await store.refresh() }
+        .onAppear {
+            Task.detached(priority: .userInitiated) {
+                await store.refresh()
+            }
+        }
     }
 }
 

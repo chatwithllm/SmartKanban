@@ -51,7 +51,11 @@ struct WeeklyReviewSheet: View {
         }
         .frame(width: 600, height: 640)
         .background(Tokens.canvas)
-        .task { await refresh() }
+        .onAppear {
+            Task.detached(priority: .userInitiated) {
+                await refresh()
+            }
+        }
     }
 
     private func statGrid(_ data: ReviewData) -> some View {
