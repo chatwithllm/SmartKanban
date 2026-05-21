@@ -49,7 +49,7 @@ final class WindowCoordinator {
     }
 
     func openNotificationsPopover() {
-        ToastStore.shared.info("Notification bell popover lands in Phase 7")
+        // Popover state is owned by the bell button itself. Nothing to do here.
     }
 
     func closeEditCard(id: UUID) {

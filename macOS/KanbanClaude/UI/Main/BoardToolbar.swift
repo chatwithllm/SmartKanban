@@ -169,19 +169,25 @@ struct ToolbarIconButton: View {
 
 struct NotificationBellButton: View {
     @ObservedObject var unread: UnreadStore
+    @StateObject private var notif = NotificationStore.shared
     let onOpen: () -> Void
+    @State private var open = false
+
     var body: some View {
-        Button(action: onOpen) {
+        Button {
+            open.toggle()
+            onOpen()
+        } label: {
             ZStack(alignment: .topTrailing) {
                 Image(systemName: "bell")
                     .font(.system(size: 13))
                     .frame(width: 28, height: 28)
-                    .foregroundStyle(unread.total() > 0 ? Tokens.violet : Tokens.ink2)
+                    .foregroundStyle(badgeCount > 0 ? Tokens.violet : Tokens.ink2)
                     .background(Tokens.canvas)
                     .clipShape(Circle())
                     .overlay(Circle().strokeBorder(Tokens.hairline, lineWidth: 1))
-                if unread.total() > 0 {
-                    Text(unread.total() > 99 ? "99+" : "\(unread.total())")
+                if badgeCount > 0 {
+                    Text(badgeCount > 99 ? "99+" : "\(badgeCount)")
                         .font(.mono(9, weight: .bold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 4).padding(.vertical, 1)
@@ -192,7 +198,12 @@ struct NotificationBellButton: View {
             }
         }
         .buttonStyle(.plain)
+        .popover(isPresented: $open, arrowEdge: .top) {
+            NotificationsPopoverContent { open = false }
+        }
     }
+
+    private var badgeCount: Int { max(unread.total(), notif.unreadCount) }
 }
 
 struct ProfileChip: View {

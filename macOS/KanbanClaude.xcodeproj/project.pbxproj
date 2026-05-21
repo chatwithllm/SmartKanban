@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1060C936F2EE6E21F942A541 /* KnowledgeEditSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2639C14F60DF7A0215BE229 /* KnowledgeEditSheet.swift */; };
 		1202BA569728F521942D053A /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C17D7526A0C80AF64C7283 /* BoardView.swift */; };
 		1221B30EA2F2E7FAB5A255E1 /* CardEventsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4547A844DB6F135A84687903 /* CardEventsStore.swift */; };
 		128BA80F3E743324C53ED096 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE4FC5F7360DC31A7B0564A /* APIClient.swift */; };
@@ -34,6 +35,7 @@
 		57E59C92A28BA7E022A3CAF0 /* UnreadStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 773BC0C48E9DCB2C2C7EEF54 /* UnreadStore.swift */; };
 		5B0519F70F2E9A5A2291C707 /* CardEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C8C56D87D09526B53D08191 /* CardEvent.swift */; };
 		5BF25BEE2436F7D468AF186D /* TemplatesTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3C71BDA0F811CBA68D2AE7 /* TemplatesTab.swift */; };
+		60D5E6D3E2757B2AB7F0AD7A /* KnowledgeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2E53FAED29C4C79FC3F963 /* KnowledgeStore.swift */; };
 		62C5559AA50703426FE355A4 /* KnowledgeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8828F429022D2664229D0BD5 /* KnowledgeListView.swift */; };
 		64697E4B9C1D517B58C9BB18 /* Template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E08922700FB9D4E21AA716 /* Template.swift */; };
 		66F364C8FEF20E3621392738 /* EditCardWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CC7C58A0BE8B62FB671B5C /* EditCardWindowController.swift */; };
@@ -44,6 +46,7 @@
 		7745DDFA7A42F36355FC5C69 /* ColorTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D44ACE213B6D91728D9D096 /* ColorTokens.swift */; };
 		7905DEF4EF346A38D34051BB /* NotificationCenterBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885B6937FD8524093723349B /* NotificationCenterBridge.swift */; };
 		810EAC46B7BF0AE217104B79 /* TelegramTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 408B2FEB0700A43C42C5DE44 /* TelegramTab.swift */; };
+		816354A17627EAFB07C5DBDA /* NotificationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000D17E398F6C9AC620570D3 /* NotificationStore.swift */; };
 		819C60959DB32578CB00F38B /* Uploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F6283E8B1DD437081BA8EC /* Uploader.swift */; };
 		89277AF7188143E94C56D9A3 /* QRGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8676FC6BB1978546CD132ECB /* QRGenerator.swift */; };
 		89953DA207CFBB576E18D09B /* TelegramIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D927EF8463962520EF9D21 /* TelegramIdentity.swift */; };
@@ -63,6 +66,7 @@
 		AEEC42C6C9B7C5CE65FF4E8A /* Attachment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9423699E6AC8AD3F52A342 /* Attachment.swift */; };
 		B7430BC42A18277ED0B1ED60 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0003E866170D3A627D0C78E0 /* Errors.swift */; };
 		B814CAF2288F34F61C395FED /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7D8A4B8109C41A91487891C /* Constants.swift */; };
+		B8896DFF1BDC01C0A3DBD88D /* KnowledgeRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF0A6F99A17D141F8C05C165 /* KnowledgeRowView.swift */; };
 		B98E683F812B05E9524B481F /* KnowledgeItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 782CDD281E87D65EB23671EE /* KnowledgeItem.swift */; };
 		BA5A510812912BEC2F538FA8 /* Notification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FD1C33B51134A565291170 /* Notification.swift */; };
 		C445A71B9842F553FD78D26B /* CardTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1449F1F57769065F90DFD43D /* CardTileView.swift */; };
@@ -78,6 +82,7 @@
 		ECFA8E4224E565E91C532F36 /* AccountTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5BD15C00ACBA8F750DB0969 /* AccountTab.swift */; };
 		ED496CAE8EAD9F1942C065D6 /* PillButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C26C5C1DE4E230F13D4A7AF /* PillButton.swift */; };
 		EFA941E64E1D709503BAC985 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FE6A6AD74A59A38FA9B854 /* RootView.swift */; };
+		F0244D71AE7EC8079B8E3391 /* NotificationsPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 471035939D1DBDBB7C82FFE1 /* NotificationsPopover.swift */; };
 		F43DC80E223945F4BCBCEDB1 /* DragStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D45EDB276CFD3AAE0917CF51 /* DragStore.swift */; };
 		F77A32CB1782A90E4824C1BB /* CardTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79842E2C6B4BA69B1BB1D10F /* CardTimelineView.swift */; };
 		F88FAA16C0A96FA39C8D2AD3 /* ToastOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0ECA762C99FA001ABF76C6 /* ToastOverlay.swift */; };
@@ -86,6 +91,7 @@
 
 /* Begin PBXFileReference section */
 		0003E866170D3A627D0C78E0 /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
+		000D17E398F6C9AC620570D3 /* NotificationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationStore.swift; sourceTree = "<group>"; };
 		039EC349FAAF73227F9F62B5 /* GeneralTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralTab.swift; sourceTree = "<group>"; };
 		050175A70FDD33A3BA88655B /* KanbanClaude.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KanbanClaude.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		07F6283E8B1DD437081BA8EC /* Uploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Uploader.swift; sourceTree = "<group>"; };
@@ -109,6 +115,7 @@
 		3D1C14609FF4BEA59531C0F3 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		408B2FEB0700A43C42C5DE44 /* TelegramTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramTab.swift; sourceTree = "<group>"; };
 		4547A844DB6F135A84687903 /* CardEventsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardEventsStore.swift; sourceTree = "<group>"; };
+		471035939D1DBDBB7C82FFE1 /* NotificationsPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsPopover.swift; sourceTree = "<group>"; };
 		4AF5B894AD6D604448314FB3 /* ReviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewData.swift; sourceTree = "<group>"; };
 		4E7E635978543E3E2BE04A57 /* UserListStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserListStore.swift; sourceTree = "<group>"; };
 		52A7737371D98D496727B87B /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
@@ -139,6 +146,7 @@
 		A4682CBC1E6A44AC8BF3DF7E /* CardLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardLink.swift; sourceTree = "<group>"; };
 		A59128523BFDC3A8F9EA326C /* ServerTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerTime.swift; sourceTree = "<group>"; };
 		A5BD15C00ACBA8F750DB0969 /* AccountTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTab.swift; sourceTree = "<group>"; };
+		B2639C14F60DF7A0215BE229 /* KnowledgeEditSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeEditSheet.swift; sourceTree = "<group>"; };
 		B8278213F25D8E266525504F /* DueDateChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DueDateChip.swift; sourceTree = "<group>"; };
 		BA9661A9ED14D59483B00031 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		C63756131DBD129EB0E3736A /* ChatInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputView.swift; sourceTree = "<group>"; };
@@ -156,6 +164,8 @@
 		EA3C71BDA0F811CBA68D2AE7 /* TemplatesTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatesTab.swift; sourceTree = "<group>"; };
 		ECB0072855DCF669D2488118 /* BroadcastEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastEvent.swift; sourceTree = "<group>"; };
 		ED207933E9D1892748EC80D7 /* TokensTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokensTab.swift; sourceTree = "<group>"; };
+		EE2E53FAED29C4C79FC3F963 /* KnowledgeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeStore.swift; sourceTree = "<group>"; };
+		EF0A6F99A17D141F8C05C165 /* KnowledgeRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeRowView.swift; sourceTree = "<group>"; };
 		EFC04BA3D3DB3D5122B71124 /* InitialsAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialsAvatar.swift; sourceTree = "<group>"; };
 		F5402D469B6F412504C3ED44 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		F7D8A4B8109C41A91487891C /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
@@ -258,6 +268,7 @@
 				E7C17D7526A0C80AF64C7283 /* BoardView.swift */,
 				1449F1F57769065F90DFD43D /* CardTileView.swift */,
 				351B597EB5D18C72E3C4F1B1 /* MainView.swift */,
+				471035939D1DBDBB7C82FFE1 /* NotificationsPopover.swift */,
 				E698D6F7EDE7B6A5F2C663A4 /* TrashDropZoneOverlay.swift */,
 			);
 			path = Main;
@@ -333,7 +344,9 @@
 		C77B0DA219C3CA7D0F8866FE /* Knowledge */ = {
 			isa = PBXGroup;
 			children = (
+				B2639C14F60DF7A0215BE229 /* KnowledgeEditSheet.swift */,
 				8828F429022D2664229D0BD5 /* KnowledgeListView.swift */,
+				EF0A6F99A17D141F8C05C165 /* KnowledgeRowView.swift */,
 			);
 			path = Knowledge;
 			sourceTree = "<group>";
@@ -400,6 +413,8 @@
 				30888F32AB7A737228CCE83D /* CardStore.swift */,
 				D45EDB276CFD3AAE0917CF51 /* DragStore.swift */,
 				0BA207C8D6BC9A6883D358E4 /* InsightStore.swift */,
+				EE2E53FAED29C4C79FC3F963 /* KnowledgeStore.swift */,
+				000D17E398F6C9AC620570D3 /* NotificationStore.swift */,
 				8C079804591FE0380E400B39 /* ToastStore.swift */,
 				773BC0C48E9DCB2C2C7EEF54 /* UnreadStore.swift */,
 				4E7E635978543E3E2BE04A57 /* UserListStore.swift */,
@@ -532,13 +547,18 @@
 				32C653C3EB5473B1A99DCD82 /* InsightStore.swift in Sources */,
 				3B3570C66C25A8B31DF420E4 /* KanbanClaudeApp.swift in Sources */,
 				4550B678651DC1FCFAD21F86 /* KeychainStore.swift in Sources */,
+				1060C936F2EE6E21F942A541 /* KnowledgeEditSheet.swift in Sources */,
 				B98E683F812B05E9524B481F /* KnowledgeItem.swift in Sources */,
 				62C5559AA50703426FE355A4 /* KnowledgeListView.swift in Sources */,
+				B8896DFF1BDC01C0A3DBD88D /* KnowledgeRowView.swift in Sources */,
+				60D5E6D3E2757B2AB7F0AD7A /* KnowledgeStore.swift in Sources */,
 				278AF13C8E4CDB80A37E7028 /* LoginView.swift in Sources */,
 				2DCE1A46702AEBACEC53A864 /* MainView.swift in Sources */,
 				95D25F1450840B9C17040143 /* MirrorToken.swift in Sources */,
 				BA5A510812912BEC2F538FA8 /* Notification.swift in Sources */,
 				7905DEF4EF346A38D34051BB /* NotificationCenterBridge.swift in Sources */,
+				816354A17627EAFB07C5DBDA /* NotificationStore.swift in Sources */,
+				F0244D71AE7EC8079B8E3391 /* NotificationsPopover.swift in Sources */,
 				ED496CAE8EAD9F1942C065D6 /* PillButton.swift in Sources */,
 				AD5C8CCDF3AF169ECDBEF408 /* PreferencesView.swift in Sources */,
 				89277AF7188143E94C56D9A3 /* QRGenerator.swift in Sources */,
