@@ -12,6 +12,9 @@ final class CardEventsStore: ObservableObject {
     @Published var error: String?
     private var wsSub: UUID?
     private var seenIds: Set<String> = []
+    private(set) var isObserving: Bool = false
+
+    func setObserving(_ on: Bool) { isObserving = on }
 
     init(cardId: UUID) {
         self.cardId = cardId
@@ -57,7 +60,13 @@ final class CardEventsStore: ObservableObject {
     private func apply(_ ev: BroadcastEvent) {
         switch ev {
         case .cardMessage(let event, let cid, _), .cardAiResponse(let event, let cid, _):
-            if cid == cardId { append(event) }
+            if cid == cardId {
+                let wasNew = !seenIds.contains(event.id)
+                append(event)
+                if wasNew && isObserving {
+                    Task { @MainActor in await self.markRead() }
+                }
+            }
         default:
             break
         }

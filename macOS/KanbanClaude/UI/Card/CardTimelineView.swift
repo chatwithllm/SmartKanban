@@ -38,6 +38,8 @@ struct CardTimelineView: View {
                 Task { await store.load() }
             }
         }
+        .onAppear { store.setObserving(true) }
+        .onDisappear { store.setObserving(false) }
     }
 
     private var content: some View {
