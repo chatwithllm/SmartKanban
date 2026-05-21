@@ -83,7 +83,7 @@ Specific change: Replace each suggestion `Text(...)` with a `Button(action: { ap
 After apply, set per-suggestion `@State applied[id] = true` and render `"✓ \(label)"` `.disabled(true)`. Surface failures via `ToastStore.shared.error(...)`. Mirror parser already extracts `<!-- suggestions: -->` block per F-282; if missing, port from `web/src/components/CardTimeline.tsx`.
 Effort: M (≈ 2 hr)
 
-### FIX-003: CaptureView add Photo mode (file picker → create-from-image)
+### FIX-003: CaptureView add Photo mode (file picker → create-from-image) ✅ UI/Capture/CaptureView.swift:142
 Found by: CA-003 + GAP-B-003
 File: `macOS/KanbanClaude/UI/Capture/CaptureView.swift`
 Line / fn: body (lines 19–62)
@@ -101,7 +101,7 @@ if panel.runModal() == .OK, let url = panel.url {
 Reuse `Uploader.swift` / the `createFromImage` endpoint already wired for Finder drop (F-635/file variant per AUDIT_A verified-OK list).
 Effort: M (≈ 2 hr)
 
-### FIX-004: CaptureView add Template mode + "/name" slash-prefix parser
+### FIX-004: CaptureView add Template mode + "/name" slash-prefix parser ✅ UI/Capture/CaptureView.swift:170 + 192
 Found by: CA-004 + GAP-B-003
 File: `macOS/KanbanClaude/UI/Capture/CaptureView.swift`
 Line / fn: title `TextField` handler + new templates picker sheet
