@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import { pool } from '../db.js';
 import { requireAdmin, hashPassword } from '../auth.js';
 import { writeAudit } from '../admin_audit.js';
+import { broadcast } from '../ws.js';
 
 export async function adminRoutes(app: FastifyInstance) {
   app.get('/api/admin/users', { preHandler: requireAdmin }, async () => {
@@ -179,11 +180,6 @@ export async function adminRoutes(app: FastifyInstance) {
     },
   );
 
-  // Placeholder for WS broadcast — wired in Task 16.
-  function broadcastPendingChanged(_app: FastifyInstance, _pendingId: string) {
-    // Will be replaced with real broadcastAdmin('pending_changed', ...) in Task 16.
-  }
-
   app.get('/api/admin/pending', { preHandler: requireAdmin }, async () => {
     const { rows } = await pool.query(
       `SELECT id, email, email_verified, name, picture_url, created_at
@@ -272,7 +268,7 @@ export async function adminRoutes(app: FastifyInstance) {
           [ticket, id],
         );
         await client.query('COMMIT');
-        broadcastPendingChanged(app, id);
+        broadcast({ type: 'pending_changed', pending_id: id });
         return { user_id: userId };
       } catch (e) {
         try { await client.query('ROLLBACK'); } catch { /* already rolled back */ }
@@ -309,7 +305,7 @@ export async function adminRoutes(app: FastifyInstance) {
           metadata: { email: snap.email, name: snap.name },
         });
         await client.query('COMMIT');
-        broadcastPendingChanged(app, req.params.id);
+        broadcast({ type: 'pending_changed', pending_id: req.params.id });
         return { ok: true };
       } catch (e) {
         try { await client.query('ROLLBACK'); } catch { /* already rolled back */ }
