@@ -32,6 +32,14 @@ export async function googleOauthRoutes(app: FastifyInstance) {
 
   app.get<{ Querystring: { code?: string; state?: string } }>(
     '/api/auth/google/callback',
+    {
+      config: {
+        rateLimit: {
+          max: 20,
+          timeWindow: '1 minute',
+        },
+      },
+    },
     async (req, reply) => {
       if (!googleEnabled()) return disabled(reply);
       const { code, state } = req.query;

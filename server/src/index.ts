@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
+import rateLimit from '@fastify/rate-limit';
 import websocket from '@fastify/websocket';
 import fastifyStatic from '@fastify/static';
 import multipart from '@fastify/multipart';
@@ -48,6 +49,7 @@ await app.register(cors, {
   credentials: true,
 });
 await app.register(cookie, { secret: process.env.COOKIE_SECRET ?? 'dev-cookie-secret-change-me' });
+await app.register(rateLimit, { global: false });
 await app.register(multipart);
 await app.register(websocket);
 
