@@ -31,6 +31,19 @@ struct AccountTab: View {
                             Text(err).foregroundStyle(Tokens.danger).font(.sans(11))
                         }
                     }
+                    GroupBox("Sign in") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Linked to the Google account associated with your email, if your admin enabled it.")
+                                .font(.sans(11))
+                                .foregroundStyle(Tokens.ink2)
+                            Button {
+                                APIClient.shared.openGoogleSignIn()
+                            } label: {
+                                Label("Sign in with Google", systemImage: "g.circle.fill")
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                    }
                     Button("Sign out", role: .destructive) {
                         Task { await auth.logout() }
                     }

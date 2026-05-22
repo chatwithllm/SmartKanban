@@ -18,5 +18,15 @@ struct KanbanClaudeApp: App {
         Settings {
             PreferencesView()
         }
+        .commands {
+            CommandMenu("Admin") {
+                Button("Admin Console…") {
+                    if let url = URL(string: APIClient.shared.baseURL.absoluteString + "admin") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+                .disabled(!(AuthStore.shared.currentUser?.isAdmin ?? false))
+            }
+        }
     }
 }

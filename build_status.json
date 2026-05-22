@@ -2,12 +2,12 @@
   "project": "KanbanClaude — admin-role + Google OAuth + approval queue",
   "plan": "docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md",
   "started_at": "2026-05-22T15:09:00Z",
-  "updated_at": "2026-05-23T02:00:00Z",
+  "updated_at": "2026-05-22T17:00:00Z",
   "total_tasks": 35,
-  "tasks_done": 29,
+  "tasks_done": 31,
   "current_task": {
-    "id": "Task 30",
-    "title": "Sign in with Google button on AccountTab",
+    "id": "Task 32",
+    "title": "AdminUsersView",
     "phase": "macOS URL scheme + Google sign-in + admin window + 3 views",
     "status": "pending"
   },
@@ -23,8 +23,8 @@
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "pending" },
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "pending" }
   ],
-  "last_commit": "38d058d",
-  "last_gate_passed": "Task 29",
+  "last_commit": "pending",
+  "last_gate_passed": "Task 31",
   "open_issues": 0,
   "incidents": 0,
   "log": [
@@ -237,6 +237,20 @@
       "commit": "38d058d",
       "gate": "passed",
       "timestamp": "2026-05-23T02:00:00Z"
+    },
+    {
+      "task": "Task 30",
+      "title": "Sign in with Google button on AccountTab; AuthClient+Google.swift extension",
+      "commit": "pending",
+      "gate": "passed",
+      "timestamp": "2026-05-22T17:00:00Z"
+    },
+    {
+      "task": "Task 31",
+      "title": "User adds isAdmin + mustChangePassword; Admin menu item in KanbanClaudeApp",
+      "commit": "pending",
+      "gate": "passed",
+      "timestamp": "2026-05-22T17:00:00Z"
     }
   ]
 }
