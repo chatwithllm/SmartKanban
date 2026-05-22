@@ -2,12 +2,12 @@
   "project": "KanbanClaude — admin-role + Google OAuth + approval queue",
   "plan": "docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md",
   "started_at": "2026-05-22T15:09:00Z",
-  "updated_at": "2026-05-23T01:00:00Z",
+  "updated_at": "2026-05-23T01:10:00Z",
   "total_tasks": 35,
-  "tasks_done": 25,
+  "tasks_done": 26,
   "current_task": {
-    "id": "Task 26",
-    "title": "ApprovalsTab",
+    "id": "Task 27",
+    "title": "AuditTab",
     "phase": "Web admin UI shell + 3 tabs",
     "status": "pending"
   },
@@ -23,8 +23,8 @@
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "pending" },
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "pending" }
   ],
-  "last_commit": "1e1fa21",
-  "last_gate_passed": "Task 25",
+  "last_commit": "acf6859",
+  "last_gate_passed": "Task 26",
   "open_issues": 0,
   "incidents": 0,
   "log": [
@@ -209,6 +209,13 @@
       "commit": "1e1fa21",
       "gate": "passed",
       "timestamp": "2026-05-23T01:00:00Z"
+    },
+    {
+      "task": "Task 26",
+      "title": "ApprovalsTab listing pending users with Approve/Reject actions",
+      "commit": "acf6859",
+      "gate": "passed",
+      "timestamp": "2026-05-23T01:10:00Z"
     }
   ]
 }
