@@ -195,8 +195,10 @@ export async function reconcileEnvAdmin(userId: string, email: string): Promise<
        RETURNING id
      )
      INSERT INTO admin_audit (actor_id, action, target_user_id, metadata)
-     SELECT id, 'env_promote', id, '{"source":"ADMIN_EMAILS"}'::jsonb FROM promoted`,
-    [userId],
+     SELECT id, 'env_promote', id,
+            jsonb_build_object('source', 'ADMIN_EMAILS', 'email', $2::text)
+     FROM promoted`,
+    [userId, email],
   );
   return true;
 }

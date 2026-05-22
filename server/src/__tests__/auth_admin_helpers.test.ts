@@ -34,6 +34,10 @@ test('reconcileEnvAdmin returns false when email not in ADMIN_EMAILS', async () 
 });
 
 test('reconcileEnvAdmin promotes user and writes audit row when email matches', async () => {
+  // Reset state so this test is independent of run order
+  await pool.query(`UPDATE users SET is_admin = FALSE WHERE id = $1`, [userId]);
+  await pool.query(`DELETE FROM admin_audit WHERE actor_id = $1 AND action = 'env_promote'`, [userId]);
+
   const orig = process.env.ADMIN_EMAILS;
   process.env.ADMIN_EMAILS = `${userEmail}, other@example.com`;
   try {
@@ -47,13 +51,15 @@ test('reconcileEnvAdmin promotes user and writes audit row when email matches', 
     );
     assert.equal(uRows[0]!.is_admin, true);
 
-    // Confirm audit row was written atomically (same CTE)
-    const { rows: aRows } = await pool.query<{ action: string }>(
-      `SELECT action FROM admin_audit WHERE target_user_id = $1 AND action = 'env_promote'`,
-      [userId],
+    // Confirm audit row was written atomically (same CTE) and metadata contains source + email
+    const a = await pool.query<{ metadata: { source: string; email: string } }>(
+      `SELECT metadata FROM admin_audit
+       WHERE actor_id = $1 AND action = 'env_promote'
+       ORDER BY created_at DESC LIMIT 1`, [userId],
     );
-    assert.equal(aRows.length, 1);
-    assert.equal(aRows[0]!.action, 'env_promote');
+    assert.equal(a.rows.length, 1);
+    assert.equal(a.rows[0]!.metadata.source, 'ADMIN_EMAILS');
+    assert.equal(a.rows[0]!.metadata.email.toLowerCase(), userEmail.toLowerCase());
   } finally {
     if (orig === undefined) delete process.env.ADMIN_EMAILS;
     else process.env.ADMIN_EMAILS = orig;
@@ -61,17 +67,24 @@ test('reconcileEnvAdmin promotes user and writes audit row when email matches', 
 });
 
 test('reconcileEnvAdmin is additive — already-admin user returns true but writes no dup audit', async () => {
-  // User is already admin from the previous test; calling again should not insert another audit row
+  // Reset state so this test is independent of run order:
+  // start with is_admin = FALSE so we can do one controlled promote, then verify no second audit row.
+  await pool.query(`UPDATE users SET is_admin = FALSE WHERE id = $1`, [userId]);
+  await pool.query(`DELETE FROM admin_audit WHERE actor_id = $1 AND action = 'env_promote'`, [userId]);
+
   const orig = process.env.ADMIN_EMAILS;
   process.env.ADMIN_EMAILS = userEmail;
   try {
+    // First call: promotes user (is_admin was FALSE) and writes 1 audit row
+    await reconcileEnvAdmin(userId, userEmail);
+
+    // Second call: user is now already admin; CTE WHERE is_admin = FALSE matches 0 rows → no second audit row
     const result = await reconcileEnvAdmin(userId, userEmail);
-    // Returns true (email is in the list); CTE WHERE is_admin = FALSE matches 0 rows so no extra audit
     assert.equal(result, true);
 
-    // Still only 1 audit row (the one from the previous test)
+    // Exactly 1 audit row for this test's actor+action
     const { rows: aRows } = await pool.query<{ c: string }>(
-      `SELECT COUNT(*)::text c FROM admin_audit WHERE target_user_id = $1 AND action = 'env_promote'`,
+      `SELECT COUNT(*)::text c FROM admin_audit WHERE actor_id = $1 AND action = 'env_promote'`,
       [userId],
     );
     assert.equal(Number(aRows[0]!.c), 1);
