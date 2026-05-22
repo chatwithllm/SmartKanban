@@ -110,18 +110,32 @@ enum Endpoint {
     // MARK: push (MVP: unused — kept for parity)
     case vapidPublicKey
 
+    // MARK: admin
+    case adminListUsers
+    case adminPromote(userId: UUID)
+    case adminDemote(userId: UUID)
+    case adminRevokeSessions(userId: UUID)
+    case adminResetPassword(userId: UUID, newPassword: String)
+    case adminListPending
+    case adminApprove(pendingId: UUID, shortName: String)
+    case adminReject(pendingId: UUID)
+    case adminAudit(limit: Int?, before: String?)
+
     var method: HTTPMethod {
         switch self {
         case .me, .listUsers, .listCards, .archivedCards, .getCard, .knowledgeForCard,
              .listMirrorTokens, .listApiTokens, .review, .listTelegramIdentities,
              .listTemplates, .getTemplate, .listKnowledge, .getKnowledge,
              .listCardInsights, .getInsight, .listCardLinks, .cardChain,
-             .cardEvents, .unreadCounts, .listNotifications, .vapidPublicKey:
+             .cardEvents, .unreadCounts, .listNotifications, .vapidPublicKey,
+             .adminListUsers, .adminListPending, .adminAudit:
             return .GET
         case .login, .register, .logout, .exchangeAuthTicket, .createCard, .createMirrorToken, .createApiToken,
              .linkTelegram, .createTemplate, .instantiateTemplate, .createKnowledge,
              .refetchKnowledge, .linkKnowledgeToCard, .knowledgeFromCard,
-             .brainstormCard, .createCardLink, .postMessage, .purgeArchived:
+             .brainstormCard, .createCardLink, .postMessage, .purgeArchived,
+             .adminPromote, .adminDemote, .adminRevokeSessions, .adminResetPassword,
+             .adminApprove, .adminReject:
             return .POST
         case .updateMe, .updateCard, .restoreCard, .updateTemplate, .updateKnowledge:
             return .PATCH
@@ -190,6 +204,16 @@ enum Endpoint {
         case .markNotificationsRead: return "/api/notifications/read"
         case .markAllNotificationsRead: return "/api/notifications/read-all"
         case .vapidPublicKey: return "/api/push/vapid-public-key"
+        // admin
+        case .adminListUsers: return "/api/admin/users"
+        case .adminPromote(let id): return "/api/admin/users/\(id.lowered)/promote"
+        case .adminDemote(let id): return "/api/admin/users/\(id.lowered)/demote"
+        case .adminRevokeSessions(let id): return "/api/admin/users/\(id.lowered)/revoke-sessions"
+        case .adminResetPassword(let id, _): return "/api/admin/users/\(id.lowered)/reset-password"
+        case .adminListPending: return "/api/admin/pending"
+        case .adminApprove(let id, _): return "/api/admin/pending/\(id.lowered)/approve"
+        case .adminReject(let id): return "/api/admin/pending/\(id.lowered)/reject"
+        case .adminAudit: return "/api/admin/audit"
         }
     }
 
@@ -210,6 +234,11 @@ enum Endpoint {
             return [.init(name: "depth", value: String(depth))]
         case .instantiateTemplate(_, let override) where override != nil:
             return [.init(name: "status_override", value: override!.rawValue)]
+        case .adminAudit(let limit, let before):
+            var arr: [URLQueryItem] = []
+            if let n = limit { arr.append(.init(name: "limit", value: String(n))) }
+            if let b = before, !b.isEmpty { arr.append(.init(name: "before", value: b)) }
+            return arr
         default:
             return []
         }
@@ -254,6 +283,10 @@ enum Endpoint {
         case .postMessage(_, let content): return try enc.encode(["content": content])
         case .markRead(_, let lastReadId): return try enc.encode(["last_read_id": lastReadId])
         case .markNotificationsRead(let ids): return try enc.encode(["ids": ids])
+        case .adminResetPassword(_, let newPassword):
+            return try enc.encode(["new_password": newPassword])
+        case .adminApprove(_, let shortName):
+            return try enc.encode(["short_name": shortName])
         default:
             return nil
         }

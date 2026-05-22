@@ -10,6 +10,7 @@ final class WindowCoordinator {
     private var captureController: NSWindowController?
     private var notificationsPopover: NSPopover?
     private(set) var knowledgeDetailControllers: [UUID: NSWindowController] = [:]
+    private var adminController: AdminWindowController?
 
     func editWindow(id: UUID) -> NSWindow? {
         editCardControllers[id]?.window
@@ -75,6 +76,19 @@ final class WindowCoordinator {
 
     func openNotificationsPopover() {
         // Popover state is owned by the bell button itself. Nothing to do here.
+    }
+
+    func openAdmin() {
+        if let existing = adminController, existing.window?.isVisible == true {
+            existing.window?.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        let controller = AdminWindowController()
+        adminController = controller
+        controller.showWindow(nil)
+        controller.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     func closeEditCard(id: UUID) {
