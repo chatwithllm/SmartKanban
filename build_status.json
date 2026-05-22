@@ -2,13 +2,13 @@
   "project": "KanbanClaude — admin-role + Google OAuth + approval queue",
   "plan": "docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md",
   "started_at": "2026-05-22T15:09:00Z",
-  "updated_at": "2026-05-22T23:30:00Z",
+  "updated_at": "2026-05-22T23:45:00Z",
   "total_tasks": 35,
-  "tasks_done": 16,
+  "tasks_done": 17,
   "current_task": {
-    "id": "Task 17",
-    "title": "Reaper for auth_tickets + non-pending pending_users",
-    "phase": "Approval queue + WS + reaper",
+    "id": "Task 18",
+    "title": "POST /api/auth/change-password",
+    "phase": "Change-password + rate limit",
     "status": "pending"
   },
   "phases": [
@@ -16,15 +16,15 @@
     { "name": "Auth helpers + /me + login",       "task_range": "T2-3",   "status": "done" },
     { "name": "Audit helper + admin user endpoints", "task_range": "T4-9", "status": "done" },
     { "name": "Google OAuth + identities + tickets", "task_range": "T10-13", "status": "in_progress" },
-    { "name": "Approval queue + WS + reaper",     "task_range": "T14-17", "status": "pending" },
+    { "name": "Approval queue + WS + reaper",     "task_range": "T14-17", "status": "done" },
     { "name": "Change-password + rate limit",     "task_range": "T18-19", "status": "pending" },
     { "name": "Web shared types + Google button + AwaitingApproval + ChangePassword", "task_range": "T20-23", "status": "pending" },
     { "name": "Web admin UI shell + 3 tabs",      "task_range": "T24-27", "status": "pending" },
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "pending" },
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "pending" }
   ],
-  "last_commit": "ee332ff",
-  "last_gate_passed": "Task 16",
+  "last_commit": "620ab78",
+  "last_gate_passed": "Task 17",
   "open_issues": 0,
   "incidents": 0,
   "log": [
@@ -146,6 +146,13 @@
       "commit": "ee332ff",
       "gate": "passed",
       "timestamp": "2026-05-22T23:30:00Z"
+    },
+    {
+      "task": "Task 17",
+      "title": "Periodic reaper deletes expired tickets, stale pending rows, expired sessions",
+      "commit": "620ab78",
+      "gate": "passed",
+      "timestamp": "2026-05-22T23:45:00Z"
     }
   ]
 }
