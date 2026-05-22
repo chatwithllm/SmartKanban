@@ -2,19 +2,19 @@
   "project": "KanbanClaude — admin-role + Google OAuth + approval queue",
   "plan": "docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md",
   "started_at": "2026-05-22T15:09:00Z",
-  "updated_at": "2026-05-22T17:00:00Z",
+  "updated_at": "2026-05-22T17:30:00Z",
   "total_tasks": 35,
-  "tasks_done": 3,
+  "tasks_done": 4,
   "current_task": {
-    "id": "Task 4",
-    "title": "Audit helper module",
+    "id": "Task 5",
+    "title": "GET /api/admin/users + requireAdmin gating",
     "phase": "Audit helper + admin user endpoints",
     "status": "pending"
   },
   "phases": [
     { "name": "Schema migration",                 "task_range": "T1",     "status": "done" },
     { "name": "Auth helpers + /me + login",       "task_range": "T2-3",   "status": "done" },
-    { "name": "Audit helper + admin user endpoints", "task_range": "T4-9", "status": "pending" },
+    { "name": "Audit helper + admin user endpoints", "task_range": "T4-9", "status": "in_progress" },
     { "name": "Google OAuth + identities + tickets", "task_range": "T10-13", "status": "pending" },
     { "name": "Approval queue + WS + reaper",     "task_range": "T14-17", "status": "pending" },
     { "name": "Change-password + rate limit",     "task_range": "T18-19", "status": "pending" },
@@ -23,8 +23,8 @@
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "pending" },
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "pending" }
   ],
-  "last_commit": "4b5b51f",
-  "last_gate_passed": "Task 3",
+  "last_commit": "490193e",
+  "last_gate_passed": "Task 4",
   "open_issues": 0,
   "incidents": 0,
   "log": [
@@ -55,6 +55,13 @@
       "commit": "4b5b51f",
       "gate": "passed",
       "timestamp": "2026-05-22T17:00:00Z"
+    },
+    {
+      "task": "Task 4",
+      "title": "Audit helper module — writeAudit with Pool | PoolClient signature",
+      "commit": "490193e",
+      "gate": "passed",
+      "timestamp": "2026-05-22T17:30:00Z"
     }
   ]
 }
