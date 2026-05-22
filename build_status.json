@@ -2,12 +2,12 @@
   "project": "KanbanClaude — admin-role + Google OAuth + approval queue",
   "plan": "docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md",
   "started_at": "2026-05-22T15:09:00Z",
-  "updated_at": "2026-05-22T18:00:00Z",
+  "updated_at": "2026-05-22T18:30:00Z",
   "total_tasks": 35,
-  "tasks_done": 5,
+  "tasks_done": 6,
   "current_task": {
-    "id": "Task 6",
-    "title": "Promote / demote with last-admin guard",
+    "id": "Task 7",
+    "title": "Revoke sessions endpoint",
     "phase": "Audit helper + admin user endpoints",
     "status": "pending"
   },
@@ -23,8 +23,8 @@
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "pending" },
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "pending" }
   ],
-  "last_commit": "cbe78c4",
-  "last_gate_passed": "Task 5",
+  "last_commit": "9853b61",
+  "last_gate_passed": "Task 6",
   "open_issues": 0,
   "incidents": 0,
   "log": [
@@ -69,6 +69,13 @@
       "commit": "cbe78c4",
       "gate": "passed",
       "timestamp": "2026-05-22T18:00:00Z"
+    },
+    {
+      "task": "Task 6",
+      "title": "Promote / demote endpoints with row-locked last-admin guard",
+      "commit": "9853b61",
+      "gate": "passed",
+      "timestamp": "2026-05-22T18:30:00Z"
     }
   ]
 }
