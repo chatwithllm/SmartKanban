@@ -213,4 +213,17 @@ export const api = {
     req<{ nodes: Card[]; edges: CardLink[]; insights: Insight[] }>(
       `/api/cards/${cardId}/chain?depth=${depth}`,
     ),
+
+  authConfig: () => req<{ google_enabled: boolean; open_signup: boolean }>('/api/auth/config'),
+
+  changePassword: (b: { current_password: string; new_password: string }) =>
+    req<{ ok: boolean }>('/api/auth/change-password', json(b)),
+
+  exchangeTicket: (ticket: string) =>
+    req<{ token: string }>('/api/auth/ticket/exchange', json({ ticket })),
+
+  pendingStatus: (id: string) =>
+    req<{ status: 'pending' | 'approved' | 'rejected'; ticket?: string }>(
+      `/api/auth/pending/${encodeURIComponent(id)}`,
+    ),
 };

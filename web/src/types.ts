@@ -38,7 +38,14 @@ export type Card = {
   attachments: Attachment[];
 };
 
-export type User = { id: string; name: string; short_name: string; email: string };
+export type User = {
+  id: string;
+  name: string;
+  short_name: string;
+  email: string;
+  is_admin: boolean;
+  must_change_password: boolean;
+};
 
 export type Scope = 'personal' | 'inbox' | 'all' | 'shared';
 
