@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../auth.tsx';
+import { api } from '../api';
+import { GoogleSignInButton } from './GoogleSignInButton';
 
 type Props = {
   redirectTo?: string;
@@ -23,6 +25,15 @@ export function LoginView({ redirectTo }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.authConfig()
+      .then(c => { if (!cancelled) setGoogleEnabled(c.google_enabled); })
+      .catch(() => { /* leave false */ });
+    return () => { cancelled = true; };
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,6 +117,24 @@ export function LoginView({ redirectTo }: Props) {
             </div>
           </div>
         </div>
+
+        {googleEnabled && (
+          <>
+            <div style={{ marginBottom: 16 }}>
+              <GoogleSignInButton />
+            </div>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              marginBottom: 20,
+              color: 'rgb(var(--ink-soft))',
+              fontSize: 12, textTransform: 'uppercase', letterSpacing: 1,
+            }}>
+              <div style={{ height: 1, flex: 1, background: 'rgb(var(--hairline) / 0.12)' }} />
+              <span>or</span>
+              <div style={{ height: 1, flex: 1, background: 'rgb(var(--hairline) / 0.12)' }} />
+            </div>
+          </>
+        )}
 
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {mode === 'register' && (
