@@ -1,0 +1,211 @@
+<!doctype html>
+<!--
+  web-app-builder · build dashboard
+  ---------------------------------
+  Renders build_status.json from the same directory. Refreshes itself every 5s.
+
+  TO VIEW: opening this file directly (file://) will block the fetch of
+  build_status.json in most browsers. Run a static server in the project root:
+
+      python3 -m http.server 9001
+
+  then open  http://localhost:9001/dashboard.html
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>build dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --line:#272e3a; --ink:#d7dde6;
+    --dim:#717b8c; --accent:#e8a44c; --ok:#5fb87a; --warn:#d9954a;
+    --bad:#d8615f; --pending:#4a5364;
+    --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--mono);
+    font-size:13px;line-height:1.55;padding:32px 28px;max-width:920px;margin:0 auto}
+  a{color:var(--accent)}
+  .head{display:flex;justify-content:space-between;align-items:baseline;
+    border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:22px}
+  .head h1{font-size:15px;font-weight:600;letter-spacing:.04em}
+  .head h1 .tag{color:var(--accent)}
+  .stamp{color:var(--dim);font-size:11px}
+  .stale{color:var(--bg);background:var(--warn);padding:1px 7px;border-radius:2px;
+    font-weight:600;font-size:10px;letter-spacing:.05em}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
+  .stat{background:var(--panel);border:1px solid var(--line);padding:12px 13px}
+  .stat .k{color:var(--dim);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+  .stat .v{font-size:22px;font-weight:600;margin-top:5px}
+  .stat .v.ok{color:var(--ok)} .stat .v.bad{color:var(--bad)}
+  .bar-wrap{margin-bottom:24px}
+  .bar-label{display:flex;justify-content:space-between;color:var(--dim);
+    font-size:11px;margin-bottom:6px}
+  .bar{height:9px;background:var(--panel);border:1px solid var(--line);overflow:hidden}
+  .bar-fill{height:100%;background:var(--accent);transition:width .4s ease}
+  .section{margin-bottom:22px}
+  .section h2{font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--dim);margin-bottom:10px;font-weight:600}
+  .now{background:var(--panel);border:1px solid var(--line);
+    border-left:3px solid var(--accent);padding:13px 15px}
+  .now .t{font-weight:600;font-size:14px}
+  .now .m{color:var(--dim);font-size:11px;margin-top:3px}
+  .phase{display:flex;align-items:center;gap:10px;padding:7px 0;
+    border-bottom:1px solid var(--line)}
+  .phase:last-child{border-bottom:none}
+  .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .dot.done{background:var(--ok)} .dot.active{background:var(--accent);
+    box-shadow:0 0 0 3px rgba(232,164,76,.18)}
+  .dot.pending{background:var(--pending)}
+  .phase .pn{flex:1}
+  .phase .pr{color:var(--dim);font-size:11px}
+  .phase.done .pn{color:var(--dim)}
+  .log{background:var(--panel);border:1px solid var(--line)}
+  .row{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;
+    padding:8px 14px;border-bottom:1px solid var(--line);font-size:12px;align-items:center}
+  .row:last-child{border-bottom:none}
+  .row .id{color:var(--accent);font-weight:600}
+  .row .sha{color:var(--dim)}
+  .row .g{font-size:10px;font-weight:600;padding:1px 7px;border-radius:2px}
+  .g.passed{color:var(--ok);background:rgba(95,184,122,.12)}
+  .g.failed{color:var(--bad);background:rgba(216,97,95,.12)}
+  .row .ts{color:var(--dim);font-size:11px}
+  .empty{color:var(--dim);padding:18px 14px;text-align:center;font-style:italic}
+  .err{background:rgba(216,97,95,.08);border:1px solid var(--bad);
+    color:var(--ink);padding:16px;font-size:12px;line-height:1.7}
+  .err code{color:var(--accent)}
+</style>
+</head>
+<body>
+<div id="app"><div class="empty">loading build_status.json …</div></div>
+
+<script>
+const REFRESH_MS = 5000;
+const STALE_MS = 20 * 60 * 1000;
+const $ = (h) => { const d=document.createElement('div'); d.innerHTML=h.trim(); return d.firstChild; };
+const esc = (s) => String(s ?? '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function fmtTime(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return esc(iso);
+  return d.toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function render(s){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const total = s.total_tasks || 0;
+  const done = s.tasks_done || 0;
+  const pct = total ? Math.round(done/total*100) : 0;
+  const complete = total > 0 && done >= total;
+  const stale = s.updated_at && !complete &&
+    (Date.now() - new Date(s.updated_at).getTime() > STALE_MS);
+
+  // header
+  app.appendChild($(`
+    <div class="head">
+      <h1>build · <span class="tag">${esc(s.project||'untitled')}</span></h1>
+      <div class="stamp">
+        ${stale ? '<span class="stale">stale</span> ' : ''}
+        updated ${fmtTime(s.updated_at)}
+      </div>
+    </div>`));
+
+  // stats
+  app.appendChild($(`
+    <div class="grid">
+      <div class="stat"><div class="k">tasks</div><div class="v">${done}/${total}</div></div>
+      <div class="stat"><div class="k">phase</div><div class="v" style="font-size:14px">
+        ${esc(s.current_task && s.current_task.phase || '—')}</div></div>
+      <div class="stat"><div class="k">open issues</div>
+        <div class="v ${s.open_issues?'bad':'ok'}">${s.open_issues||0}</div></div>
+      <div class="stat"><div class="k">incidents</div>
+        <div class="v">${s.incidents||0}</div></div>
+    </div>`));
+
+  // progress bar
+  app.appendChild($(`
+    <div class="bar-wrap">
+      <div class="bar-label"><span>progress</span>
+        <span>${pct}% ${complete?'· complete':''}</span></div>
+      <div class="bar"><div class="bar-fill" style="width:${pct}%;
+        background:${complete?'var(--ok)':'var(--accent)'}"></div></div>
+    </div>`));
+
+  // current task
+  const ct = s.current_task || {};
+  app.appendChild($(`
+    <div class="section">
+      <h2>current task</h2>
+      <div class="now">
+        <div class="t">${esc(ct.id||'—')} · ${esc(ct.title||(complete?'all tasks complete':'—'))}</div>
+        <div class="m">status: ${esc(ct.status||'—')}
+          &nbsp;·&nbsp; last gate: ${esc(s.last_gate_passed||'—')}
+          &nbsp;·&nbsp; last commit: ${esc(s.last_commit||'—')}</div>
+      </div>
+    </div>`));
+
+  // phases
+  const phases = Array.isArray(s.phases) ? s.phases : [];
+  const psec = $(`<div class="section"><h2>phases</h2><div class="plist"></div></div>`);
+  const plist = psec.querySelector('.plist');
+  if (!phases.length) plist.appendChild($(`<div class="empty">no phases listed</div>`));
+  phases.forEach(p => {
+    const st = p.status || 'pending';
+    plist.appendChild($(`
+      <div class="phase ${st}">
+        <span class="dot ${st}"></span>
+        <span class="pn">${esc(p.name||'—')}</span>
+        <span class="pr">${esc(p.task_range||'')} · ${esc(st)}</span>
+      </div>`));
+  });
+  app.appendChild(psec);
+
+  // task log
+  const log = Array.isArray(s.log) ? s.log.slice().reverse() : [];
+  const lsec = $(`<div class="section"><h2>task log</h2><div class="log"></div></div>`);
+  const lbox = lsec.querySelector('.log');
+  if (!log.length) lbox.appendChild($(`<div class="empty">no tasks completed yet</div>`));
+  log.forEach(r => {
+    const g = (r.gate||'').toLowerCase()==='passed' ? 'passed' : 'failed';
+    lbox.appendChild($(`
+      <div class="row">
+        <span class="id">${esc(r.task||'—')}</span>
+        <span>${esc(r.title||'')}</span>
+        <span class="g ${g}">${esc(r.gate||'?')}</span>
+        <span class="sha">${esc(r.commit||'')}</span>
+        <span class="ts">${fmtTime(r.timestamp)}</span>
+      </div>`));
+  });
+  app.appendChild(lsec);
+}
+
+function renderError(){
+  document.getElementById('app').innerHTML = `
+    <div class="err">
+      <strong>Could not load build_status.json.</strong><br><br>
+      If you opened this file directly, the browser blocks the fetch. Run a static
+      server in the project root and open the dashboard through it:<br><br>
+      &nbsp;&nbsp;<code>python3 -m http.server 9001</code><br>
+      &nbsp;&nbsp;then open <code>http://localhost:9001/dashboard.html</code><br><br>
+      Otherwise the build may not have written build_status.json yet — it appears
+      after the first task.
+    </div>`;
+}
+
+async function tick(){
+  try{
+    const res = await fetch('build_status.json?_=' + Date.now(), {cache:'no-store'});
+    if(!res.ok) throw new Error(res.status);
+    render(await res.json());
+  }catch(e){ renderError(); }
+}
+tick();
+setInterval(tick, REFRESH_MS);
+</script>
+</body>
+</html>

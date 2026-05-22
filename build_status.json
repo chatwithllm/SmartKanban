@@ -1,16 +1,31 @@
 {
-  "screens_done": [
-    "Login", "AppShell", "BoardToolbar", "ScopeSwitcher", "ProfileDropdown",
-    "Board", "BoardColumn", "CardTile",
-    "EditCard", "QRPopover", "AiInsightsPanel",
-    "Capture", "CardTimeline", "ChatInput",
-    "Knowledge", "KnowledgeRow", "KnowledgeEdit",
-    "Notifications", "Archive", "WeeklyReview",
-    "Preferences", "GeneralTab", "AccountTab", "TokensTab", "TelegramTab", "TemplatesTab",
-    "ToastOverlay", "StatusItem"
+  "project": "KanbanClaude — admin-role + Google OAuth + approval queue",
+  "plan": "docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md",
+  "started_at": "2026-05-22T15:09:00Z",
+  "updated_at": "2026-05-22T15:09:00Z",
+  "total_tasks": 35,
+  "tasks_done": 0,
+  "current_task": {
+    "id": "Task 1",
+    "title": "Add additive SQL migration",
+    "phase": "Schema migration",
+    "status": "pending"
+  },
+  "phases": [
+    { "name": "Schema migration",                 "task_range": "T1",     "status": "pending" },
+    { "name": "Auth helpers + /me + login",       "task_range": "T2-3",   "status": "pending" },
+    { "name": "Audit helper + admin user endpoints", "task_range": "T4-9", "status": "pending" },
+    { "name": "Google OAuth + identities + tickets", "task_range": "T10-13", "status": "pending" },
+    { "name": "Approval queue + WS + reaper",     "task_range": "T14-17", "status": "pending" },
+    { "name": "Change-password + rate limit",     "task_range": "T18-19", "status": "pending" },
+    { "name": "Web shared types + Google button + AwaitingApproval + ChangePassword", "task_range": "T20-23", "status": "pending" },
+    { "name": "Web admin UI shell + 3 tabs",      "task_range": "T24-27", "status": "pending" },
+    { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "pending" },
+    { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "pending" }
   ],
-  "current_screen": "",
-  "phase_complete": 9,
-  "timestamp": "03:57:01",
-  "notes": "Visual diff (Rule 14) deferred across all screens — I-1 logged in AGENT_LEARNINGS.md; screen locked during session per Rule 17 pre-flight."
+  "last_commit": "ece7d1c",
+  "last_gate_passed": "",
+  "open_issues": 0,
+  "incidents": 0,
+  "log": []
 }
