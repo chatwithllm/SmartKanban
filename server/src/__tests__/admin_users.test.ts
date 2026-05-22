@@ -17,7 +17,7 @@ async function register(name: string, makeAdmin = false) {
   const res = await app.inject({
     method: 'POST',
     url: '/api/auth/register',
-    payload: { name, short_name: name, email, password: 'password123' },
+    payload: { name, short_name: name.slice(0, 16), email, password: 'password123' },
   });
   const setCookie = res.headers['set-cookie'];
   const cookieStr = (Array.isArray(setCookie) ? setCookie[0] : setCookie) as string;
@@ -58,4 +58,69 @@ test('GET /api/admin/users returns the list when called by an admin', async () =
   const list = res.json() as Array<{ id: string; is_admin: boolean; identities: unknown[] }>;
   assert.ok(list.length >= 2);
   assert.ok(list.some(u => u.is_admin === true));
+});
+
+test('POST /api/admin/users/:id/promote flips is_admin and writes audit row', async () => {
+  const target = await register('promote_target');
+  const res = await app.inject({
+    method: 'POST',
+    url: `/api/admin/users/${target.id}/promote`,
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(res.statusCode, 200);
+  const u = await pool.query(`SELECT is_admin FROM users WHERE id = $1`, [target.id]);
+  assert.equal(u.rows[0]!.is_admin, true);
+  const a = await pool.query(
+    `SELECT count(*)::int AS c FROM admin_audit WHERE action='promote' AND target_user_id=$1`,
+    [target.id],
+  );
+  assert.equal(a.rows[0]!.c, 1);
+});
+
+test('promote on an already-admin user returns 409 already_admin', async () => {
+  const target = await register('already_admin', true);
+  const res = await app.inject({
+    method: 'POST',
+    url: `/api/admin/users/${target.id}/promote`,
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(res.statusCode, 409);
+  assert.equal(res.json().error, 'already_admin');
+});
+
+test('demote blocks when it would leave zero admins (last_admin)', async () => {
+  // Demote all admins except one — that one is the sole admin
+  await pool.query(`UPDATE users SET is_admin = FALSE`);
+  const sole = await register('sole_admin', true);
+  // adminCookie no longer points at an admin — demote needs an admin session
+  // Re-issue: login as the sole admin
+  const login = await app.inject({
+    method: 'POST', url: '/api/auth/login',
+    payload: { email: sole.email, password: 'password123' },
+  });
+  const soleCookie = (Array.isArray(login.headers['set-cookie'])
+    ? login.headers['set-cookie'][0] : login.headers['set-cookie']!)!.split(';')[0]!;
+  const res = await app.inject({
+    method: 'POST',
+    url: `/api/admin/users/${sole.id}/demote`,
+    headers: { cookie: soleCookie },
+  });
+  assert.equal(res.statusCode, 409);
+  assert.equal(res.json().error, 'cannot_demote_self_last_admin');
+  // Restore the original admin so later tests can use adminCookie
+  await pool.query(`UPDATE users SET is_admin = TRUE WHERE id IN (
+    SELECT user_id FROM sessions WHERE token = $1
+  )`, [adminCookie.split('=')[1]]);
+});
+
+test('demote succeeds when at least one other admin remains', async () => {
+  const second = await register('second_admin_for_demote', true);
+  const res = await app.inject({
+    method: 'POST',
+    url: `/api/admin/users/${second.id}/demote`,
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(res.statusCode, 200);
+  const u = await pool.query(`SELECT is_admin FROM users WHERE id = $1`, [second.id]);
+  assert.equal(u.rows[0]!.is_admin, false);
 });
