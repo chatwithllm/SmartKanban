@@ -2,12 +2,12 @@
   "project": "KanbanClaude — admin-role + Google OAuth + approval queue",
   "plan": "docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md",
   "started_at": "2026-05-22T15:09:00Z",
-  "updated_at": "2026-05-22T19:00:00Z",
+  "updated_at": "2026-05-22T19:30:00Z",
   "total_tasks": 35,
-  "tasks_done": 7,
+  "tasks_done": 8,
   "current_task": {
-    "id": "Task 8",
-    "title": "Audit log endpoint",
+    "id": "Task 9",
+    "title": "GET /api/admin/env-admins",
     "phase": "Audit helper + admin user endpoints",
     "status": "pending"
   },
@@ -23,8 +23,8 @@
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "pending" },
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "pending" }
   ],
-  "last_commit": "716eb8d",
-  "last_gate_passed": "Task 7",
+  "last_commit": "9d0b3d3",
+  "last_gate_passed": "Task 8",
   "open_issues": 0,
   "incidents": 0,
   "log": [
@@ -83,6 +83,13 @@
       "commit": "716eb8d",
       "gate": "passed",
       "timestamp": "2026-05-22T19:00:00Z"
+    },
+    {
+      "task": "Task 8",
+      "title": "Paginated GET /api/admin/audit with cursor by created_at",
+      "commit": "9d0b3d3",
+      "gate": "passed",
+      "timestamp": "2026-05-22T19:30:00Z"
     }
   ]
 }
