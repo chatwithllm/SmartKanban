@@ -2,12 +2,12 @@
   "project": "KanbanClaude — admin-role + Google OAuth + approval queue",
   "plan": "docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md",
   "started_at": "2026-05-22T15:09:00Z",
-  "updated_at": "2026-05-22T23:59:00Z",
+  "updated_at": "2026-05-23T00:10:00Z",
   "total_tasks": 35,
-  "tasks_done": 19,
+  "tasks_done": 20,
   "current_task": {
-    "id": "Task 20",
-    "title": "Widen User type, expose is_admin and must_change_password on web",
+    "id": "Task 21",
+    "title": "Google sign-in button + login page wire-up",
     "phase": "Web shared types + Google button + AwaitingApproval + ChangePassword",
     "status": "pending"
   },
@@ -23,8 +23,8 @@
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "pending" },
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "pending" }
   ],
-  "last_commit": "ff8bf05",
-  "last_gate_passed": "Task 19",
+  "last_commit": "916e24e",
+  "last_gate_passed": "Task 20",
   "open_issues": 0,
   "incidents": 0,
   "log": [
@@ -167,6 +167,13 @@
       "commit": "ff8bf05",
       "gate": "passed",
       "timestamp": "2026-05-22T23:59:00Z"
+    },
+    {
+      "task": "Task 20",
+      "title": "Widen User type with is_admin/must_change_password; add authConfig/changePassword/exchangeTicket/pendingStatus helpers",
+      "commit": "916e24e",
+      "gate": "passed",
+      "timestamp": "2026-05-23T00:10:00Z"
     }
   ]
 }
