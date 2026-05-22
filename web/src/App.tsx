@@ -26,12 +26,15 @@ import { useNotifications } from './hooks/useNotifications.ts';
 import { NotificationBell } from './components/NotificationBell.tsx';
 import { CaptureBar } from './components/CaptureBar.tsx';
 import { STATUSES } from './types.ts';
+import { AwaitingApproval } from './components/AwaitingApproval.tsx';
 
 export function App() {
   const { user, loading } = useAuth();
   const path = location.pathname;
 
   if (loading) return <div className="p-8 text-2 text-ink-soft tracking-tight2">Loading…</div>;
+
+  if (path === '/awaiting-approval') return <AwaitingApproval />;
 
   // Strict UUID shape — looser regex would let typoed URLs reach the
   // server where Postgres throws 22P02 on the cards.id cast and returns 500.
