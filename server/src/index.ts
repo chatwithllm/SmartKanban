@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import { cardRoutes } from './routes/cards.js';
 import { authRoutes } from './routes/auth.js';
 import { adminRoutes } from './routes/admin.js';
+import { googleOauthRoutes } from './routes/google_oauth.js';
 import { mirrorRoutes } from './routes/mirror.js';
 import { apiTokenRoutes } from './routes/api_tokens.js';
 import { reviewRoutes } from './routes/review.js';
@@ -54,6 +55,7 @@ fs.mkdirSync(attachmentsDir, { recursive: true });
 
 await app.register(authRoutes);
 await app.register(adminRoutes);
+await app.register(googleOauthRoutes);
 await app.register(cardRoutes);
 await app.register(chatRoutes);
 await app.register(notificationRoutes);
