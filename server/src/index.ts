@@ -8,6 +8,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { cardRoutes } from './routes/cards.js';
 import { authRoutes } from './routes/auth.js';
+import { adminRoutes } from './routes/admin.js';
 import { mirrorRoutes } from './routes/mirror.js';
 import { apiTokenRoutes } from './routes/api_tokens.js';
 import { reviewRoutes } from './routes/review.js';
@@ -52,6 +53,7 @@ const attachmentsDir = path.resolve(process.env.ATTACHMENTS_DIR ?? 'data/attachm
 fs.mkdirSync(attachmentsDir, { recursive: true });
 
 await app.register(authRoutes);
+await app.register(adminRoutes);
 await app.register(cardRoutes);
 await app.register(chatRoutes);
 await app.register(notificationRoutes);
