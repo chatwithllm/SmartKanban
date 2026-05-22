@@ -596,6 +596,242 @@ branch-condition data is recursive — inline the leaf body, or pass a `nested` 
 suppresses the branch on the recursive call.**
 
 
+---
+
+## RULE 19 — Disk Space Check Before Every Build Stage
+
+**Source: Android build incident** — orchestrator ran out of disk mid-build.
+Gradle caches alone consume ~9GB. DerivedData ~4GB. Emulator images ~4GB.
+Build failing mid-stage wastes hours and requires human intervention.
+
+### Required disk space by target
+
+| Target | Minimum free | What consumes it |
+|--------|-------------|-----------------|
+| macOS (Xcode) | 8GB | DerivedData 3-4GB + simulator |
+| Android (Expo/Gradle) | 15GB | Gradle caches 9GB + emulator 4GB + node_modules |
+| iOS (Xcode + simulator) | 12GB | DerivedData + iOS simulators |
+
+### Check before starting orchestrator
+
+```bash
+# Get available disk space in GB
+AVAILABLE=$(df -BG . | tail -1 | awk '{print $4}' | tr -d 'G')
+echo "Available: ${AVAILABLE}GB"
+
+# Minimum by target
+MINIMUM_MACOS=8
+MINIMUM_ANDROID=15
+MINIMUM_IOS=12
+
+if [ "$AVAILABLE" -lt "$MINIMUM_$TARGET_UPPER" ]; then
+  echo "❌ INSUFFICIENT DISK: ${AVAILABLE}GB free, need ${MINIMUM}GB"
+  echo "Run: brew cleanup -s && rm -rf ~/.gradle/caches (Android)"
+  echo "     rm -rf ~/Library/Developer/Xcode/DerivedData (macOS/iOS)"
+  exit 1
+fi
+```
+
+### Check between stages (Android builds especially)
+
+After every build phase write to orchestrator_status.json:
+  "disk_free_gb": N
+
+If disk_free_gb drops below 3GB → write PAUSED.json immediately:
+  {"reason": "Disk space critical: Xgb free. Run: brew cleanup -s && rm -rf ~/.gradle/caches"}
+
+Never attempt the next stage with less than 3GB free.
+
+---
+
+## RULE 20 — Environment File Pre-flight Before Any Build
+
+**Source: Android build incident** — build paused because .env.test was missing.
+The orchestrator cannot know what env files a project needs unless it checks first.
+
+### Required env file scan — runs in Stage 0, before audit
+
+```bash
+# Find all env example/template files
+find . -name ".env*example*" -o -name ".env*template*" -o -name ".env*sample*"   2>/dev/null | grep -v node_modules | grep -v .git
+
+# Find what env files the project expects
+grep -r "dotenv\|env.test\|env.production\|env.local\|env.staging"   package.json *.config.* .env* 2>/dev/null | head -20
+
+# Check which expected files are missing
+for env_file in .env .env.local .env.test .env.production .env.staging; do
+  [ -f "$env_file" ] && echo "✅ $env_file" || echo "⚠ $env_file missing"
+done
+```
+
+### If any expected env file is missing → PAUSE before build starts
+
+Write PAUSED.json:
+  {
+    "reason": "Missing env files: .env.test, .env.production",
+    "action": "Create these files with required values before restarting",
+    "hint": "Copy from .env.example and fill in your values"
+  }
+
+Do NOT start Stage 0.5 (audit) until all required env files exist.
+This is better than discovering missing env 6 hours into a build.
+
+---
+
+## RULE 21 — Target-Specific Tool Pre-flight
+
+**Source: Android build incident** — Java, Android SDK, and emulator were
+missing or misconfigured. Build ran for hours before hitting tool failures.
+
+### Android tool checklist — must ALL pass before build starts
+
+```bash
+# Java (must be 17+)
+java -version 2>&1 | grep "version"
+echo "JAVA_HOME: $JAVA_HOME"
+[ -z "$JAVA_HOME" ] && echo "❌ JAVA_HOME not set"
+
+# Android SDK
+echo "ANDROID_HOME: $ANDROID_HOME"
+[ -z "$ANDROID_HOME" ] && echo "❌ ANDROID_HOME not set"
+which adb || echo "❌ adb not found (install Android SDK platform-tools)"
+
+# Emulator
+adb devices | grep emulator || echo "❌ No emulator running — start one before build"
+
+# Gradle
+./gradlew --version 2>/dev/null || echo "⚠ No gradlew (Expo will create it)"
+
+# Expo
+npx expo --version || echo "❌ Expo CLI not available"
+
+# Node version (must be 18+)
+node --version
+
+# EAS CLI (for builds)
+npx eas --version 2>/dev/null || echo "⚠ EAS CLI not installed (needed for production builds)"
+```
+
+### macOS tool checklist
+
+```bash
+# Xcode — full install required (not just CLT)
+xcodebuild -version || echo "❌ Xcode not installed"
+xcode-select -p | grep -v CommandLineTools || echo "❌ CLT only — need full Xcode"
+
+# Simulator
+xcrun simctl list devices | grep "Booted" || echo "⚠ No simulator running"
+
+# SwiftLint (optional but recommended)
+swiftlint --version 2>/dev/null || echo "⚠ SwiftLint not installed (brew install swiftlint)"
+```
+
+### If any ❌ items found → PAUSE before build starts
+
+Write PAUSED.json with exact install commands:
+```json
+{
+  "reason": "Missing required tools for Android build",
+  "missing": ["JAVA_HOME not set", "No emulator running"],
+  "fix": [
+    "export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home",
+    "Add JAVA_HOME to ~/.zshrc",
+    "Open Android Studio → Device Manager → Start emulator"
+  ]
+}
+```
+
+### The rule in one sentence
+Check every required tool BEFORE starting Stage 0.5.
+A tool missing at hour 6 is 6 wasted hours. A tool missing at minute 1 is nothing.
+
+---
+
+## RULE 22 — Continuous Resource Monitoring During Build
+
+**Source: Android build disk incident + emulator crash pattern**
+
+The orchestrator must monitor resources between stages, not just at start.
+
+### Add to orchestrator.py — resource monitor thread
+
+```python
+def monitor_resources():
+    while not pipeline_complete:
+        # Check disk
+        result = subprocess.run(['df', '-BG', '.'], capture_output=True, text=True)
+        available = int(result.stdout.split('
+')[1].split()[3].replace('G',''))
+        
+        # Check emulator (Android)
+        if TARGET == 'android':
+            adb = subprocess.run(['adb', 'devices'], capture_output=True, text=True)
+            emulator_alive = 'emulator' in adb.stdout
+            if not emulator_alive:
+                update_status({'warning': 'Emulator not detected — build may fail'})
+        
+        update_status({'disk_free_gb': available})
+        
+        if available < 3:
+            with open('PAUSED.json', 'w') as f:
+                json.dump({'reason': f'Disk critical: {available}GB free',
+                          'fix': 'brew cleanup -s && rm -rf ~/.gradle/caches'}, f)
+            os.kill(os.getpid(), signal.SIGTERM)
+        
+        time.sleep(60)  # Check every minute
+
+# Start in background thread when orchestrator launches
+threading.Thread(target=monitor_resources, daemon=True).start()
+```
+
+
+---
+
+## RULE 23 — Bundle ID Auto-Generation Must Never Double
+
+**Source: orchestrator.log** — `com.localocr.extended.localocr.extended` generated
+instead of `com.localocr.extended`. Auto-generation ran folder name twice.
+
+Correct pattern:
+```python
+folder = os.path.basename(project_path).lower()
+folder = folder.replace('_','.').replace('-','.').replace(' ','.')
+while '..' in folder: folder = folder.replace('..','.')
+bundle_id = f'com.{folder.strip(".")}'
+# LocalOCR_Extended → com.localocr.extended  ✅
+# KanbanClaude     → com.kanbanclaude        ✅
+```
+
+Always print the generated Bundle ID at orchestrator start.
+If it contains a double segment (e.g. `com.foo.foo`) — log a warning and ask user to confirm.
+
+---
+
+## RULE 24 — Build Progress Must Be Visible Every 60 Seconds
+
+**Source: orchestrator.log** — 10+ minutes of "still working (Ns)" with no
+screen name, phase, or commit information. Impossible to know if build is
+progressing or hung.
+
+The build agent MUST write to `build_status.json` after every screen:
+```json
+{
+  "current_screen": "InventoryView",
+  "phase_complete": 4,
+  "screens_done": ["Dashboard", "Inventory"],
+  "last_commit": "abc1234",
+  "last_gate_passed": "visual",
+  "timestamp": "14:32:01"
+}
+```
+
+The orchestrator monitor thread reads `build_status.json` every 60 seconds
+and logs: `[build-progress] Screen: InventoryView | Phase: 4 | Screens done: 2`
+
+If `build_status.json` has not been updated in 20 minutes → log a WARNING.
+If not updated in 45 minutes → write PAUSED.json: "Build agent may be hung — check Claude Code terminal"
+
+
 ## LEARNING LOOP — Every Incident Updates Both Files Immediately
 
 When you append a new incident to AGENT_LEARNINGS.md, you MUST in the same commit:
