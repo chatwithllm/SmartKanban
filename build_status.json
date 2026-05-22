@@ -2,12 +2,12 @@
   "project": "KanbanClaude — admin-role + Google OAuth + approval queue",
   "plan": "docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md",
   "started_at": "2026-05-22T15:09:00Z",
-  "updated_at": "2026-05-22T23:45:00Z",
+  "updated_at": "2026-05-22T23:55:00Z",
   "total_tasks": 35,
-  "tasks_done": 17,
+  "tasks_done": 18,
   "current_task": {
-    "id": "Task 18",
-    "title": "POST /api/auth/change-password",
+    "id": "Task 19",
+    "title": "Rate-limit /api/auth/google/callback",
     "phase": "Change-password + rate limit",
     "status": "pending"
   },
@@ -23,8 +23,8 @@
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "pending" },
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "pending" }
   ],
-  "last_commit": "620ab78",
-  "last_gate_passed": "Task 17",
+  "last_commit": "b1db1e1",
+  "last_gate_passed": "Task 18",
   "open_issues": 0,
   "incidents": 0,
   "log": [
@@ -153,6 +153,13 @@
       "commit": "620ab78",
       "gate": "passed",
       "timestamp": "2026-05-22T23:45:00Z"
+    },
+    {
+      "task": "Task 18",
+      "title": "POST /api/auth/change-password verifies current pw and clears must_change flag",
+      "commit": "b1db1e1",
+      "gate": "passed",
+      "timestamp": "2026-05-22T23:55:00Z"
     }
   ]
 }
