@@ -9,7 +9,7 @@
     "id": "Task 32",
     "title": "AdminUsersView",
     "phase": "macOS URL scheme + Google sign-in + admin window + 3 views",
-    "status": "pending"
+    "status": "694fa33"
   },
   "phases": [
     { "name": "Schema migration",                 "task_range": "T1",     "status": "done" },
@@ -20,10 +20,10 @@
     { "name": "Change-password + rate limit",     "task_range": "T18-19", "status": "done" },
     { "name": "Web shared types + Google button + AwaitingApproval + ChangePassword", "task_range": "T20-23", "status": "done" },
     { "name": "Web admin UI shell + 3 tabs",      "task_range": "T24-27", "status": "done" },
-    { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "pending" },
-    { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "pending" }
+    { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "694fa33" },
+    { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "694fa33" }
   ],
-  "last_commit": "pending",
+  "last_commit": "694fa33",
   "last_gate_passed": "Task 31",
   "open_issues": 0,
   "incidents": 0,
@@ -241,14 +241,14 @@
     {
       "task": "Task 30",
       "title": "Sign in with Google button on AccountTab; AuthClient+Google.swift extension",
-      "commit": "pending",
+      "commit": "694fa33",
       "gate": "passed",
       "timestamp": "2026-05-22T17:00:00Z"
     },
     {
       "task": "Task 31",
       "title": "User adds isAdmin + mustChangePassword; Admin menu item in KanbanClaudeApp",
-      "commit": "pending",
+      "commit": "694fa33",
       "gate": "passed",
       "timestamp": "2026-05-22T17:00:00Z"
     }
