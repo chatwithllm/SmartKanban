@@ -2,12 +2,12 @@
   "project": "KanbanClaude — admin-role + Google OAuth + approval queue",
   "plan": "docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md",
   "started_at": "2026-05-22T15:09:00Z",
-  "updated_at": "2026-05-22T17:05:00Z",
+  "updated_at": "2026-05-22T17:10:00Z",
   "total_tasks": 35,
-  "tasks_done": 33,
+  "tasks_done": 34,
   "current_task": {
-    "id": "Task 34",
-    "title": "Run the full server test suite",
+    "id": "Task 35",
+    "title": "End-to-end smoke QA",
     "phase": "End-to-end QA",
     "status": "pending"
   },
@@ -21,12 +21,18 @@
     { "name": "Web shared types + Google button + AwaitingApproval + ChangePassword", "task_range": "T20-23", "status": "done" },
     { "name": "Web admin UI shell + 3 tabs",      "task_range": "T24-27", "status": "done" },
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "done" },
-    { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "694fa33" }
+    { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "in_progress" }
   ],
   "last_commit": "d4b8e97",
-  "last_gate_passed": "Task 33",
-  "open_issues": 0,
-  "incidents": 0,
+  "last_gate_passed": "Task 34",
+  "open_issues": 1,
+  "incidents": 1,
+  "known_pre_existing_failures": {
+    "suite": "notifications.test.ts",
+    "count": 6,
+    "admin_role_related": false,
+    "note": "All 6 failures are in notifications.test.ts (tests 166-171). No admin_*, google_*, or auth_* failures. Pre-existing infra issue (likely missing DB or push config in CI)."
+  },
   "log": [
     {
       "task": "Task 1",
@@ -258,6 +264,17 @@
       "commit": "d4b8e97",
       "gate": "passed",
       "timestamp": "2026-05-22T17:05:00Z"
+    },
+    {
+      "task": "Task 34",
+      "title": "Full test + build matrix",
+      "gate": "passed_with_concerns",
+      "timestamp": "2026-05-22T17:10:00Z",
+      "matrix": {
+        "server": { "pass": 223, "fail": 6, "failing_suite": "notifications.test.ts", "admin_role_related": false },
+        "web_build": { "result": "SUCCEEDED", "exit_code": 0, "note": "✓ built in 1.09s" },
+        "macos_build": { "result": "SUCCEEDED", "exit_code": 0 }
+      }
     }
   ]
 }
