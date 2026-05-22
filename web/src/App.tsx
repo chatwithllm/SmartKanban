@@ -28,6 +28,7 @@ import { CaptureBar } from './components/CaptureBar.tsx';
 import { STATUSES } from './types.ts';
 import { AwaitingApproval } from './components/AwaitingApproval.tsx';
 import { ChangePassword } from './components/ChangePassword.tsx';
+import { AdminView } from './AdminView.tsx';
 
 export function App() {
   const { user, loading } = useAuth();
@@ -43,6 +44,15 @@ export function App() {
   if (path === '/change-password') {
     if (!user) return <LoginView redirectTo="/change-password" />;
     return <ChangePassword />;
+  }
+
+  if (path === '/admin') {
+    if (!user) return <LoginView redirectTo="/admin" />;
+    if (!user.is_admin) {
+      window.location.replace('/');
+      return <div className="p-8 text-2 text-ink-soft tracking-tight2">Redirecting…</div>;
+    }
+    return <AdminView />;
   }
 
   if (path === '/awaiting-approval') return <AwaitingApproval />;
