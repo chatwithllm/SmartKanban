@@ -23,7 +23,7 @@
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "done" },
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "694fa33" }
   ],
-  "last_commit": "TBD",
+  "last_commit": "d4b8e97",
   "last_gate_passed": "Task 33",
   "open_issues": 0,
   "incidents": 0,
@@ -255,7 +255,7 @@
     {
       "task": "Tasks 32-33",
       "title": "Native AdminWindow with Users, Approvals, Audit views + 9 admin endpoints",
-      "commit": "TBD",
+      "commit": "d4b8e97",
       "gate": "passed",
       "timestamp": "2026-05-22T17:05:00Z"
     }
