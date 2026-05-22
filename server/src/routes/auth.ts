@@ -12,6 +12,8 @@ import {
   userFromSession,
   verifyPassword,
 } from '../auth.js';
+import { consumeTicket } from '../auth_tickets.js';
+import { googleEnabled } from '../google.js';
 
 const OPEN_SIGNUP = process.env.OPEN_SIGNUP !== 'false'; // default true (household trust)
 
@@ -151,4 +153,43 @@ export async function authRoutes(app: FastifyInstance) {
       return rows[0];
     },
   );
+
+  // --- Pending-approval poll ---------------------------------------------------
+
+  app.get<{ Params: { id: string } }>('/api/auth/pending/:id', async (req, reply) => {
+    const { rows } = await pool.query<{ outcome: string; outcome_ticket: string | null }>(
+      `SELECT outcome, outcome_ticket FROM pending_users WHERE id = $1`, [req.params.id],
+    );
+    if (rows.length === 0) return reply.code(404).send({ error: 'not_found' });
+    const { outcome, outcome_ticket } = rows[0]!;
+    if (outcome === 'approved') return { status: 'approved', ticket: outcome_ticket };
+    if (outcome === 'rejected') return { status: 'rejected' };
+    return { status: 'pending' };
+  });
+
+  // --- One-time ticket exchange ------------------------------------------------
+
+  app.post<{ Body: { ticket: string } }>('/api/auth/ticket/exchange', async (req, reply) => {
+    const { ticket } = req.body ?? ({} as { ticket: string });
+    if (!ticket) return reply.code(400).send({ error: 'ticket_required' });
+    try {
+      const sessionToken = await consumeTicket(ticket);
+      setSessionCookie(reply, sessionToken);
+      return { token: sessionToken };
+    } catch (e) {
+      if ((e as Error).message === 'ticket_invalid') {
+        return reply.code(410).send({ error: 'ticket_invalid' });
+      }
+      throw e;
+    }
+  });
+
+  // --- Auth config flags -------------------------------------------------------
+
+  app.get('/api/auth/config', async () => {
+    return {
+      google_enabled: googleEnabled(),
+      open_signup: process.env.OPEN_SIGNUP !== 'false',
+    };
+  });
 }
