@@ -184,6 +184,32 @@ export async function authRoutes(app: FastifyInstance) {
     }
   });
 
+  // --- Change password ---------------------------------------------------------
+
+  app.post<{ Body: { current_password: string; new_password: string } }>(
+    '/api/auth/change-password',
+    { preHandler: requireUser },
+    async (req, reply) => {
+      const { current_password, new_password } = req.body ?? ({} as { current_password: string; new_password: string });
+      if (!new_password || new_password.length < 6) {
+        return reply.code(400).send({ error: 'password_too_short' });
+      }
+      const { rows } = await pool.query<{ auth_hash: string }>(
+        `SELECT auth_hash FROM users WHERE id = $1`, [req.user!.id],
+      );
+      if (rows.length === 0) return reply.code(404).send({ error: 'not_found' });
+      if (!(await verifyPassword(rows[0]!.auth_hash, current_password))) {
+        return reply.code(401).send({ error: 'invalid_credentials' });
+      }
+      const hash = await hashPassword(new_password);
+      await pool.query(
+        `UPDATE users SET auth_hash = $1, must_change_password = FALSE WHERE id = $2`,
+        [hash, req.user!.id],
+      );
+      return { ok: true };
+    },
+  );
+
   // --- Auth config flags -------------------------------------------------------
 
   app.get('/api/auth/config', async () => {
