@@ -6,6 +6,7 @@ import {
   createSession,
   deleteSession,
   hashPassword,
+  reconcileEnvAdmin,
   requireUser,
   setSessionCookie,
   userFromSession,
@@ -80,9 +81,11 @@ export async function authRoutes(app: FastifyInstance) {
     if (!user || !(await verifyPassword(user.auth_hash, password))) {
       return reply.code(401).send({ error: 'invalid credentials' });
     }
+    await reconcileEnvAdmin(user.id, user.email);
     const token = await createSession(user.id);
     setSessionCookie(reply, token);
-    return { id: user.id, name: user.name, short_name: user.short_name, email: user.email };
+    const fresh = await userFromSession(token);
+    return fresh!;
   });
 
   app.post('/api/auth/logout', async (req, reply) => {

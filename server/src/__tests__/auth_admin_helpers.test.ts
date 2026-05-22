@@ -1,7 +1,10 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import Fastify from 'fastify';
+import cookie from '@fastify/cookie';
 import { pool } from '../db.js';
 import { reconcileEnvAdmin } from '../auth.js';
+import { authRoutes } from '../routes/auth.js';
 
 let userId = '';
 let userEmail = '';
@@ -91,5 +94,55 @@ test('reconcileEnvAdmin is additive — already-admin user returns true but writ
   } finally {
     if (orig === undefined) delete process.env.ADMIN_EMAILS;
     else process.env.ADMIN_EMAILS = orig;
+  }
+});
+
+test('login response includes is_admin and reflects ADMIN_EMAILS reconciliation', async () => {
+  const email = `login_admin_${Math.random().toString(36).slice(2, 8)}@test.local`;
+  const origAdminEmails = process.env.ADMIN_EMAILS;
+  process.env.ADMIN_EMAILS = email;
+  const app = Fastify();
+  await app.register(cookie, { secret: 't' });
+  await app.register(authRoutes);
+  await app.ready();
+  try {
+    const reg = await app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { name: 'L', short_name: 'L', email, password: 'password123' },
+    });
+    assert.equal(reg.statusCode, 201);
+
+    const login = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email, password: 'password123' },
+    });
+    assert.equal(login.statusCode, 200);
+    const body = login.json() as { is_admin: boolean; must_change_password: boolean };
+    assert.equal(body.is_admin, true);
+    assert.equal(body.must_change_password, false);
+
+    // /api/auth/me also returns is_admin
+    const setCookieHeader = login.headers['set-cookie'];
+    const rawCookie = Array.isArray(setCookieHeader)
+      ? setCookieHeader[0]!
+      : (setCookieHeader as string)!;
+    const cookieHeader = rawCookie.split(';')[0]!;
+    const me = await app.inject({
+      method: 'GET',
+      url: '/api/auth/me',
+      headers: { cookie: cookieHeader },
+    });
+    assert.equal(me.statusCode, 200);
+    const meBody = me.json() as { is_admin: boolean };
+    assert.equal(meBody.is_admin, true);
+  } finally {
+    await app.close();
+    await pool.query(`DELETE FROM admin_audit WHERE target_user_id IN (SELECT id FROM users WHERE email = $1)`, [email]);
+    await pool.query(`DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE email = $1)`, [email]);
+    await pool.query(`DELETE FROM users WHERE email = $1`, [email]);
+    if (origAdminEmails === undefined) delete process.env.ADMIN_EMAILS;
+    else process.env.ADMIN_EMAILS = origAdminEmails;
   }
 });
