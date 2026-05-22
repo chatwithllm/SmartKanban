@@ -27,12 +27,23 @@ import { NotificationBell } from './components/NotificationBell.tsx';
 import { CaptureBar } from './components/CaptureBar.tsx';
 import { STATUSES } from './types.ts';
 import { AwaitingApproval } from './components/AwaitingApproval.tsx';
+import { ChangePassword } from './components/ChangePassword.tsx';
 
 export function App() {
   const { user, loading } = useAuth();
   const path = location.pathname;
 
   if (loading) return <div className="p-8 text-2 text-ink-soft tracking-tight2">Loading…</div>;
+
+  if (user?.must_change_password && path !== '/change-password') {
+    window.location.replace('/change-password');
+    return <div className="p-8 text-2 text-ink-soft tracking-tight2">Redirecting…</div>;
+  }
+
+  if (path === '/change-password') {
+    if (!user) return <LoginView redirectTo="/change-password" />;
+    return <ChangePassword />;
+  }
 
   if (path === '/awaiting-approval') return <AwaitingApproval />;
 
