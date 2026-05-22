@@ -38,7 +38,7 @@ Three intertwined capabilities ship as one milestone:
 
 2. **Google OAuth.** Added as second auth method alongside argon2 password. New `user_identities` table stores `(user_id, provider, provider_sub, email, email_verified)`. Auto-link to existing user when Google `email_verified=true` matches an existing `users.email`. Server runs the OAuth dance; macOS opens the system browser and receives a session via a custom URL scheme (`kanbanclaude://auth?ticket=...`) that exchanges for a session token.
 
-3. **Approval queue.** Google login for an unknown email creates a row in `pending_users` — *not* in `users`. The callback returns 202 with `pending_id`. The web client renders an "Awaiting approval" page that polls `/api/auth/pending/:id`. The admin sees the queue at `/admin`, clicks Approve → row migrates to `users` + identity linked + audit row written + ticket issued — all in one transaction. Reject deletes the pending row.
+3. **Approval queue.** Google login for an unknown email creates a row in `pending_users` — *not* in `users`. The callback 302-redirects the browser to `/awaiting-approval?id=<pending_id>`. That page polls `/api/auth/pending/:id`. The admin sees the queue at `/admin`, clicks Approve → a single transaction INSERTs the new `users` row, links the identity, writes the audit row, creates a session + 60s ticket, and UPDATEs the pending row to `outcome='approved'` with the ticket attached. Reject UPDATEs the pending row to `outcome='rejected'`. The pending row survives until the reaper deletes it (rows with `outcome != 'pending'` older than 5 minutes). Bootstrap exception: if the pending email is in `ADMIN_EMAILS` and `email_verified=true`, skip the queue entirely — create the user directly as admin with an `env_promote` audit row (see Section 5 callback spec).
 
 Cross-cutting:
 
@@ -101,7 +101,8 @@ CREATE INDEX IF NOT EXISTS idx_auth_tickets_expiry ON auth_tickets(expires_at);
 -- admin audit log
 CREATE TABLE IF NOT EXISTS admin_audit (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  actor_id          UUID NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+  actor_id          UUID REFERENCES users(id) ON DELETE SET NULL,  -- nullable so audit
+                                                                   -- rows outlive deleted users
   action            TEXT NOT NULL,                -- 'promote' | 'demote' | 'reset_password' |
                                                   -- 'revoke_sessions' | 'approve_user' |
                                                   -- 'reject_user' | 'env_promote'
@@ -118,7 +119,7 @@ CREATE INDEX IF NOT EXISTS idx_admin_audit_actor   ON admin_audit(actor_id);
 
 - `auth_hash` stays `NOT NULL`. Google-only users get `auth_hash='oauth:google'`, which never matches argon2 verification (no `$argon2id$` prefix). Defense-in-depth: also reject login when `auth_hash NOT LIKE '$argon2%'`.
 - `ADMIN_EMAILS` is **not** stored in DB. Reconciled on every successful login — if `email` is in the env list and `is_admin=false`, flip to true and write an `env_promote` audit row.
-- `pending_users` is independent from `users` until approval. Approve runs a single transaction: INSERT users + INSERT user_identities + INSERT admin_audit + DELETE pending_users.
+- `pending_users` is independent from `users` until approval. Approve runs a single transaction: INSERT users + INSERT user_identities + INSERT sessions + INSERT auth_tickets + INSERT admin_audit + UPDATE pending_users SET outcome='approved', outcome_ticket=<ticket>, outcome_at=NOW(). The pending row is **not** deleted at approval — the reaper sweeps `outcome != 'pending'` rows after 5 minutes (same job as session/ticket cleanup) so the pending user's HTTP poll can still read `outcome` and pick up the ticket.
 - `auth_tickets` cleanup: `DELETE WHERE expires_at < NOW()` is added to the existing session-cleanup job.
 
 ## 5. Backend Endpoints
@@ -135,9 +136,31 @@ GET  /api/auth/google/callback
         → Verify state cookie. Exchange code with Google. Verify id_token signature, aud, iss, exp.
         → If identity exists by (provider, provider_sub): reconcile env-admin → create session.
         → Else if email_verified=true and users.email matches: auto-link identity → create session.
-        → Else: INSERT INTO pending_users (UPSERT on (provider, provider_sub)) → 202 with pending_id.
-        → web return: redirect to /awaiting-approval?id=<pending_id> OR set Set-Cookie session + redirect to /.
-        → macos return: redirect to kanbanclaude://auth?ticket=<one-time> (only after session created).
+        → Else (no identity, no email match):
+            Bootstrap exception — if email_verified=true AND email is in ADMIN_EMAILS:
+              Single transaction:
+                INSERT users (name, short_name=split_part(name,' ',1), email,
+                              auth_hash='oauth:google', is_admin=true)
+                INSERT user_identities (provider='google', provider_sub, email, email_verified)
+                INSERT admin_audit (actor_id=<new_user_id>, action='env_promote',
+                                    target_user_id=<new_user_id>,
+                                    metadata='{"source":"ADMIN_EMAILS","via":"google_bootstrap"}')
+              Treat as logged in (create session) just like the auto-link branch.
+              No row written to pending_users.
+            Otherwise:
+              UPSERT pending_users on (provider, provider_sub). If existing row has
+              outcome='rejected', reset outcome='pending' and clear outcome_ticket/outcome_at.
+              Always end the response as a top-level browser navigation:
+              302 redirect (NOT a 202 JSON response — the callback is a browser GET).
+        → web return (302 targets):
+            existing-identity / auto-link / bootstrap branch → /
+            pending branch                                   → /awaiting-approval?id=<pending_id>
+        → macos return (302 targets):
+            existing-identity / auto-link / bootstrap branch → kanbanclaude://auth?ticket=<one-time>
+            pending branch                                   → /awaiting-approval?id=<pending_id>
+            (After admin approves later, the macOS user re-clicks "Sign in with Google" in
+             the app. That second pass hits the existing-identity branch above and returns
+             a kanbanclaude:// ticket. See Section 7 Flow C note.)
 
 GET  /api/auth/pending/:id
         → Reads pending_users.outcome. Returns:
@@ -242,17 +265,20 @@ export async function reconcileEnvAdmin(userId: string, email: string): Promise<
     .map(s => s.trim().toLowerCase())
     .filter(Boolean);
   if (!list.includes(email.toLowerCase())) return false;
-  const { rowCount } = await pool.query(
-    `UPDATE users SET is_admin=true WHERE id=$1 AND is_admin=false`,
+
+  // UPDATE + audit INSERT must be atomic. A crash between them would promote a
+  // user with no audit row, violating the rule that every admin action writes
+  // admin_audit in the same transaction. Use a single CTE.
+  await pool.query(
+    `WITH promoted AS (
+       UPDATE users SET is_admin=true
+       WHERE id=$1 AND is_admin=false
+       RETURNING id
+     )
+     INSERT INTO admin_audit (actor_id, action, target_user_id, metadata)
+     SELECT id, 'env_promote', id, '{"source":"ADMIN_EMAILS"}'::jsonb FROM promoted`,
     [userId],
   );
-  if (rowCount && rowCount > 0) {
-    await pool.query(
-      `INSERT INTO admin_audit (actor_id, action, target_user_id, metadata)
-       VALUES ($1, 'env_promote', $1, '{"source":"ADMIN_EMAILS"}')`,
-      [userId],
-    );
-  }
   return true;
 }
 ```
@@ -264,10 +290,10 @@ export async function reconcileEnvAdmin(userId: string, email: string): Promise<
 **New files:**
 
 - `views/AdminView.tsx` — top-level page mounted at `/admin`. Tab strip: Users · Approvals · Audit.
-- `views/admin/UsersTab.tsx` — table of users: short_name, email, identity badges (password / google), is_admin toggle, "Reset password" button, "Revoke sessions" button.
+- `views/admin/UsersTab.tsx` — table of users: short_name, email, identity badges (password / google), is_admin toggle, "Reset password" button, "Revoke sessions" button. "Reset password" is **disabled** for users whose only identity is `google` (no `password` row in their identities and `auth_hash='oauth:google'`) — forcing a password they never had only creates confusion. Tooltip on the disabled button: "User signs in via Google; password reset doesn't apply."
 - `views/admin/ApprovalsTab.tsx` — list of `pending_users` with avatar, name, email, "Approve" + "Reject" actions. Approve opens a modal asking for `short_name`.
 - `views/admin/AuditTab.tsx` — paginated audit log. Each row: actor → action → target, timestamp, expand for metadata JSON.
-- `views/AwaitingApproval.tsx` — landing page after Google OAuth callback when account is pending. Polls `/api/auth/pending/:id` every 5s. Auto-redirects to `/` on approval, shows error on reject.
+- `views/AwaitingApproval.tsx` — landing page after Google OAuth callback when account is pending. Polls `/api/auth/pending/:id` every 5s. On `status='approved'`, POSTs the ticket to `/api/auth/ticket/exchange`; on success redirects to `/`. **If the exchange returns 410 `ticket_invalid` (user came back after 60s ticket TTL), render a "Session expired — sign in again" view with a button that re-initiates Google OAuth.** That second pass takes the existing-identity branch and signs the user in normally. On `status='rejected'`, show denial message; no retry button.
 - `views/ChangePassword.tsx` — forced redirect target when `must_change_password=true`.
 - `components/GoogleSignInButton.tsx` — styled per Google brand guidelines. Posts to `/api/auth/google/start?return=web`.
 
@@ -292,6 +318,10 @@ export async function reconcileEnvAdmin(userId: string, email: string): Promise<
 - `UI/Preferences/AccountTab.swift` — add "Sign in with Google" button under the existing email/password form.
 - `App/KanbanClaudeApp.swift` (main `App`) — wire the URL scheme handler.
 - `Models/User.swift` — add `isAdmin: Bool` and `mustChangePassword: Bool`.
+
+### Data caveats
+
+- `pending_users.picture_url` is **dropped at approval time** — `users` and `user_identities` have no avatar column. The Google profile picture is used only in the Approvals tab to help the admin recognize the person. Adding an avatar column to `users` is out of scope for v1.
 
 ### Empty states
 
@@ -351,8 +381,9 @@ Browser                 Server
    │◄─────────────────────│
    │
    │   (admin approves)
-   │                      │ ws broadcast 'pending_approved'
-   │                      │ users + identity row inserted, pending row deleted
+   │                      │ ws broadcast 'pending_changed' (admin UIs only)
+   │                      │ users + identity inserted; pending row UPDATEd
+   │                      │ outcome='approved' with outcome_ticket
    │ next poll
    │─────────────────────►│
    │ { status: 'approved', ticket }
@@ -391,6 +422,20 @@ macOS app          system browser         Server
    │ refresh auth state, land in app
 ```
 
+**macOS new-user case (not shown above).** Flow C covers the existing-identity
+path only. A new macOS user lands in the queue: the system browser is sent to
+`/awaiting-approval?id=<pending_id>` (same as Flow B), and the macOS app never
+receives a `kanbanclaude://` URL. `pending_users` carries no `return=macos`
+hint, so the approval transaction cannot redirect back to the URL scheme.
+
+After the admin approves, the user identity now exists in `user_identities`.
+The user re-opens the macOS app, clicks "Sign in with Google" again — this
+second pass takes the existing-identity branch of `/api/auth/google/callback`,
+which already issues a `kanbanclaude://auth?ticket=...` redirect. From there
+the flow above runs end-to-end. AwaitingApproval in the system browser tells
+the user this in plain language: "Approved — return to the KanbanClaude app
+and sign in with Google again."
+
 ### Flow D — Approval action (admin side)
 
 ```
@@ -402,23 +447,32 @@ Admin browser              Server                  Pending browser
    │ POST /api/admin/pending/:id/approve { short_name }
    │─────────────────────────►│
    │                          │ BEGIN
+   │                          │   SELECT * FROM pending_users WHERE id=$1
+   │                          │     AND outcome='pending' FOR UPDATE
    │                          │   INSERT users
    │                          │   INSERT user_identities (from pending row)
+   │                          │   INSERT sessions
+   │                          │   INSERT auth_tickets (60s)
    │                          │   INSERT admin_audit
-   │                          │   DELETE pending_users
+   │                          │   UPDATE pending_users
+   │                          │     SET outcome='approved',
+   │                          │         outcome_ticket=<ticket>,
+   │                          │         outcome_at=NOW()
+   │                          │     WHERE id=$1
    │                          │ COMMIT
-   │                          │ ws broadcast 'pending_approved' { pending_id, user_id }
+   │                          │ ws broadcast 'pending_changed' { pending_id }  (admin UIs only)
    │ { user_id }              │
    │◄─────────────────────────│
    │                          │                        │ poll picks up status='approved'
-   │                          │                        │ exchange ticket, land in app
+   │                          │                        │ + ticket; exchange for cookie
 ```
 
 ### Edge cases
 
 | Case | Behavior |
 |------|----------|
-| Concurrent approve + reject on same pending row | Second action sees zero rows in `DELETE ... RETURNING` → 409 `pending_gone`. |
+| Concurrent approve + reject on same pending row | Second action sees zero rows in `UPDATE ... WHERE outcome='pending' RETURNING` → 409 `pending_gone`. |
+| User returns to AwaitingApproval after ticket expires | Ticket TTL is 60s; the reaper holds the pending row for 5 min. A user who closes the tab and returns after 60s sees `status='approved'` with an expired ticket; `/api/auth/ticket/exchange` returns 410 `ticket_invalid`. **Recovery:** `user_identities` already exists, so `AwaitingApproval.tsx` catches 410 from the exchange call and renders an action: "Session expired — sign in again." The button restarts Google OAuth; the next callback takes the existing-identity branch (Flow A) and lands the user normally. Same recovery applies on macOS — re-click "Sign in with Google" in the app. |
 | Stale `auth_tickets` | Swept on every login + nightly job in session cleanup. |
 | Google `sub` changes for same user | Cannot happen; `sub` is permanent per Google identity. |
 | User changes Google email later | `user_identities.email` stored only for display. Lookup is by `provider_sub`. |
@@ -476,11 +530,23 @@ Consistent shape: `{ error: '<machine_code>', message?: '<human>' }`.
 3. **auth_ticket** — 32-byte `crypto.randomBytes` base64url. 60-second TTL. Single-use; row marked consumed on first exchange. Plaintext storage matches existing `sessions.token` style; acceptable for the 60-second window.
 4. **URL scheme hijack on macOS** — another app could register `kanbanclaude://`. The ticket's single-use + 60-second + server-side validation are partial mitigations. A malicious app on the same device could still race the legitimate one. Documented as a known limitation; PKCE-style code_verifier from the macOS app is the planned hardening for v2.
 5. **Approval queue spam** — UNIQUE `(provider, provider_sub)` collapses repeated attempts from the same Google account into one row. Add per-IP rate limit on `/api/auth/google/callback` (use `@fastify/rate-limit`; confirm dep status during planning, add if missing).
-6. **Last-admin guard** — enforced inside the demote transaction with `SELECT COUNT(*) WHERE is_admin AND id != $target FOR UPDATE`.
+6. **Last-admin guard** — enforced inside the demote transaction. Postgres rejects `FOR UPDATE` with aggregates, so do not use `SELECT COUNT(*) ... FOR UPDATE`. Instead row-lock the candidate set and count in application code:
+   ```sql
+   BEGIN;
+     SELECT id FROM users
+     WHERE is_admin = true AND id <> $target_user_id
+     FOR UPDATE;
+   -- if the returned row count is 0 → ROLLBACK and respond 409 last_admin
+     UPDATE users SET is_admin=false WHERE id=$target_user_id;
+     INSERT INTO admin_audit (...) VALUES (...);
+   COMMIT;
+   ```
+   The `FOR UPDATE` on the other-admins rowset blocks a concurrent demote from racing the check.
 7. **Admin password reset** — sets `must_change_password=true` and deletes all existing sessions. Login flow refuses all routes except `/api/auth/change-password` until the flag clears.
 8. **Audit immutability** — no UPDATE/DELETE endpoint exists. INSERT-only. Retention indefinite (household scale, low volume).
 9. **ADMIN_EMAILS** — additive only. Removing an email never demotes. Demote happens explicitly via UI. Documented.
 10. **Argon2 placeholder for OAuth-only users** — `auth_hash='oauth:google'`. `verifyPassword` returns false. Defense-in-depth: login rejects when `auth_hash NOT LIKE '$argon2%'`.
+11. **`pending_id` in URL** — `/api/auth/pending/:id` is unauthenticated and can return a session-granting ticket. The `id` is a UUIDv4 (122 bits of entropy), so guessing is infeasible. The risk is incidental disclosure: the id rides in the URL, so it can land in browser history, referer headers (e.g. if the AwaitingApproval page is iframed by a third party), and reverse-proxy access logs. Mitigations in scope for v1: short ticket TTL (60s), single-use consume, and the fact that the id alone is useless until an admin acts. **Optional hardening (v2):** bind the ticket retrieval to the original OAuth `state` cookie — set a long-lived `pending_session=<random>` cookie at callback time and require it on `/api/auth/pending/:id`. This adds one more secret the attacker would need from the same browser. Not implemented in v1 to keep the polling endpoint behaviorally simple.
 
 ## 11. Testing Strategy
 
@@ -493,7 +559,7 @@ Consistent shape: `{ error: '<machine_code>', message?: '<human>' }`.
 ### Integration tests (real Postgres via existing test setup)
 
 - **`admin_users.test.ts`**: Non-admin → 403 on `GET /api/admin/users`. Admin sees list with identities + session_count. Promote: 200, audit row. Demote last admin → 409. Demote when ≥2 admins → 200. Self-demote when sole admin → 409. Reset password: hash changes, sessions deleted, `must_change_password=true`, audit row. Revoke sessions: count in audit metadata.
-- **`admin_pending.test.ts`**: Google callback for unknown email_verified=true → 202 + pending row. Approve creates user + identity, deletes pending, audit row, WS broadcast. Concurrent approves → one wins, other gets `pending_gone`. Reject deletes + audits. Approve when email exists → `email_in_use`.
+- **`admin_pending.test.ts`**: Google callback for unknown email_verified=true → 302 to `/awaiting-approval` + pending row created with outcome='pending'. Approve creates user + identity + session + ticket; pending row UPDATEd to outcome='approved' with outcome_ticket populated; audit row written; `pending_changed` WS broadcast emitted. Concurrent approves → one wins (UPDATE returns row), other gets `pending_gone` (UPDATE returns zero rows due to outcome filter). Reject UPDATEs to outcome='rejected' + audit. Approve when email exists → `email_in_use`. Bootstrap branch: Google callback with email in `ADMIN_EMAILS` and email_verified=true creates user directly as admin and writes `env_promote` audit row (no pending row).
 - **`google_flow.test.ts`** (mocks Google JWKS + token endpoint): linked identity → session cookie. Verified-email auto-link → identity row + cookie. Unverified email → pending queue (no auto-link). New verified email → pending queue, then approved poll returns ticket → exchange → cookie.
 
 ### macOS tests
@@ -530,6 +596,6 @@ Consistent shape: `{ error: '<machine_code>', message?: '<human>' }`.
 2. Deploy backend with Google routes gated on env-var presence (default: disabled until `GOOGLE_CLIENT_*` set).
 3. Deploy web with Admin route and Google button (button hidden when `google_enabled=false`).
 4. Deploy macOS build with URL scheme registered + admin window.
-5. Owner sets `ADMIN_EMAILS=<owner-email>` in `.env`, restarts server. Logs in → confirms `is_admin=true` in `/api/auth/me`.
+5. Owner sets `ADMIN_EMAILS=<owner-email>` in `.env`, restarts server. Logs in (password or Google) → confirms `is_admin=true` in `/api/auth/me`. **This closes the bootstrap hole:** even if the owner's first-ever sign-in is via Google on a fresh DB, the callback's bootstrap exception (Section 5) creates them as admin directly instead of dropping them into a queue with no admin to approve.
 6. Owner configures Google Cloud OAuth client, sets `GOOGLE_CLIENT_*` env vars, restarts server.
-7. Owner invites family by sharing the login URL. New Google sign-ins land in the approval queue.
+7. Owner invites family by sharing the login URL. New Google sign-ins (emails NOT in `ADMIN_EMAILS`) land in the approval queue.
