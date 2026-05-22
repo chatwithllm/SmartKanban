@@ -37,6 +37,7 @@ enum Endpoint {
     case register(name: String, shortName: String, email: String, password: String)
     case logout
     case updateMe(shortName: String?, name: String?)
+    case exchangeAuthTicket(ticket: String)
     case listUsers
 
     // MARK: cards
@@ -117,7 +118,7 @@ enum Endpoint {
              .listCardInsights, .getInsight, .listCardLinks, .cardChain,
              .cardEvents, .unreadCounts, .listNotifications, .vapidPublicKey:
             return .GET
-        case .login, .register, .logout, .createCard, .createMirrorToken, .createApiToken,
+        case .login, .register, .logout, .exchangeAuthTicket, .createCard, .createMirrorToken, .createApiToken,
              .linkTelegram, .createTemplate, .instantiateTemplate, .createKnowledge,
              .refetchKnowledge, .linkKnowledgeToCard, .knowledgeFromCard,
              .brainstormCard, .createCardLink, .postMessage, .purgeArchived:
@@ -140,6 +141,7 @@ enum Endpoint {
         case .register: return "/api/auth/register"
         case .logout: return "/api/auth/logout"
         case .updateMe: return "/api/auth/me"
+        case .exchangeAuthTicket: return "/api/auth/ticket/exchange"
         case .listUsers: return "/api/users"
         case .listCards: return "/api/cards"
         case .archivedCards: return "/api/cards/archived"
@@ -219,6 +221,8 @@ enum Endpoint {
         switch self {
         case .login(let email, let password):
             return try enc.encode(["email": email, "password": password])
+        case .exchangeAuthTicket(let ticket):
+            return try enc.encode(["ticket": ticket])
         case .register(let name, let shortName, let email, let password):
             return try enc.encode([
                 "name": name, "short_name": shortName,

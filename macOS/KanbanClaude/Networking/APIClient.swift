@@ -77,7 +77,9 @@ final class APIClient {
             // On login/register the server returns Set-Cookie. Mirror its value
             // into Keychain so a cold launch can re-inject if the cookie store
             // is empty (e.g. user purged ~/Library/Cookies).
-            if endpoint.path.hasPrefix("/api/auth/login") || endpoint.path.hasPrefix("/api/auth/register") {
+            if endpoint.path.hasPrefix("/api/auth/login")
+                || endpoint.path.hasPrefix("/api/auth/register")
+                || endpoint.path == "/api/auth/ticket/exchange" {
                 if let storage = session.configuration.httpCookieStorage,
                    let token = storage.cookies(for: baseURL)?.first(where: { $0.name == "kanban_session" })?.value {
                     KeychainStore.save(token: token)

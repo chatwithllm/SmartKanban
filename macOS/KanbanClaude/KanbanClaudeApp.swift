@@ -9,6 +9,9 @@ struct KanbanClaudeApp: App {
         WindowGroup("SmartKanban", id: "main") {
             RootView()
                 .frame(minWidth: 960, minHeight: 600)
+                .onOpenURL { url in
+                    URLSchemeHandler.shared.handle(url)
+                }
         }
         .windowToolbarStyle(.unifiedCompact)
 

@@ -65,7 +65,7 @@ targets:
               NSExceptionAllowsInsecureHTTPLoads: true
               NSIncludesSubdomains: true
         CFBundleURLTypes:
-          - CFBundleURLName: com.kanbanclaude.deeplink
+          - CFBundleURLName: com.kanbanclaude.auth
             CFBundleURLSchemes:
               - kanbanclaude
         UTExportedTypeDeclarations: []

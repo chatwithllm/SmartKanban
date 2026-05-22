@@ -83,6 +83,18 @@ final class AuthStore: ObservableObject {
         phase = .unauthenticated
     }
 
+    func loginWithTicket(_ ticket: String) async throws {
+        // Exchange single-use ticket for a session cookie (Set-Cookie) + { token }.
+        // APIClient.rawSend mirrors the Set-Cookie value into Keychain automatically
+        // for the /api/auth/ticket/exchange path.
+        _ = try await APIClient.shared.send(.exchangeAuthTicket(ticket: ticket), as: TicketExchangeResponse.self)
+        // Cookie is now set in the shared session; bootstrap fetches the user via /api/auth/me
+        await bootstrap()
+        if case .authenticated(let user) = phase {
+            ToastStore.shared.success("Signed in as \(user.shortName)")
+        }
+    }
+
     func updateMe(shortName: String?, name: String?) async throws -> User {
         let updated = try await APIClient.shared.send(.updateMe(shortName: shortName, name: name), as: User.self)
         phase = .authenticated(updated)
