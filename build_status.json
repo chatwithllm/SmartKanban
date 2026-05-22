@@ -7,15 +7,15 @@
   "tasks_done": 34,
   "current_task": {
     "id": "Task 35",
-    "title": "End-to-end smoke QA",
+    "title": "End-to-end smoke QA — manual (requires browser + Google Cloud OAuth client config)",
     "phase": "End-to-end QA",
-    "status": "pending"
+    "status": "pending_user"
   },
   "phases": [
     { "name": "Schema migration",                 "task_range": "T1",     "status": "done" },
     { "name": "Auth helpers + /me + login",       "task_range": "T2-3",   "status": "done" },
     { "name": "Audit helper + admin user endpoints", "task_range": "T4-9", "status": "done" },
-    { "name": "Google OAuth + identities + tickets", "task_range": "T10-13", "status": "in_progress" },
+    { "name": "Google OAuth + identities + tickets", "task_range": "T10-13", "status": "done" },
     { "name": "Approval queue + WS + reaper",     "task_range": "T14-17", "status": "done" },
     { "name": "Change-password + rate limit",     "task_range": "T18-19", "status": "done" },
     { "name": "Web shared types + Google button + AwaitingApproval + ChangePassword", "task_range": "T20-23", "status": "done" },
