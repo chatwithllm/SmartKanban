@@ -155,6 +155,21 @@ test('reset-password rejects passwords shorter than 6 chars', async () => {
   assert.equal(res.json().error, 'password_too_short');
 });
 
+test('GET /api/admin/audit returns recent rows ordered desc with cursor pagination', async () => {
+  const res = await app.inject({
+    method: 'GET',
+    url: '/api/admin/audit?limit=5',
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(res.statusCode, 200);
+  const body = res.json() as { items: Array<{ action: string; created_at: string }>; next_before?: string };
+  assert.ok(Array.isArray(body.items));
+  assert.ok(body.items.length <= 5);
+  if (body.items.length >= 2) {
+    assert.ok(new Date(body.items[0]!.created_at) >= new Date(body.items[1]!.created_at));
+  }
+});
+
 test('POST /api/admin/users/:id/revoke-sessions deletes all sessions and audits the count', async () => {
   const target = await register('revoke_target');
   // create a second session by logging in again

@@ -147,6 +147,37 @@ export async function adminRoutes(app: FastifyInstance) {
     },
   );
 
+  app.get<{ Querystring: { limit?: string; before?: string } }>(
+    '/api/admin/audit',
+    { preHandler: requireAdmin },
+    async (req) => {
+      const rawLimit = Number(req.query.limit ?? '100');
+      const limit = Math.max(1, Math.min(200, Number.isFinite(rawLimit) ? rawLimit : 100));
+      const before = req.query.before;
+      const params: unknown[] = [limit];
+      let where = '';
+      if (before) {
+        params.push(before);
+        where = `WHERE a.created_at < $2`;
+      }
+      const { rows } = await pool.query(
+        `SELECT a.id, a.action, a.metadata, a.created_at,
+                a.actor_id, ua.name AS actor_name,
+                a.target_user_id, ut.name AS target_user_name,
+                a.target_pending_id
+         FROM admin_audit a
+         LEFT JOIN users ua ON ua.id = a.actor_id
+         LEFT JOIN users ut ON ut.id = a.target_user_id
+         ${where}
+         ORDER BY a.created_at DESC
+         LIMIT $1`,
+        params,
+      );
+      const next_before = rows.length === limit ? rows[rows.length - 1].created_at : undefined;
+      return { items: rows, next_before };
+    },
+  );
+
   app.post<{ Params: { id: string } }>(
     '/api/admin/users/:id/revoke-sessions',
     { preHandler: requireAdmin },
