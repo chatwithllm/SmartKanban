@@ -170,6 +170,24 @@ test('GET /api/admin/audit returns recent rows ordered desc with cursor paginati
   }
 });
 
+test('GET /api/admin/env-admins returns parsed list', async () => {
+  const original = process.env.ADMIN_EMAILS;
+  process.env.ADMIN_EMAILS = 'A@x.COM, b@x.com ,';
+  try {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/admin/env-admins',
+      headers: { cookie: adminCookie },
+    });
+    assert.equal(res.statusCode, 200);
+    const body = res.json() as { emails: string[] };
+    assert.deepEqual(body.emails, ['a@x.com', 'b@x.com']);
+  } finally {
+    if (original === undefined) delete process.env.ADMIN_EMAILS;
+    else process.env.ADMIN_EMAILS = original;
+  }
+});
+
 test('POST /api/admin/users/:id/revoke-sessions deletes all sessions and audits the count', async () => {
   const target = await register('revoke_target');
   // create a second session by logging in again

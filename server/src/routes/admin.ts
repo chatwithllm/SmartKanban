@@ -178,6 +178,14 @@ export async function adminRoutes(app: FastifyInstance) {
     },
   );
 
+  app.get('/api/admin/env-admins', { preHandler: requireAdmin }, async () => {
+    const list = (process.env.ADMIN_EMAILS ?? '')
+      .split(',')
+      .map(s => s.trim().toLowerCase())
+      .filter(Boolean);
+    return { emails: list };
+  });
+
   app.post<{ Params: { id: string } }>(
     '/api/admin/users/:id/revoke-sessions',
     { preHandler: requireAdmin },
