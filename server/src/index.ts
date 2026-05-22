@@ -27,6 +27,7 @@ import { wsRoutes } from './ws.js';
 import { startTelegramBot } from './telegram/bot.js';
 import { enqueueBrainstorm } from './ai/brainstorm_queue.js';
 import { recoverPendingInsights } from './insights.js';
+import { startReaper } from './reaper.js';
 
 const app = Fastify({ logger: true });
 
@@ -100,6 +101,8 @@ await app.listen({ port, host: '0.0.0.0' });
 if (process.env.TELEGRAM_BOT_TOKEN) {
   startTelegramBot().catch((err) => app.log.error(err, 'telegram bot error'));
 }
+
+startReaper();
 
 recoverPendingInsights()
   .then((ids) => {
