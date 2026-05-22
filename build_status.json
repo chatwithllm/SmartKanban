@@ -2,13 +2,13 @@
   "project": "KanbanClaude — admin-role + Google OAuth + approval queue",
   "plan": "docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md",
   "started_at": "2026-05-22T15:09:00Z",
-  "updated_at": "2026-05-23T01:10:00Z",
+  "updated_at": "2026-05-23T01:20:00Z",
   "total_tasks": 35,
-  "tasks_done": 26,
+  "tasks_done": 27,
   "current_task": {
-    "id": "Task 27",
-    "title": "AuditTab",
-    "phase": "Web admin UI shell + 3 tabs",
+    "id": "Task 28",
+    "title": "macOS URL scheme + Google sign-in + admin window + 3 views",
+    "phase": "macOS URL scheme + Google sign-in + admin window + 3 views",
     "status": "pending"
   },
   "phases": [
@@ -19,12 +19,12 @@
     { "name": "Approval queue + WS + reaper",     "task_range": "T14-17", "status": "done" },
     { "name": "Change-password + rate limit",     "task_range": "T18-19", "status": "done" },
     { "name": "Web shared types + Google button + AwaitingApproval + ChangePassword", "task_range": "T20-23", "status": "done" },
-    { "name": "Web admin UI shell + 3 tabs",      "task_range": "T24-27", "status": "in_progress" },
+    { "name": "Web admin UI shell + 3 tabs",      "task_range": "T24-27", "status": "done" },
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "pending" },
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "pending" }
   ],
-  "last_commit": "acf6859",
-  "last_gate_passed": "Task 26",
+  "last_commit": "1e84769",
+  "last_gate_passed": "Task 27",
   "open_issues": 0,
   "incidents": 0,
   "log": [
@@ -216,6 +216,13 @@
       "commit": "acf6859",
       "gate": "passed",
       "timestamp": "2026-05-23T01:10:00Z"
+    },
+    {
+      "task": "Task 27",
+      "title": "AuditTab paginated by cursor with collapsible metadata",
+      "commit": "1e84769",
+      "gate": "passed",
+      "timestamp": "2026-05-23T01:20:00Z"
     }
   ]
 }
