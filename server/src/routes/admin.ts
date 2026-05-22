@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import crypto from 'node:crypto';
 import { pool } from '../db.js';
 import { requireAdmin, hashPassword } from '../auth.js';
 import { writeAudit } from '../admin_audit.js';
@@ -175,6 +176,147 @@ export async function adminRoutes(app: FastifyInstance) {
       );
       const next_before = rows.length === limit ? rows[rows.length - 1].created_at : undefined;
       return { items: rows, next_before };
+    },
+  );
+
+  // Placeholder for WS broadcast — wired in Task 16.
+  function broadcastPendingChanged(_app: FastifyInstance, _pendingId: string) {
+    // Will be replaced with real broadcastAdmin('pending_changed', ...) in Task 16.
+  }
+
+  app.get('/api/admin/pending', { preHandler: requireAdmin }, async () => {
+    const { rows } = await pool.query(
+      `SELECT id, email, email_verified, name, picture_url, created_at
+       FROM pending_users
+       WHERE outcome = 'pending'
+       ORDER BY created_at ASC`,
+    );
+    return rows;
+  });
+
+  app.post<{ Params: { id: string }; Body: { short_name: string } }>(
+    '/api/admin/pending/:id/approve',
+    { preHandler: requireAdmin },
+    async (req, reply) => {
+      const { id } = req.params;
+      const { short_name } = req.body ?? ({} as { short_name: string });
+      if (!short_name || short_name.trim().length < 1 || short_name.trim().length > 16) {
+        return reply.code(400).send({ error: 'short_name must be 1-16 characters' });
+      }
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        const pending = await client.query<{
+          provider: string; provider_sub: string; email: string;
+          email_verified: boolean; name: string;
+        }>(
+          `SELECT provider, provider_sub, email, email_verified, name
+           FROM pending_users WHERE id = $1 AND outcome = 'pending' FOR UPDATE`,
+          [id],
+        );
+        if (pending.rowCount === 0) {
+          await client.query('ROLLBACK');
+          return reply.code(409).send({ error: 'pending_gone' });
+        }
+        const p = pending.rows[0]!;
+        // Pre-check best-effort; the 23505 catch below is the real guard.
+        const dup = await client.query(`SELECT 1 FROM users WHERE LOWER(email) = LOWER($1)`, [p.email]);
+        if (dup.rowCount! > 0) {
+          await client.query('ROLLBACK');
+          return reply.code(409).send({ error: 'email_in_use' });
+        }
+        let userId: string;
+        try {
+          const newUser = await client.query<{ id: string }>(
+            `INSERT INTO users (name, short_name, email, auth_hash)
+             VALUES ($1, $2, $3, 'oauth:google') RETURNING id`,
+            [p.name, short_name.trim(), p.email],
+          );
+          userId = newUser.rows[0]!.id;
+        } catch (e) {
+          await client.query('ROLLBACK');
+          if ((e as { code?: string }).code === '23505') {
+            return reply.code(409).send({ error: 'email_in_use' });
+          }
+          throw e;
+        }
+        await client.query(
+          `INSERT INTO user_identities (user_id, provider, provider_sub, email, email_verified)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [userId, p.provider, p.provider_sub, p.email, p.email_verified],
+        );
+        const sessionToken = crypto.randomBytes(32).toString('base64url');
+        const sessionExpires = new Date(Date.now() + 30 * 86400 * 1000);
+        await client.query(
+          `INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, $3)`,
+          [sessionToken, userId, sessionExpires],
+        );
+        const ticket = crypto.randomBytes(32).toString('base64url');
+        const ticketExpires = new Date(Date.now() + 60 * 1000);
+        await client.query(
+          `INSERT INTO auth_tickets (ticket, session_token, expires_at) VALUES ($1, $2, $3)`,
+          [ticket, sessionToken, ticketExpires],
+        );
+        await writeAudit(client, {
+          actor_id: req.user!.id,
+          action: 'approve_user',
+          target_user_id: userId,
+          target_pending_id: id,
+        });
+        await client.query(
+          `UPDATE pending_users
+             SET outcome = 'approved',
+                 outcome_ticket = $1,
+                 outcome_at = NOW()
+           WHERE id = $2`,
+          [ticket, id],
+        );
+        await client.query('COMMIT');
+        broadcastPendingChanged(app, id);
+        return { user_id: userId };
+      } catch (e) {
+        try { await client.query('ROLLBACK'); } catch { /* already rolled back */ }
+        throw e;
+      } finally {
+        client.release();
+      }
+    },
+  );
+
+  app.post<{ Params: { id: string } }>(
+    '/api/admin/pending/:id/reject',
+    { preHandler: requireAdmin },
+    async (req, reply) => {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        const updated = await client.query<{ email: string; name: string }>(
+          `UPDATE pending_users
+              SET outcome = 'rejected', outcome_at = NOW()
+            WHERE id = $1 AND outcome = 'pending'
+            RETURNING email, name`,
+          [req.params.id],
+        );
+        if (updated.rowCount === 0) {
+          await client.query('ROLLBACK');
+          return reply.code(409).send({ error: 'pending_gone' });
+        }
+        const snap = updated.rows[0]!;
+        await writeAudit(client, {
+          actor_id: req.user!.id,
+          action: 'reject_user',
+          target_pending_id: req.params.id,
+          metadata: { email: snap.email, name: snap.name },
+        });
+        await client.query('COMMIT');
+        broadcastPendingChanged(app, req.params.id);
+        return { ok: true };
+      } catch (e) {
+        try { await client.query('ROLLBACK'); } catch { /* already rolled back */ }
+        throw e;
+      } finally {
+        client.release();
+      }
     },
   );
 
