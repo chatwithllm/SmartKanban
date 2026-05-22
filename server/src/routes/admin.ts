@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { pool } from '../db.js';
-import { requireAdmin } from '../auth.js';
+import { requireAdmin, hashPassword } from '../auth.js';
 import { writeAudit } from '../admin_audit.js';
 
 export async function adminRoutes(app: FastifyInstance) {
@@ -99,6 +99,76 @@ export async function adminRoutes(app: FastifyInstance) {
         });
         await client.query('COMMIT');
         return { ok: true };
+      } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+      } finally {
+        client.release();
+      }
+    },
+  );
+
+  app.post<{ Params: { id: string }; Body: { new_password: string } }>(
+    '/api/admin/users/:id/reset-password',
+    { preHandler: requireAdmin },
+    async (req, reply) => {
+      const { id } = req.params;
+      const { new_password } = req.body ?? ({} as { new_password: string });
+      if (!new_password || new_password.length < 6) {
+        return reply.code(400).send({ error: 'password_too_short' });
+      }
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        const exists = await client.query(`SELECT 1 FROM users WHERE id = $1`, [id]);
+        if (exists.rowCount === 0) {
+          await client.query('ROLLBACK');
+          return reply.code(404).send({ error: 'not_found' });
+        }
+        const hash = await hashPassword(new_password);
+        await client.query(
+          `UPDATE users SET auth_hash = $1, must_change_password = TRUE WHERE id = $2`,
+          [hash, id],
+        );
+        await client.query(`DELETE FROM sessions WHERE user_id = $1`, [id]);
+        await writeAudit(client, {
+          actor_id: req.user!.id,
+          action: 'reset_password',
+          target_user_id: id,
+        });
+        await client.query('COMMIT');
+        return { ok: true };
+      } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+      } finally {
+        client.release();
+      }
+    },
+  );
+
+  app.post<{ Params: { id: string } }>(
+    '/api/admin/users/:id/revoke-sessions',
+    { preHandler: requireAdmin },
+    async (req, reply) => {
+      const { id } = req.params;
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        const exists = await client.query(`SELECT 1 FROM users WHERE id = $1`, [id]);
+        if (exists.rowCount === 0) {
+          await client.query('ROLLBACK');
+          return reply.code(404).send({ error: 'not_found' });
+        }
+        const del = await client.query(`DELETE FROM sessions WHERE user_id = $1`, [id]);
+        await writeAudit(client, {
+          actor_id: req.user!.id,
+          action: 'revoke_sessions',
+          target_user_id: id,
+          metadata: { count: del.rowCount ?? 0 },
+        });
+        await client.query('COMMIT');
+        return { ok: true, count: del.rowCount ?? 0 };
       } catch (e) {
         await client.query('ROLLBACK');
         throw e;
