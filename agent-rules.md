@@ -488,6 +488,49 @@ behaves correctly here" from "the change ships."
 
 ---
 
+## RULE 21 — Production Is Deploy-Only — Boot the Artifact on Dev First  [all] [server]
+
+**Source: KanbanClaude I-10 — workflow principle behind the rate-limit crash.**
+The broken image (`@fastify/rate-limit@10.x` against Fastify 4) was never
+booted anywhere before prod. `npm install` ran, `tsc` passed, 228 tests passed,
+`docker compose build` succeeded — but no one ever started the container locally
+to verify it could `app.listen()`. The first place that image ran was the prod
+cutover. It crashed in <1 second; site was down ~3 minutes.
+
+Then the FIX was hand-applied directly on the prod VM (sed pin → delete lock
+→ rebuild on prod → restart) under emergency pressure. The repo wasn't updated
+until afterwards. For the window between hot-patch and PR #41 merge, prod and
+main were divergent: any unrelated rebuild from main would have re-introduced
+the crash.
+
+The principle (two clauses, both binding):
+
+1. **Prod is deploy-only.** Never commit, edit, or run code changes directly
+   on a production host. Every change flows: dev edit → commit → push →
+   deploy script reads the artifact built from that commit. Emergency
+   incident fixes are NOT an exception — they still flow through the repo
+   (commit → CI build → deploy), even when the incident is hot. A hand-edit
+   on the box exists outside source control, drifts from main, and re-emerges
+   on the next clean rebuild.
+
+2. **"Verified on dev" means the deploy artifact booted.** Building the
+   artifact is not verifying it. The exact Docker image (or rpm, or
+   `.app`, or whatever ships) MUST be booted on dev or staging before it
+   touches prod. Boot means: container starts, `app.listen` succeeds,
+   `/health` responds 200, key startup logs match expectations. Running
+   `npm run dev` instead does NOT exercise plugin registration the same
+   way — `npm install` may resolve different deps than the Docker image,
+   bind-mounted source bypasses the COPY layer, dev server may skip the
+   plugin chain that boot-loads at production cold-start.
+
+If your deploy pipeline doesn't yet boot the built artifact on a
+dev/staging environment, that's a gap to close before the next deploy —
+not an excuse to skip the verification. At minimum: build the image
+locally + `docker run` it against a local DB + verify the health endpoint
+responds 200 before pushing the deploy.
+
+---
+
 ## ANTI-PATTERNS — Never Do These  [all]
 
 | Anti-pattern | Why it fails | Correct pattern |
@@ -517,6 +560,8 @@ behaves correctly here" from "the change ships."
 | Diagnose a multi-client network bug on one client only | Wrong client gets "fixed" while the real bug sits untouched | Rule 13 + Rule 16 — audit every client implementation; tag log lines by client |
 | `npm install <plugin>` without version pin | npm grabs latest, may target newer framework major → crash at boot | Rule 19 — pin to framework-compatible version, check peerDeps first |
 | Leave a verified fix in `git stash` instead of committing | Stash never ships; broken version goes to prod | Rule 20 — fix not done until committed + pushed + merged to deploy branch |
+| Edit / commit / hot-patch code directly on a production host | Change exists outside source control; reverts on next rebuild | Rule 21 — every change flows commit → deploy, even emergencies |
+| Skip booting the exact deploy artifact on dev/staging before prod | Boot-time crashes (plugin peerDep, missing env, etc.) only surface in prod | Rule 21 — build the image AND `docker run` it AND verify health before prod |
 
 ---
 

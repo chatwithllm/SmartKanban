@@ -99,3 +99,20 @@ Plan patches landed at commit `ece7d1c` before any task ran.
 - **User prompt that exposed it**: > "[server log] FastifyError: fastify-plugin: @fastify/rate-limit — expected '5.x' fastify version, '4.29.1' is installed"
 - **Fix**: Prod sed-pinned `@fastify/rate-limit` to `^9.1.0`, deleted lock, rebuilt image (`81ad933350172bb`), recreated container. Site recovered ~5 min later. PR #41 then aligned `main` with prod by popping the stash, committing, opening + merging the PR.
 - **Rules locked in**: RULE 19 (pin dependency installs to a version compatible with the project's framework major) + RULE 20 (a fix is not "done" until committed — a stash is not a deliverable).
+
+### I-10 workflow principle (locked as RULE 21)
+The rate-limit crash is the textbook case for two binding workflow rules:
+- The broken image never booted ANYWHERE before prod. `npm install`, `tsc`,
+  228 tests, and `docker compose build` all passed because none of them
+  actually started the container. The first place that image ran was the
+  prod cutover. The Fastify peerDep mismatch surfaces ONLY at
+  `app.register(rateLimit)` — which only fires during a real boot.
+- The fix was hand-applied directly on the prod VM (sed pin → delete lock
+  → rebuild on prod → restart) under incident pressure. Source control
+  didn't catch up until PR #41. For the window between hot-patch and PR
+  merge, prod and main were divergent — any unrelated rebuild from main
+  would have re-introduced the crash.
+Two failures of the same workflow principle: prod was treated as a place to
+edit code, and dev was treated as a place to compile code rather than run
+the deploy artifact. **RULE 21 locked**: production is deploy-only, and
+"verified on dev" means the exact built artifact booted, not just compiled.
