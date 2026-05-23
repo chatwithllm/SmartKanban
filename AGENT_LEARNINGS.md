@@ -62,6 +62,20 @@ Plan patches landed at commit `ece7d1c` before any task ran.
 - **Why I-4 missed it**: I-4's smoke test used a hardcoded inline payload constructed to match the known schema, not loaded from a file. The file-load pattern forces re-capture when the schema changes; the inline pattern hides drift. Rule 14 was correct in spirit — "captured real payload" — but "captured" was interpreted as "written by hand to match the schema," not "curl'd from the live server." Updated done-gate to be explicit: the sample must come from a real curl-capture, not be hand-constructed.
 - **Rule reinforcement**: Rule 14 already exists. Done-gate checkbox tightened to require file-loaded curl-captured sample.
 
+### I-7: WS storm — prior I-6 fix didn't address pre-login connect
+- **Symptom**: Server log shows /ws every ~500ms BEFORE login, even though I-6 raised the backoff floor to 1s.
+- **Root cause**: bootstrap()'s cached-user fallback restores a stored user without verifying session token still exists in keychain → starts WS → server 4401 → reconnect loop. The I-6 backoff math is correct in isolation, but the storm was driven by the bootstrap-cache path triggering connect() pre-auth, with no gate to block it. The cap-and-double logic was on the right code, but called too aggressively because each "successful" 4401 close resets connectedAt to nil.
+- **User prompt that exposed it**: > "/ws every 500ms BEFORE login. Storm happens with no session."
+- **Fix**: Added two gates. (1) WebSocketClient.connect() returns immediately if KeychainStore.read() == nil. (2) AuthStore.bootstrap() cached-fallback now also checks KeychainStore.read() — no token, no cached restore. (3) logout() now disconnects WS before clearing keychain so any queued reconnect fires connect() → hits guard → bails cleanly.
+- **Rule locked in**: RULE 16 — a retry/reconnect loop fix is incomplete until verified there is exactly ONE reconnect entry point AND every caller path respects the unauthenticated guard.
+
+### I-8: notifications table absent from schema.sql — migration-only
+- **Symptom**: GET /api/notifications returns 500 "relation notifications does not exist". 6 notifications tests fail. QA found via 500 in browser.
+- **Root cause**: notifications schema lived in server/migrations/2026-05-03-notifications.sql only. `npm run db:init` runs schema.sql, not migrations/. Fresh DBs had no table. The pre-existing failure was misclassified as infra noise during Task 34 — should have been a SCHEMA gap.
+- **User prompt that exposed it**: > "GET /api/notifications returns 500. The QA database was built from schema.sql. There is no notifications table."
+- **Fix**: Appended notifications + push_subscriptions DDL to server/schema.sql with idempotent IF NOT EXISTS clauses. db:init now produces a complete DB.
+- **Rule locked in**: RULE 17 — schema.sql is the single source of truth for `npm run db:init`. Every feature's tables must be in schema.sql, and every feature's tests must pass against a freshly-initialized DB.
+
 ### I-6: WebSocket reconnect storm — auth-failed loop without backoff escalation
 - **Symptom**: Server log shows `GET /ws` every ~1s, continuously. Existing client had exponential backoff (500ms→10s cap) but it wasn't working.
 - **Root cause**: Two compounding issues. (1) Session cookie not reliably attached to WS handshake — `URLSessionWebSocketTask` cookie behavior is undocumented; in practice the WS opened unauthenticated and the server closed with 4401 immediately. (2) `backoffMS` was reset on every `.hello` message — even a brief connect-then-drop (auth fail → close after handshake → hello never received → 5s armHelloDeadline fires → reconnect) cycled fast. (3) Floor was 500ms, cap was 10s — insufficient to rate-limit a storm.

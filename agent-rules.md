@@ -337,6 +337,53 @@ waiting for an outage to reveal it.
 
 ---
 
+## RULE 16 — A Retry-Loop Fix Is Verified, Not Assumed  [client] [all]
+
+**Source: macOS WS storm recurrence** — RULE 15 was correctly applied to
+scheduleReconnect, but the storm continued. The root cause was a different
+caller (cached-user bootstrap) starting the reconnect loop while the user was
+unauthenticated. The backoff math was on the right code; the wrong code was
+calling it.
+
+When fixing any retry/reconnect loop, BEFORE declaring the fix done:
+
+1. Grep for every caller of `connect()` / `retry()` / `reconnect()`. List them.
+2. For each: verify it can ONLY fire under a precondition that makes the retry
+   meaningful (authenticated, target reachable, prerequisites met). A caller
+   that can fire pre-condition is a hidden loop driver.
+3. Gate the operation INSIDE the function being called, not only at the call
+   site. Defense in depth — a future caller can't bypass the gate.
+4. Reproduce the failure end-to-end after the fix. Watching the backoff numbers
+   in unit tests doesn't prove the storm stopped if a different caller triggers
+   it.
+
+A retry-loop fix that hasn't been verified end-to-end with a fresh build of
+the actual binary on the actual platform is not a fix — it's a hypothesis.
+
+---
+
+## RULE 17 — schema.sql Is the Complete Source of Truth for db:init  [db] [server]
+
+**Source: notifications table missing from schema.sql** — the notifications
+feature's tables lived in server/migrations/2026-05-03-notifications.sql ONLY.
+`npm run db:init` runs schema.sql, not migrations. Fresh databases (CI test runs,
+QA setups, new contributor onboarding) silently had no notifications table.
+Notification tests failed for "infra" reasons and were dismissed.
+
+For projects whose init flow is `psql ... -f schema.sql`:
+
+- Every CREATE TABLE / CREATE INDEX / ALTER TABLE ADD COLUMN that any feature
+  depends on MUST appear in schema.sql.
+- New schema lands as: (a) the dated migration file, AND (b) appended to
+  schema.sql with idempotent guards (IF NOT EXISTS). The two stay in lockstep.
+- Before declaring any feature done, run `npm run db:init` against a FRESH
+  database (drop + create) and exercise the feature's test suite. Existing tests
+  passing on the dev DB prove nothing if the dev DB was migrated, not init'd.
+- "Pre-existing failure, unrelated" is not a status — it's a triage step. Each
+  pre-existing failure has a real cause; classify it before dismissing.
+
+---
+
 ## ANTI-PATTERNS — Never Do These  [all]
 
 | Anti-pattern | Why it fails | Correct pattern |
@@ -359,6 +406,9 @@ waiting for an outage to reveal it.
 | Hardcode smoke test payload instead of curl-capturing it | Payload diverges from live API; drift goes undetected | Rule 14 — load from a committed curl-captured file |
 | Reset retry backoff on first ack | Brief-connect-then-drop loops at the floor | Rule 15 — reset only on sustained success (>5s) |
 | Hardcoded ≤500ms retry floor | One client can outpace a struggling service | Rule 15 — floor ≥1s |
+| Fix retry-loop math without auditing every caller | Wrong code path drives the storm | Rule 16 — grep all callers, gate inside the function |
+| Schema in migration only, not schema.sql | Fresh db:init missing tables; tests fail for "infra" | Rule 17 — schema.sql is the source of truth |
+| Dismiss "pre-existing test failure" without diagnosing | Hides real defects (e.g. missing tables) | Rule 17 — classify every failure, don't ignore |
 
 ---
 

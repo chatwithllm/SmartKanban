@@ -57,6 +57,20 @@ layer. Lines marked `[all]` always apply.
       Verified by reading the code OR running the included backoff smoke test
       (`macOS/Scripts/ws_backoff_smoke_test.swift` or equivalent).
 
+- [ ] `[client]` If this task modified a retry/reconnect loop, EVERY caller of
+      the loop's entry point was grepped and verified to be gated on the loop's
+      preconditions (auth, prerequisites). The gate also exists inside the
+      function being called (defense in depth).
+
+- [ ] `[db]` If this task added or modified any table/column/index, the change
+      landed in BOTH the dated migration file AND `server/schema.sql` (idempotent
+      with IF NOT EXISTS). A fresh `npm run db:init` produces a complete schema.
+
+- [ ] `[server]` If the task's test suite had any pre-existing failure on the
+      target table/area, that failure was diagnosed and either fixed in this
+      commit OR explicitly classified with a tracked reason — never dismissed
+      as "infra."
+
 ## If a line fails
 
 Do not report done. Find the root cause, fix it, and re-run the gate from the top —
