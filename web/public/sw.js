@@ -1,11 +1,19 @@
 // Minimal offline-aware service worker: network-first for HTML; cache-first for hashed assets.
-const CACHE = 'kanban-v1';
+// CACHE name MUST bump on any frontend fix so old tabs pick up the new bundle —
+// the activate handler below deletes every cache that doesn't match.
+const CACHE = 'kanban-v2';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(self.skipWaiting());
 });
 self.addEventListener('activate', (e) => {
-  e.waitUntil(self.clients.claim());
+  e.waitUntil(
+    (async () => {
+      const names = await caches.keys();
+      await Promise.all(names.filter((n) => n !== CACHE).map((n) => caches.delete(n)));
+      await self.clients.claim();
+    })(),
+  );
 });
 
 self.addEventListener('fetch', (event) => {
