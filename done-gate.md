@@ -104,3 +104,15 @@ a fix can break an earlier line. Repeat until every applicable line is true.
 When the learning loop locks a rule that introduces a new verification step, add a
 checkbox here in the same commit. The gate grows with the project's institutional
 memory.
+
+- [ ] `[all]` If this task ran `npm install <pkg>` / `pnpm add` / `cargo add` /
+      `pip install` against the project's package manifest, the new dep is
+      explicitly version-pinned to a range compatible with the project's
+      framework major. For framework plugins, the plugin's peerDeps were
+      checked against the project's framework version BEFORE the install.
+      Verified by a boot-time smoke (real `app.register` succeeds), not just
+      `npm install` + `tsc` exit 0. (Rule 19)
+- [ ] `[all]` `git status` is clean and `git stash list` is empty for any
+      hunk produced or modified by this task. Every fix is committed AND
+      pushed to a branch that the deploy artifact reads from. A working-tree
+      or stashed change is not a delivered fix. (Rule 20)
