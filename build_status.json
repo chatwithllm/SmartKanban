@@ -2,7 +2,7 @@
   "project": "KanbanClaude — admin-role + Google OAuth + approval queue",
   "plan": "docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md",
   "started_at": "2026-05-22T15:09:00Z",
-  "updated_at": "2026-05-23T08:40:00Z",
+  "updated_at": "2026-05-23T08:55:00Z",
   "total_tasks": 35,
   "tasks_done": 34,
   "current_task": {
@@ -23,10 +23,10 @@
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "done" },
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "in_progress" }
   ],
-  "last_commit": "efb9d20",
-  "last_gate_passed": "I-4 fix",
+  "last_commit": "36c1798",
+  "last_gate_passed": "I-6 fix",
   "open_issues": 0,
-  "incidents": 4,
+  "incidents": 6,
   "known_pre_existing_failures": {
     "suite": "notifications.test.ts",
     "count": 6,
@@ -285,6 +285,22 @@
       "commit": "efb9d20",
       "gate": "passed",
       "timestamp": "2026-05-23T08:40:00Z"
+    },
+    {
+      "task": "I-5 fix",
+      "title": "AdminUserRow decode — smoke test load from committed curl-captured file (decode_samples/admin_users.json) + dump_admin_users.sh",
+      "commit": "bde2e8c",
+      "gate": "passed",
+      "timestamp": "2026-05-23T08:48:00Z",
+      "root_cause": "Smoke test used hardcoded inline payload; curl-captured file now committed and loaded at test time"
+    },
+    {
+      "task": "I-6 fix",
+      "title": "WS auth via explicit Cookie header + backoff hardened (1s floor, 30s cap, sustained reset)",
+      "commit": "5283714",
+      "gate": "passed",
+      "timestamp": "2026-05-23T08:52:00Z",
+      "root_cause": "URLSessionWebSocketTask cookie quirk (unauthenticated WS) + backoffMS reset on hello (brief-connect-then-drop looped at floor)"
     },
     {
       "task": "Task 34",
