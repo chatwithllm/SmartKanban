@@ -44,6 +44,10 @@ layer. Lines marked `[all]` always apply.
 - [ ] `[all]` If this task added or changed an auth path or any config-gated UI,
       every other client that has the equivalent surface (web/native/mobile) was
       updated to match — same fetch, same gate, same fallback when disabled.
+- [ ] `[client]` Every new/modified Codable that mirrors a server response was
+      decoded against a real captured JSON payload (curl → file → JSONDecoder),
+      not just reviewed against the route handler source. Null and missing-key
+      variants for every DB-nullable column were included as regression cases.
 
 ## If a line fails
 

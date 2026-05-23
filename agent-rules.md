@@ -286,6 +286,33 @@ is a half-ship. The done-gate must include a parity check.
 
 ---
 
+## RULE 14 — Decode Cross-Client Codable Models Against Real Captured Payloads  [client]
+
+**Source: macOS admin users decoding failure** — `AdminUserRow.swift` looked correct
+field-for-field by reading the route handler, but failed against the actual JSON
+because `short_name` is nullable in the DB schema and Swift's non-optional `String`
+field crashed on `null` with "The data couldn't be read because it is missing". The
+web client and the macOS client used different decoders — web's `JSON.parse` is
+permissive with nulls and missing keys, Swift's `JSONDecoder` is strict on types and
+required keys. The mismatch only surfaced at runtime.
+
+Before declaring any cross-client Codable model "done":
+
+- Curl the real endpoint, capture the JSON to a file.
+- Write a tiny standalone decode test that loads that file and decodes the model.
+  In Swift specifically, `JSONDecoder().decode(T.self, from: data)` MUST succeed.
+- Include regression cases for every nullable DB column that maps to a non-optional
+  Swift field: test with `null` and with the key absent entirely.
+- Commit the captured sample alongside the test so future schema drifts surface
+  at decode-test time rather than at runtime.
+
+Static reading of "the server returns X" lies about TIMESTAMPTZ → Date → string
+coercion, about pg COUNT(*) coming back as int vs string, about COALESCE(…, '[]')
+vs null, about UUID case quirks, and about DB-nullable columns the server code
+usually fills. The decode-against-real-payload test is the only thing that's truthful.
+
+---
+
 ## ANTI-PATTERNS — Never Do These  [all]
 
 | Anti-pattern | Why it fails | Correct pattern |
@@ -304,6 +331,7 @@ is a half-ship. The done-gate must include a parity check.
 | Hand the user a smoke-test checklist | Transfers verification to the user | Rule 0 — do every check yourself |
 | Seed users + flip a flag to test admin path | Skips the empty-state branch entirely | Rule 12 — clear table, hit the real registration path |
 | Wire an auth method only on one client | Other clients can't use it; partial ship | Rule 13 — parity across clients, gate on config |
+| Write a Codable from reading the route handler alone | Hidden type/format mismatches break decode at runtime | Rule 14 — decode against captured real JSON |
 
 ---
 

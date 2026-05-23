@@ -45,3 +45,11 @@ Plan patches landed at commit `ece7d1c` before any task ran.
 - **User prompt that exposed it**: > "QA Step 9: on macOS, click Sign in with Google. The button isn't there."
 - **Fix**: Added `AuthConfig` codable + `Endpoint.authConfig` case. LoginView fetches config on mount, shows Google button + OR divider when `google_enabled == true`. AccountTab linking button now also gates on the same config — hides when google_enabled is false.
 - **Rule locked in**: RULE 13 — login-affecting features must reach every client; gate on config, not on hardcoded assumptions.
+
+### I-4: macOS AdminUserRow decoding failed against real server response
+- **Symptom**: After Google sign-in, macOS app showed "Couldn't load users: Decoding error: The data couldn't be read because it is missing." Web admin path worked fine — same endpoint, different decoder.
+- **Root cause**: `short_name` is nullable in the DB schema (`short_name text` with no `NOT NULL`). The server query uses `COALESCE(u.short_name, u.name)` as protection, but the Swift struct declared `shortName: String` (non-optional). If `short_name` is `null` in the JSON — either because the COALESCE didn't apply in an earlier code state, or via a direct DB row — Swift's `JSONDecoder` raises `DecodingError.keyNotFound` (localized: "The data couldn't be read because it is missing"). Web's `JSON.parse` is permissive with nulls; Swift is strict.
+- **User prompt that exposed it**: > "QA Step 9 succeeded — Google sign-in landed user 'Narc' in the app. Immediately after, red toast on macOS: 'Couldn't load users: Decoding error: The data couldn't be read because it is missing.'"
+- **Fix**: Added a custom `init(from:)` to `AdminUserRow` that decodes `short_name` via `decodeIfPresent` and falls back to `name` when null or absent. `identities`, `lastLoginAt`, and `sessionCount` also hardened with safe fallbacks.
+- **Why tests missed it**: macOS has no test target wired up. Codables get verified only when the running app touches the real endpoint. A standalone swift script `macOS/Scripts/decode_smoke_test.swift` now smoke-tests this decode against a captured real payload, including null/missing `short_name` regression cases.
+- **Rule locked in**: RULE 14 — every cross-client Codable must have a decoding smoke test against a captured real payload.
