@@ -313,6 +313,30 @@ usually fills. The decode-against-real-payload test is the only thing that's tru
 
 ---
 
+## RULE 15 — Capped Exponential Backoff on Every Reconnect/Retry Loop  [client] [all]
+
+**Source: macOS WS reconnect storm** — the WebSocket client looked like it had
+backoff (500ms→10s) but its backoff reset on every `hello` message. A flaky auth
+state caused brief connects + immediate drops; backoff reset every iteration and
+the client hammered the server every ~1s.
+
+Any client-side reconnect or retry loop (WebSocket, polling, retry-after-failure
+fetch, queue consumer) MUST:
+
+1. Start at a floor ≥1 second. A 500ms or 100ms floor will overwhelm a service
+   in trouble.
+2. Double after each failure, capped at ≥10 seconds (30s for a long-lived
+   connection is reasonable).
+3. Reset to the floor ONLY after a sustained successful interval — receipt of a
+   handshake/hello/ack alone is not enough. A successful connect that immediately
+   drops should count as a failure, not a success.
+4. Log the next-attempt delay so operators can spot a storm at a glance.
+
+A retry loop without an explicit cap + sustained-success reset is a footgun
+waiting for an outage to reveal it.
+
+---
+
 ## ANTI-PATTERNS — Never Do These  [all]
 
 | Anti-pattern | Why it fails | Correct pattern |
@@ -332,6 +356,9 @@ usually fills. The decode-against-real-payload test is the only thing that's tru
 | Seed users + flip a flag to test admin path | Skips the empty-state branch entirely | Rule 12 — clear table, hit the real registration path |
 | Wire an auth method only on one client | Other clients can't use it; partial ship | Rule 13 — parity across clients, gate on config |
 | Write a Codable from reading the route handler alone | Hidden type/format mismatches break decode at runtime | Rule 14 — decode against captured real JSON |
+| Hardcode smoke test payload instead of curl-capturing it | Payload diverges from live API; drift goes undetected | Rule 14 — load from a committed curl-captured file |
+| Reset retry backoff on first ack | Brief-connect-then-drop loops at the floor | Rule 15 — reset only on sustained success (>5s) |
+| Hardcoded ≤500ms retry floor | One client can outpace a struggling service | Rule 15 — floor ≥1s |
 
 ---
 

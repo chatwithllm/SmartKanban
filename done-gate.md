@@ -45,9 +45,17 @@ layer. Lines marked `[all]` always apply.
       every other client that has the equivalent surface (web/native/mobile) was
       updated to match — same fetch, same gate, same fallback when disabled.
 - [ ] `[client]` Every new/modified Codable that mirrors a server response was
-      decoded against a real captured JSON payload (curl → file → JSONDecoder),
-      not just reviewed against the route handler source. Null and missing-key
-      variants for every DB-nullable column were included as regression cases.
+      decoded against a CURL-CAPTURED JSON payload loaded from a committed file
+      (not a hand-constructed or hardcoded inline sample). The sample was obtained
+      by running `curl` against a live server and saving the output. Null and
+      missing-key variants for every DB-nullable column were included as regression
+      cases. Script under `macOS/Scripts/decode_smoke_test.swift` (or equivalent)
+      loads the sample file and exits 0.
+- [ ] `[client]` If this task added or modified any retry/reconnect loop, the loop
+      uses capped exponential backoff (floor ≥1s, cap ≥10s, doubling) with reset
+      ONLY after a sustained successful operation (not on first handshake/ack alone).
+      Verified by reading the code OR running the included backoff smoke test
+      (`macOS/Scripts/ws_backoff_smoke_test.swift` or equivalent).
 
 ## If a line fails
 
