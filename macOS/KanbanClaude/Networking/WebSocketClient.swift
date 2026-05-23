@@ -13,7 +13,8 @@ final class WebSocketClient: ObservableObject {
     private var task: URLSessionWebSocketTask?
     private var session: URLSession?
     private var receiveLoop: Task<Void, Never>?
-    private var backoffMS: Int = 500
+    private var backoffMS: Int = 1_000   // floor ≥1s per Rule 15
+    private var connectedAt: Date?        // when the current connection last received hello
     private var helloDeadline: Task<Void, Never>?
     private var subscribers: [UUID: (BroadcastEvent) -> Void] = [:]
 
@@ -44,10 +45,20 @@ final class WebSocketClient: ObservableObject {
         cfg.httpShouldSetCookies = true
         let s = URLSession(configuration: cfg)
         session = s
-        let t = s.webSocketTask(with: Constants.wsURL)
+        // Build an explicit URLRequest with the Cookie header so the session token
+        // reaches the WS handshake regardless of URLSessionWebSocketTask cookie-
+        // storage quirks (Apple's docs are silent on whether it attaches cookies
+        // automatically during the HTTP Upgrade). Root cause of I-6 reconnect storm:
+        // unauthenticated WS was immediately closed by the server (4401), backoff
+        // reset on every brief hello-then-drop, hammering the server every ~1s.
+        var req = URLRequest(url: Constants.wsURL)
+        if let token = KeychainStore.read() {
+            req.setValue("kanban_session=\(token)", forHTTPHeaderField: "Cookie")
+        }
+        let t = s.webSocketTask(with: req)
         task = t
         t.resume()
-        log.info("ws: connecting \(Constants.wsURL.absoluteString, privacy: .public)")
+        log.info("ws: connecting \(Constants.wsURL.absoluteString, privacy: .public) (auth=\(KeychainStore.read() != nil, privacy: .public))")
         startReceiveLoop()
         armHelloDeadline()
     }
@@ -98,7 +109,9 @@ final class WebSocketClient: ObservableObject {
             if case .hello = ev {
                 helloDeadline?.cancel(); helloDeadline = nil
                 isConnected = true
-                backoffMS = 500
+                connectedAt = Date()
+                // Do NOT reset backoffMS here. Reset only after a sustained connection
+                // (>5s) — a brief connect-then-drop must not reset the backoff (Rule 15).
             }
             lastEvent = ev
             for handler in subscribers.values { handler(ev) }
@@ -124,8 +137,16 @@ final class WebSocketClient: ObservableObject {
 
     private func scheduleReconnect() {
         disconnect(reason: "backoff")
+        // Reset backoff only if the previous connection was sustained (>5s).
+        // A brief connect-then-drop (auth failure, server hiccup) must NOT reset
+        // the floor — doing so caused the I-6 reconnect storm (Rule 15).
+        if let t = connectedAt, Date().timeIntervalSince(t) > 5 {
+            backoffMS = 1_000
+        }
+        connectedAt = nil
         let ms = backoffMS
-        backoffMS = min(backoffMS * 2, 10_000)
+        backoffMS = min(backoffMS * 2, 30_000)   // cap raised to 30s (was 10s)
+        log.info("ws: reconnecting in \(ms, privacy: .public)ms (next=\(self.backoffMS, privacy: .public)ms)")
         Task { [weak self] in
             try? await Task.sleep(nanoseconds: UInt64(ms) * 1_000_000)
             await MainActor.run { self?.connect() }
@@ -134,7 +155,8 @@ final class WebSocketClient: ObservableObject {
 
     private func handleWake() {
         log.info("ws: wake detected — reconnecting")
-        backoffMS = 500
+        backoffMS = 1_000
+        connectedAt = nil
         connect()
     }
 }
