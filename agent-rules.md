@@ -422,6 +422,72 @@ For projects whose init flow is `psql ... -f schema.sql`:
 
 ---
 
+## RULE 19 — Pin Dependency Installs to a Framework-Compatible Version  [server] [client] [all]
+
+**Source: KanbanClaude I-10.** Task 10 of the admin-role build ran
+`npm install google-auth-library @fastify/rate-limit` with no version
+constraint. npm grabbed `@fastify/rate-limit@10.3.0`, which targets
+Fastify 5. The project runs on Fastify ^4.28.1. The mismatch only surfaced
+when production cut over and the server crash-looped — `npm install`, `tsc`,
+`docker build`, and 228 passing tests all looked green because none of them
+booted a real Fastify app with the plugin loaded.
+
+For any dependency install (npm, pnpm, yarn, cargo, pip, gem, go get):
+
+1. **Always specify a version constraint compatible with the project's
+   framework major.** `npm install <plugin>` → `npm install <plugin>@^X`
+   where X is the latest release that supports the project's framework. For
+   plugins of any framework (Fastify, Express, Vue, Rails, Django…), check
+   the plugin's release notes / peerDeps BEFORE installing.
+
+2. **Pre-flight grep the project's framework major** before picking a version:
+   ```bash
+   grep '"<framework>":' package.json   # e.g. "fastify": "^4.28.1"
+   ```
+   Then on the npm/registry page (or in CHANGELOG), find the highest
+   plugin major that lists the project's framework major as a peer / supported
+   range.
+
+3. **Adding a plugin to an existing app must include a boot-time smoke test**
+   — start the server (or a minimal harness that does the actual `app.register`)
+   and confirm it boots. Unit tests don't catch peerDep mismatches because
+   they typically stub the plugin or don't load the full plugin chain.
+
+A plugin installed without checking framework compatibility is a production
+outage waiting for the next deploy.
+
+---
+
+## RULE 20 — A Fix Is Not "Done" Until Committed — Stash Is Not a Deliverable  [all]
+
+**Source: KanbanClaude I-10.** The `@fastify/rate-limit` v10→v9 downgrade was
+identified locally during the macos-build push. The fix was applied to
+`package.json` + `package-lock.json` in the working tree, then **stashed**
+instead of committed. The stash held the correct version for hours while
+the broken `^10.3.0` stayed in source. Production cut over to the broken
+version. After the prod crash, the local stash was popped, committed, and
+PR-merged — but the outage had already happened.
+
+The per-task done-gate MUST verify:
+
+1. **The fix is committed.** `git status` is clean (no uncommitted/stashed
+   changes related to the fix). `git log` shows the commit. The fix exists
+   in a branch, not just a working tree or stash.
+2. **The fix is pushed and merged into the deploy source** (main, or whatever
+   branch the deploy reads from). `git log origin/main --grep="<fix description>"`
+   finds it. A fix on a local branch that hasn't been pushed is still not
+   shipped.
+3. **`git stash list` is empty at end-of-task.** Stashes accumulate fixes that
+   were tested-then-deferred. A stash that survives the task is a bug carrier
+   — either commit it, drop it, or document it as deferred work (with a
+   tracking issue).
+
+Working code in a working tree is not a fix. A fix that doesn't reach the
+deploy artifact is a hypothesis. The done-gate must distinguish "the change
+behaves correctly here" from "the change ships."
+
+---
+
 ## ANTI-PATTERNS — Never Do These  [all]
 
 | Anti-pattern | Why it fails | Correct pattern |
@@ -449,6 +515,8 @@ For projects whose init flow is `psql ... -f schema.sql`:
 | Dismiss "pre-existing test failure" without diagnosing | Hides real defects (e.g. missing tables) | Rule 17 — classify every failure, don't ignore |
 | Ship frontend fix without bumping service-worker cache | Old tabs keep serving the buggy bundle forever | Rule 18 — bump CACHE name + activate-handler delete |
 | Diagnose a multi-client network bug on one client only | Wrong client gets "fixed" while the real bug sits untouched | Rule 13 + Rule 16 — audit every client implementation; tag log lines by client |
+| `npm install <plugin>` without version pin | npm grabs latest, may target newer framework major → crash at boot | Rule 19 — pin to framework-compatible version, check peerDeps first |
+| Leave a verified fix in `git stash` instead of committing | Stash never ships; broken version goes to prod | Rule 20 — fix not done until committed + pushed + merged to deploy branch |
 
 ---
 
