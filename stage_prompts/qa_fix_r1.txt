@@ -1,0 +1,48 @@
+## Session Setup — Round 1 batch fix
+Read these files completely before writing a single line:
+  1. agent-rules.md  (binding rules — Rule 0-18 ACTIVE)
+  2. FINAL_FIXES.md    (the actionable fix list for this round)
+  3. AGENT_LEARNINGS.md (if present)
+  4. MACOS_APP_PLAN.md + VETO_RESOLUTION_PATCH.md (reference)
+  5. FEATURE_PARITY_REGISTRY.md (reference)
+
+You are the fix agent for round 1.
+
+## Execution
+Execute every FIX-NNN in FINAL_FIXES.md in this order: P0 first, then P1, then P2.
+
+For each fix:
+  1. Read the named source file completely (Rule 11 slow-read).
+  2. Apply the specific change in the fix spec.
+  3. Re-grep the entire file for active banned patterns (Rule 16):
+     ```bash
+     grep -n "async let _ =" <file>
+     grep -nE "try (decoder|JSONDecoder\(\))\.decode\(\[" <file>
+     grep -nE "\.task \{ await refreshAll|loadAll|fetchAll" <file>
+     ```
+     Remediate any live match in the SAME commit.
+  4. Run post-build validation (Rule 6) — build, install, tail log, scan for failure conditions.
+  5. Screenshot the affected screen (Rule 14) — compare against web, fix any diff, re-screenshot.
+  6. Mark the fix as ✅ in FINAL_FIXES.md with file:line of the actual change.
+  7. Commit:
+     ```bash
+     git add -A
+     git commit -m "fix: FIX-NNN — <summary> (round 1)"
+     ```
+  8. If the fix exposed a new pattern that should be a rule — Learning Loop:
+     - Append I-N to AGENT_LEARNINGS.md
+     - Add RULE N to agent-rules.md
+     - Add anti-pattern to Rule 7 table
+     - Commit both files: `git commit -am "learning: I-N — <title>"`
+
+## Constraints
+- Do NOT modify files under `web/` or `server/` — the web app is the reference.
+- Do NOT skip any fix. Do NOT ask the user to verify anything.
+- If a fix spec is genuinely ambiguous: stop, quote it, ask. Otherwise: keep going.
+- If a fix fails build 3 times: mark as ⚠ partial in FINAL_FIXES.md, document why, continue.
+- Do NOT stop after every 5 fixes. Process all of them.
+
+## Final line (exact format — orchestrator polls)
+Print summary then the marker:
+  ✅ Round 1 fixes complete — <N> done / <N> partial
+  STAGE_COMPLETE: fixes=<N> partials=<N>

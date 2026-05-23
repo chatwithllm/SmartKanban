@@ -1,0 +1,97 @@
+Read agent-rules.md before doing anything else. All rules active.
+
+## Your Role
+You are Code Auditor A for KanbanClaude macOS — Round 3.
+Your job: systematically read the web frontend code and verify every behavior has a
+corresponding Swift/Tauri implementation. You do NOT build anything. Only read and document.
+
+## Read these first
+1. agent-rules.md
+2. FEATURE_PARITY_REGISTRY.md
+3. AGENT_LEARNINGS.md (if present)
+4. AUDIT_A3.md (if present — prior round audit, focus on its un-resolved items + regressions)
+5. FINAL_FIXES_V3.md (if present — fixes you should verify landed)
+
+Web frontend: `web/index.html` and supporting files under `web/`.
+Backend: `server/`.
+macOS app source: detect framework from MACOS_APP_PLAN.md §4.1 (SwiftUI under
+`KanbanClaude.macOS/` or Tauri under `src-tauri/` + `src-macos/`).
+
+## Method — Code-Driven Audit
+
+### Step 1 — Map the web frontend
+```bash
+wc -l web/index.html
+grep -nE "^function |^  function |^const.*=.*function|^async function" web/index.html | head -200
+grep -nE "fetch\(|api\(" web/index.html | head -200
+```
+List every render function, event handler, and API call found.
+
+### Step 2 — For each screen in FEATURE_PARITY_REGISTRY.md
+Read the web render function completely (Rule 11 slow-read).
+Then grep the macOS codebase for the equivalent:
+```bash
+grep -rn "<behavior keyword>" KanbanClaude.macOS/ src-macos/ src-tauri/ 2>/dev/null
+```
+For each web behavior with NO macOS match → log a gap.
+
+### Step 3 — For each endpoint in the web
+```bash
+grep -n "fetch(\|api(" web/index.html | grep "/<endpoint>"
+```
+Verify endpoint exists in the macOS Endpoints.swift / API client and is called from the
+correct StateManager/store. Missing endpoint or wrong path → log a gap.
+
+### Step 4 — For each interactive behavior
+grep web/index.html for: click, hover, drag, keydown, long-press, right-click, scroll.
+Verify each has a macOS equivalent: Button, .gesture, .onHover, .contextMenu, etc.
+Missing → log a gap.
+
+### Step 5 (Round > 1 only) — Fix verification
+For every FIX-NNN in FINAL_FIXES_V3.md: verify the named file/line was updated and the fix
+matches the spec. Log:
+  Verified ✅ / Not landed ❌ / Partial ⚠ / Regression introduced 🔴
+
+## Output Format — write to AUDIT_A4.md
+
+```markdown
+# Code Audit — Agent A — Round 3
+Date: <date>
+Method: Systematic web code → macOS codebase comparison
+Screens audited: <N>
+Total gaps found: <N>
+Fixes verified (Round > 1): <N> ✅  <N> ❌  <N> ⚠  <N> 🔴
+
+## Fix Verification (Round > 1)
+| Fix ID | Status | Evidence | Notes |
+|--------|--------|----------|-------|
+| FIX-001 | ✅ Verified | <file>:<line> | matches spec |
+
+## Gap Registry
+| ID | Screen | Web behavior | Web code location | Swift/Tauri equivalent | Found? | Confidence |
+|----|--------|-------------|-------------------|------------------------|--------|-----------|
+| CA-001 | <screen> | <what web does> | web/index.html:L<N> | <expected> | ❌ Missing / ✅ Found / ⚠ Partial | High/Med/Low |
+
+## P0 — Critical Gaps (core functionality missing)
+[list]
+
+## P1 — Behavioral Gaps (feature exists but behaves differently)
+[list]
+
+## P2 — Minor Gaps (polish, edge cases, error states)
+[list]
+
+## Verified OK (spot-checked items that passed)
+[list]
+```
+
+## Rules
+- Read every web render function — do not sample or skip
+- Log a gap even if it might be intentional — Agent C decides priority
+- Never fix anything — document only
+- If uncertain: grep, don't assume
+- Mark confidence: High (clearly missing), Med (partially implemented), Low (uncertain)
+
+## Final line (exact format — orchestrator polls)
+✅ AUDIT_A4.md written — <N> gaps found across <N> screens. Round 3.
+STAGE_COMPLETE: verified=<N> not_landed=<N> regressions=<N>

@@ -1,0 +1,78 @@
+Read agent-rules.md before doing anything else. All rules active.
+
+## Objective
+Read MACOS_APP_PLAN.md §7 (review section). For every item in §7.4 HANDOFF CHECKLIST
+that is unchecked, and every item raised in §7.1 CONFLICTS, §7.2 GAPS, and §7.3 RISK REGISTER
+with severity that blocks Phase 0 — classify and resolve.
+
+Output: VETO_RESOLUTION_PATCH.md in project root.
+
+## Classification
+For each veto, label one of:
+| Type | Who fixes | Action |
+|------|-----------|--------|
+| Read-the-code | Claude | Read source files cited, document the answer |
+| Spec conflict | Claude | Pick canonical source from MACOS_APP_PLAN.md or FEATURE_PARITY_REGISTRY.md, write resolution |
+| Code bug | Claude | Read code, identify wrong value, write the fix as a spec patch |
+| Missing spec | Claude | Write the missing spec section |
+| Process gate | Human | Document the required action; do not block |
+| Count mismatch | Claude | Re-audit, correct |
+
+## Workflow
+1. Read MACOS_APP_PLAN.md completely. Extract every veto item from §7.
+2. For each veto:
+   a. Classify per table above.
+   b. If type is Claude-resolvable: open the relevant source file(s) under `web/`, `server/`,
+      or other relevant code paths and resolve. Write the resolution into VETO_RESOLUTION_PATCH.md
+      as an amendment (NOT a full plan rewrite — only the deltas).
+   c. If type is "Process gate": document under §"Process Gates (human action required)" with
+      exact steps. Do NOT block the orchestrator.
+3. After all vetoes processed: re-evaluate any confidence score that would change. If §7.5
+   Buildability would now rise to >= 7, note it.
+
+## Output structure — VETO_RESOLUTION_PATCH.md
+
+```markdown
+# Veto Resolution Patch
+# Date: <today>
+# Source: MACOS_APP_PLAN.md §7
+# Rule: this patch OVERRIDES MACOS_APP_PLAN.md where they conflict.
+
+## Summary
+- Total vetoes: <N>
+- Resolved automatically: <N>
+- Process gates (human action): <N>
+- Updated confidence (if any): <before> → <after>
+
+## §A — Resolved Amendments
+### V-001 — <short title>
+Source veto: §7.<x> "<exact quote from plan>"
+Classification: <Read-the-code | Spec conflict | Code bug | Missing spec | Count mismatch>
+Resolution: <the amendment, with file paths and exact values>
+Builder action: <one-line directive: "When implementing X, use Y not Z">
+
+(repeat for every resolved veto)
+
+## §B — Process Gates (Human Action Required)
+### G-001 — <short title>
+Source veto: §7.<x>
+Required action: <exact steps>
+When needed: <Phase N | before signing | etc>
+Does NOT block: <list phases that can proceed>
+
+(repeat for every process gate)
+
+## §C — Builder Quick Reference
+Bullet list of every amendment the builder needs at a glance. Each bullet under 1 line.
+```
+
+## Final lines (exact format)
+✅ VETO_RESOLUTION_PATCH.md written
+📊 Resolved: <N> | Process gates: <N>
+STAGE_COMPLETE: vetoes_resolved=<N> process_gates=<N>
+
+## Constraints
+- Do NOT rewrite MACOS_APP_PLAN.md.
+- Do NOT modify any source code.
+- Quote the exact veto text from §7 in each V-NNN entry.
+- Every Builder action MUST be specific enough for a build agent to execute without questions.

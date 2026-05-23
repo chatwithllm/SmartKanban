@@ -29,3 +29,16 @@ logs/security/
 docker-compose.override.yml
 .claude/
 design_*.md
+
+# macOS build outputs
+macOS/DerivedData/
+macOS/dist/
+macOS/build/
+macOS/*.xcodeproj/xcuserdata/
+macOS/*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcuserstate
+
+# orchestrator generated
+__pycache__/
+orchestrator.log
+orchestrator_status.json

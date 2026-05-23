@@ -213,4 +213,37 @@ export const api = {
     req<{ nodes: Card[]; edges: CardLink[]; insights: Insight[] }>(
       `/api/cards/${cardId}/chain?depth=${depth}`,
     ),
+
+  authConfig: () => req<{ google_enabled: boolean; open_signup: boolean }>('/api/auth/config'),
+
+  changePassword: (b: { current_password: string; new_password: string }) =>
+    req<{ ok: boolean }>('/api/auth/change-password', json(b)),
+
+  exchangeTicket: (ticket: string) =>
+    req<{ token: string }>('/api/auth/ticket/exchange', json({ ticket })),
+
+  pendingStatus: (id: string) =>
+    req<{ status: 'pending' | 'approved' | 'rejected'; ticket?: string }>(
+      `/api/auth/pending/${encodeURIComponent(id)}`,
+    ),
+
+  adminListUsers: () => req<import('./types.ts').AdminUserRow[]>('/api/admin/users'),
+  adminPromote: (id: string) => req<{ ok: boolean }>(`/api/admin/users/${id}/promote`, { method: 'POST' }),
+  adminDemote:  (id: string) => req<{ ok: boolean }>(`/api/admin/users/${id}/demote`,  { method: 'POST' }),
+  adminRevoke:  (id: string) => req<{ ok: boolean; count: number }>(`/api/admin/users/${id}/revoke-sessions`, { method: 'POST' }),
+  adminResetPassword: (id: string, new_password: string) =>
+    req<{ ok: boolean }>(`/api/admin/users/${id}/reset-password`, json({ new_password })),
+  adminListPending: () => req<import('./types.ts').PendingUserRow[]>('/api/admin/pending'),
+  adminApprove: (id: string, short_name: string) =>
+    req<{ user_id: string }>(`/api/admin/pending/${id}/approve`, json({ short_name })),
+  adminReject: (id: string) =>
+    req<{ ok: boolean }>(`/api/admin/pending/${id}/reject`, { method: 'POST' }),
+  adminAudit: (params: { limit?: number; before?: string } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.set('limit', String(params.limit));
+    if (params.before) qs.set('before', params.before);
+    return req<{ items: import('./types.ts').AuditEntryRow[]; next_before?: string }>(
+      `/api/admin/audit${qs.toString() ? `?${qs}` : ''}`,
+    );
+  },
 };

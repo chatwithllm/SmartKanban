@@ -1,0 +1,335 @@
+{
+  "project": "KanbanClaude — admin-role + Google OAuth + approval queue",
+  "plan": "docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md",
+  "started_at": "2026-05-22T15:09:00Z",
+  "updated_at": "2026-05-23T09:20:00Z",
+  "total_tasks": 35,
+  "tasks_done": 35,
+  "current_task": {
+    "id": "Task 35",
+    "title": "End-to-end smoke QA — 12/12 web steps passed; macOS Google sign-in verified; 4 defects found+fixed during QA (I-2 first-user, I-3 macOS Google button, I-7 WS storm, I-8 schema gap)",
+    "phase": "End-to-end QA",
+    "status": "done"
+  },
+  "phases": [
+    { "name": "Schema migration",                 "task_range": "T1",     "status": "done" },
+    { "name": "Auth helpers + /me + login",       "task_range": "T2-3",   "status": "done" },
+    { "name": "Audit helper + admin user endpoints", "task_range": "T4-9", "status": "done" },
+    { "name": "Google OAuth + identities + tickets", "task_range": "T10-13", "status": "done" },
+    { "name": "Approval queue + WS + reaper",     "task_range": "T14-17", "status": "done" },
+    { "name": "Change-password + rate limit",     "task_range": "T18-19", "status": "done" },
+    { "name": "Web shared types + Google button + AwaitingApproval + ChangePassword", "task_range": "T20-23", "status": "done" },
+    { "name": "Web admin UI shell + 3 tabs",      "task_range": "T24-27", "status": "done" },
+    { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "done" },
+    { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "done" }
+  ],
+  "feature_status": "SHIPPED — admin-role + Google OAuth + approval queue complete; QA passed 12/12 with 4 defects caught and fixed via learning loop",
+  "last_commit": "e16ec86",
+  "last_gate_passed": "I-9 web WS storm fix (Rule 18 locked)",
+  "open_issues": 0,
+  "incidents": 9,
+  "defect_3_resolution": "WEB client (web/src/ws.ts) was the source — backoff reset to 500ms on every onopen. Rewrote with capped exponential backoff (1s floor, 30s cap, jitter ±50%) + stable-connection gating (onopen + first-frame + ≥10s) + single-socket guard + 1008 circuit-breaker. SW cache bumped kanban-v1 → kanban-v2 with activate-handler cleanup. Misattributed to macOS across I-6, I-7, and a stale-binary diagnosis — process lesson captured in I-9. Resolved at commit e16ec86.",
+  "known_pre_existing_failures": {
+    "suite": "card_messages.test.ts + knowledge_http.test.ts",
+    "count": 3,
+    "admin_role_related": false,
+    "note": "2 card_messages failures (AI event: 'events.find is not a function') + 1 knowledge_http failure. Notifications 6 failures RESOLVED by I-8 fix (schema.sql now complete). Remaining 3 are pre-existing non-notification issues."
+  },
+  "log": [
+    {
+      "task": "Task 1",
+      "title": "Add additive SQL migration",
+      "commit": "72003d0",
+      "gate": "passed",
+      "timestamp": "2026-05-22T15:30:00Z"
+    },
+    {
+      "task": "Task 2",
+      "title": "Extend AuthUser type and helpers",
+      "commit": "9758149",
+      "gate": "passed",
+      "timestamp": "2026-05-22T16:00:00Z"
+    },
+    {
+      "task": "Task 2",
+      "title": "Task 2 quality fixes",
+      "commit": "def407b",
+      "gate": "passed-fixes",
+      "timestamp": "2026-05-22T16:30:00Z"
+    },
+    {
+      "task": "Task 3",
+      "title": "Wire is_admin into /me + login; reconcile ADMIN_EMAILS on every login",
+      "commit": "4b5b51f",
+      "gate": "passed",
+      "timestamp": "2026-05-22T17:00:00Z"
+    },
+    {
+      "task": "Task 4",
+      "title": "Audit helper module — writeAudit with Pool | PoolClient signature",
+      "commit": "490193e",
+      "gate": "passed",
+      "timestamp": "2026-05-22T17:30:00Z"
+    },
+    {
+      "task": "Task 5",
+      "title": "GET /api/admin/users + requireAdmin gating",
+      "commit": "cbe78c4",
+      "gate": "passed",
+      "timestamp": "2026-05-22T18:00:00Z"
+    },
+    {
+      "task": "Task 6",
+      "title": "Promote / demote endpoints with row-locked last-admin guard",
+      "commit": "9853b61",
+      "gate": "passed",
+      "timestamp": "2026-05-22T18:30:00Z"
+    },
+    {
+      "task": "Task 7",
+      "title": "Reset-password + revoke-sessions admin endpoints",
+      "commit": "716eb8d",
+      "gate": "passed",
+      "timestamp": "2026-05-22T19:00:00Z"
+    },
+    {
+      "task": "Task 8",
+      "title": "Paginated GET /api/admin/audit with cursor by created_at",
+      "commit": "9d0b3d3",
+      "gate": "passed",
+      "timestamp": "2026-05-22T19:30:00Z"
+    },
+    {
+      "task": "Task 9",
+      "title": "GET /api/admin/env-admins exposes parsed ADMIN_EMAILS env var",
+      "commit": "152247f",
+      "gate": "passed",
+      "timestamp": "2026-05-22T20:00:00Z"
+    },
+    {
+      "task": "Task 10",
+      "title": "Add google-auth-library + @fastify/rate-limit; document new env vars in .env.example",
+      "commit": "9216301",
+      "gate": "passed",
+      "timestamp": "2026-05-22T20:30:00Z"
+    },
+    {
+      "task": "Task 11",
+      "title": "google.ts wraps OAuth2Client with verifyIdToken + exchangeCode + enabled-check",
+      "commit": "fc304a3",
+      "gate": "passed",
+      "timestamp": "2026-05-22T21:00:00Z"
+    },
+    {
+      "task": "Task 12",
+      "title": "auth_tickets module with 60s single-use issue/consume + reaper",
+      "commit": "0068fdb",
+      "gate": "passed",
+      "timestamp": "2026-05-22T21:30:00Z"
+    },
+    {
+      "task": "Task 13",
+      "title": "/api/auth/google/start + /callback with 4 branches (identity, auto-link, bootstrap, pending)",
+      "commit": "a0a9dd7",
+      "gate": "passed",
+      "timestamp": "2026-05-22T22:00:00Z"
+    },
+    {
+      "task": "Task 14",
+      "title": "Pending poll + ticket exchange + /api/auth/config endpoints",
+      "commit": "f423b02",
+      "gate": "passed",
+      "timestamp": "2026-05-22T22:30:00Z"
+    },
+    {
+      "task": "Task 15",
+      "title": "Admin approve/reject endpoints with outcome lifecycle, ticket creation, snapshot metadata",
+      "commit": "5a546aa",
+      "gate": "passed",
+      "timestamp": "2026-05-22T23:00:00Z"
+    },
+    {
+      "task": "Task 16",
+      "title": "admin-only pending_changed WS broadcast; wired into approve/reject",
+      "commit": "ee332ff",
+      "gate": "passed",
+      "timestamp": "2026-05-22T23:30:00Z"
+    },
+    {
+      "task": "Task 17",
+      "title": "Periodic reaper deletes expired tickets, stale pending rows, expired sessions",
+      "commit": "620ab78",
+      "gate": "passed",
+      "timestamp": "2026-05-22T23:45:00Z"
+    },
+    {
+      "task": "Task 18",
+      "title": "POST /api/auth/change-password verifies current pw and clears must_change flag",
+      "commit": "b1db1e1",
+      "gate": "passed",
+      "timestamp": "2026-05-22T23:55:00Z"
+    },
+    {
+      "task": "Task 19",
+      "title": "Rate-limit /api/auth/google/callback — 20 req/min per IP",
+      "commit": "ff8bf05",
+      "gate": "passed",
+      "timestamp": "2026-05-22T23:59:00Z"
+    },
+    {
+      "task": "Task 20",
+      "title": "Widen User type with is_admin/must_change_password; add authConfig/changePassword/exchangeTicket/pendingStatus helpers",
+      "commit": "916e24e",
+      "gate": "passed",
+      "timestamp": "2026-05-23T00:10:00Z"
+    },
+    {
+      "task": "Task 21",
+      "title": "GoogleSignInButton + gated render on /api/auth/config in LoginView",
+      "commit": "b7698bb",
+      "gate": "passed",
+      "timestamp": "2026-05-23T00:20:00Z"
+    },
+    {
+      "task": "Task 22",
+      "title": "AwaitingApproval page with poll + ticket exchange + 410-recovery flow",
+      "commit": "7c8a863",
+      "gate": "passed",
+      "timestamp": "2026-05-23T00:30:00Z"
+    },
+    {
+      "task": "Task 23",
+      "title": "ChangePassword view with forced redirect on must_change_password",
+      "commit": "064b50f",
+      "gate": "passed",
+      "timestamp": "2026-05-23T00:40:00Z"
+    },
+    {
+      "task": "Task 24",
+      "title": "AdminView shell with tab strip + admin API helpers + admin types",
+      "commit": "9b1a3c6",
+      "gate": "passed",
+      "timestamp": "2026-05-23T00:50:00Z"
+    },
+    {
+      "task": "Task 25",
+      "title": "UsersTab with promote toggle, reset-password (gated for google-only), and revoke",
+      "commit": "1e1fa21",
+      "gate": "passed",
+      "timestamp": "2026-05-23T01:00:00Z"
+    },
+    {
+      "task": "Task 26",
+      "title": "ApprovalsTab listing pending users with Approve/Reject actions",
+      "commit": "acf6859",
+      "gate": "passed",
+      "timestamp": "2026-05-23T01:10:00Z"
+    },
+    {
+      "task": "Task 27",
+      "title": "AuditTab paginated by cursor with collapsible metadata",
+      "commit": "1e84769",
+      "gate": "passed",
+      "timestamp": "2026-05-23T01:20:00Z"
+    },
+    {
+      "task": "Task 28",
+      "title": "Register kanbanclaude:// URL scheme in project.yml + Info.plist",
+      "commit": "38d058d",
+      "gate": "passed",
+      "timestamp": "2026-05-23T02:00:00Z"
+    },
+    {
+      "task": "Task 29",
+      "title": "URLSchemeHandler auth route + ticket exchange endpoint + AuthStore.loginWithTicket",
+      "commit": "38d058d",
+      "gate": "passed",
+      "timestamp": "2026-05-23T02:00:00Z"
+    },
+    {
+      "task": "Task 30",
+      "title": "Sign in with Google button on AccountTab; AuthClient+Google.swift extension",
+      "commit": "694fa33",
+      "gate": "passed",
+      "timestamp": "2026-05-22T17:00:00Z"
+    },
+    {
+      "task": "Task 31",
+      "title": "User adds isAdmin + mustChangePassword; Admin menu item in KanbanClaudeApp",
+      "commit": "694fa33",
+      "gate": "passed",
+      "timestamp": "2026-05-22T17:00:00Z"
+    },
+    {
+      "task": "Tasks 32-33",
+      "title": "Native AdminWindow with Users, Approvals, Audit views + 9 admin endpoints",
+      "commit": "d4b8e97",
+      "gate": "passed",
+      "timestamp": "2026-05-22T17:05:00Z"
+    },
+    {
+      "task": "I-2 fix",
+      "title": "First-user-auto-admin bootstrap",
+      "commit": "9636f97",
+      "gate": "passed",
+      "timestamp": "2026-05-22T18:00:00Z"
+    },
+    {
+      "task": "I-3 fix",
+      "title": "macOS Google sign-in on LoginView",
+      "commit": "d69aa14",
+      "gate": "passed",
+      "timestamp": "2026-05-23T08:15:00Z"
+    },
+    {
+      "task": "I-4 fix",
+      "title": "AdminUserRow decode hardened against null/missing short_name; decode smoke test added",
+      "commit": "efb9d20",
+      "gate": "passed",
+      "timestamp": "2026-05-23T08:40:00Z"
+    },
+    {
+      "task": "I-5 fix",
+      "title": "AdminUserRow decode — smoke test load from committed curl-captured file (decode_samples/admin_users.json) + dump_admin_users.sh",
+      "commit": "bde2e8c",
+      "gate": "passed",
+      "timestamp": "2026-05-23T08:48:00Z",
+      "root_cause": "Smoke test used hardcoded inline payload; curl-captured file now committed and loaded at test time"
+    },
+    {
+      "task": "I-6 fix",
+      "title": "WS auth via explicit Cookie header + backoff hardened (1s floor, 30s cap, sustained reset)",
+      "commit": "5283714",
+      "gate": "passed",
+      "timestamp": "2026-05-23T08:52:00Z",
+      "root_cause": "URLSessionWebSocketTask cookie quirk (unauthenticated WS) + backoffMS reset on hello (brief-connect-then-drop looped at floor)"
+    },
+    {
+      "task": "I-7 fix",
+      "title": "WS storm — gate connect() on session token; cached-user bootstrap checks token",
+      "commit": "cd3d18e",
+      "gate": "passed",
+      "timestamp": "2026-05-23T09:10:00Z",
+      "root_cause": "bootstrap() cached-user fallback called connect() without checking keychain — server 4401 → reconnect loop pre-login. I-6 backoff math was correct; wrong caller drove the storm."
+    },
+    {
+      "task": "I-8 fix",
+      "title": "notifications + push_subscriptions added to schema.sql (was migration-only)",
+      "commit": "918bb8d",
+      "gate": "passed",
+      "timestamp": "2026-05-23T09:15:00Z",
+      "root_cause": "DDL in migration file only; npm run db:init runs schema.sql only; fresh DBs had no notifications table; 6 test failures misclassified as infra noise"
+    },
+    {
+      "task": "Task 34",
+      "title": "Full test + build matrix",
+      "gate": "passed_with_concerns",
+      "timestamp": "2026-05-22T17:10:00Z",
+      "matrix": {
+        "server": { "pass": 223, "fail": 6, "failing_suite": "notifications.test.ts", "admin_role_related": false },
+        "web_build": { "result": "SUCCEEDED", "exit_code": 0, "note": "✓ built in 1.09s" },
+        "macos_build": { "result": "SUCCEEDED", "exit_code": 0 }
+      }
+    }
+  ]
+}

@@ -25,9 +25,10 @@ export type BroadcastEvent =
   | { type: 'insight.updated'; insight: Insight; card_id: string; owner_id: string }
   | { type: 'insight.failed';  insight: Insight; card_id: string; owner_id: string }
   | { type: 'card.link.created'; link: CardLink; from_owner_id: string; to_owner_id: string }
-  | { type: 'card.link.deleted'; id: string; from_card_id: string; to_card_id: string; from_owner_id: string; to_owner_id: string };
+  | { type: 'card.link.deleted'; id: string; from_card_id: string; to_card_id: string; from_owner_id: string; to_owner_id: string }
+  | { type: 'pending_changed'; pending_id: string };
 
-type Client = { socket: WebSocket; userId: string };
+type Client = { socket: WebSocket; userId: string; isAdmin: boolean };
 const clients = new Set<Client>();
 
 // A card is visible to `userId` if they created it, are assigned, it's shared
@@ -95,6 +96,9 @@ export function broadcast(ev: BroadcastEvent) {
         continue;
       }
     }
+    if (ev.type === 'pending_changed') {
+      if (!c.isAdmin) continue;
+    }
     c.socket.send(JSON.stringify(ev));
   }
 }
@@ -122,7 +126,7 @@ export async function wsRoutes(app: FastifyInstance) {
       return;
     }
 
-    const client: Client = { socket, userId: user.id };
+    const client: Client = { socket, userId: user.id, isAdmin: user.is_admin };
     clients.add(client);
     socket.send(JSON.stringify({ type: 'hello', user_id: user.id }));
     socket.on('close', () => clients.delete(client));

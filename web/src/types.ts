@@ -38,7 +38,14 @@ export type Card = {
   attachments: Attachment[];
 };
 
-export type User = { id: string; name: string; short_name: string; email: string };
+export type User = {
+  id: string;
+  name: string;
+  short_name: string;
+  email: string;
+  is_admin: boolean;
+  must_change_password: boolean;
+};
 
 export type Scope = 'personal' | 'inbox' | 'all' | 'shared';
 
@@ -158,6 +165,39 @@ export type Insight = {
 export const CARD_LINK_LABELS = [
   'evolves_from','supersedes','split_from','related','inspired_by','duplicate_of',
 ] as const;
+
+export type AdminUserRow = {
+  id: string;
+  name: string;
+  short_name: string;
+  email: string;
+  is_admin: boolean;
+  identities: Array<{ provider: string; email: string }>;
+  last_login_at: string | null;
+  session_count: number;
+  created_at: string;
+};
+
+export type PendingUserRow = {
+  id: string;
+  email: string;
+  email_verified: boolean;
+  name: string;
+  picture_url: string | null;
+  created_at: string;
+};
+
+export type AuditEntryRow = {
+  id: string;
+  action: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  target_user_id: string | null;
+  target_user_name: string | null;
+  target_pending_id: string | null;
+};
 
 export type CardLinkLabel = (typeof CARD_LINK_LABELS)[number];
 

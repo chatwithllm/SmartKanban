@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
+import rateLimit from '@fastify/rate-limit';
 import websocket from '@fastify/websocket';
 import fastifyStatic from '@fastify/static';
 import multipart from '@fastify/multipart';
@@ -8,6 +9,8 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { cardRoutes } from './routes/cards.js';
 import { authRoutes } from './routes/auth.js';
+import { adminRoutes } from './routes/admin.js';
+import { googleOauthRoutes } from './routes/google_oauth.js';
 import { mirrorRoutes } from './routes/mirror.js';
 import { apiTokenRoutes } from './routes/api_tokens.js';
 import { reviewRoutes } from './routes/review.js';
@@ -25,6 +28,7 @@ import { wsRoutes } from './ws.js';
 import { startTelegramBot } from './telegram/bot.js';
 import { enqueueBrainstorm } from './ai/brainstorm_queue.js';
 import { recoverPendingInsights } from './insights.js';
+import { startReaper } from './reaper.js';
 
 const app = Fastify({ logger: true });
 
@@ -45,6 +49,7 @@ await app.register(cors, {
   credentials: true,
 });
 await app.register(cookie, { secret: process.env.COOKIE_SECRET ?? 'dev-cookie-secret-change-me' });
+await app.register(rateLimit, { global: false });
 await app.register(multipart);
 await app.register(websocket);
 
@@ -52,6 +57,8 @@ const attachmentsDir = path.resolve(process.env.ATTACHMENTS_DIR ?? 'data/attachm
 fs.mkdirSync(attachmentsDir, { recursive: true });
 
 await app.register(authRoutes);
+await app.register(adminRoutes);
+await app.register(googleOauthRoutes);
 await app.register(cardRoutes);
 await app.register(chatRoutes);
 await app.register(notificationRoutes);
@@ -96,6 +103,8 @@ await app.listen({ port, host: '0.0.0.0' });
 if (process.env.TELEGRAM_BOT_TOKEN) {
   startTelegramBot().catch((err) => app.log.error(err, 'telegram bot error'));
 }
+
+startReaper();
 
 recoverPendingInsights()
   .then((ids) => {

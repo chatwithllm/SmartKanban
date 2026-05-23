@@ -26,12 +26,36 @@ import { useNotifications } from './hooks/useNotifications.ts';
 import { NotificationBell } from './components/NotificationBell.tsx';
 import { CaptureBar } from './components/CaptureBar.tsx';
 import { STATUSES } from './types.ts';
+import { AwaitingApproval } from './components/AwaitingApproval.tsx';
+import { ChangePassword } from './components/ChangePassword.tsx';
+import { AdminView } from './AdminView.tsx';
 
 export function App() {
   const { user, loading } = useAuth();
   const path = location.pathname;
 
   if (loading) return <div className="p-8 text-2 text-ink-soft tracking-tight2">Loading…</div>;
+
+  if (user?.must_change_password && path !== '/change-password') {
+    window.location.replace('/change-password');
+    return <div className="p-8 text-2 text-ink-soft tracking-tight2">Redirecting…</div>;
+  }
+
+  if (path === '/change-password') {
+    if (!user) return <LoginView redirectTo="/change-password" />;
+    return <ChangePassword />;
+  }
+
+  if (path === '/admin') {
+    if (!user) return <LoginView redirectTo="/admin" />;
+    if (!user.is_admin) {
+      window.location.replace('/');
+      return <div className="p-8 text-2 text-ink-soft tracking-tight2">Redirecting…</div>;
+    }
+    return <AdminView />;
+  }
+
+  if (path === '/awaiting-approval') return <AwaitingApproval />;
 
   // Strict UUID shape — looser regex would let typoed URLs reach the
   // server where Postgres throws 22P02 on the cards.id cast and returns 500.
