@@ -362,6 +362,44 @@ the actual binary on the actual platform is not a fix — it's a hypothesis.
 
 ---
 
+## RULE 18 — Service-Worker Cache Name Bumps on Every Frontend Fix  [client]
+
+**Source: KanbanClaude — web WS storm "fix" that wouldn't reach users.** The web
+client had a real bug in `connectWS`. The fix shipped. The storm persisted in
+production because every open tab had cached the OLD bundle via the service
+worker (`CACHE = 'kanban-v1'`) and there was no activate-handler cleanup of old
+caches. Tabs kept serving the buggy bundle indefinitely. Users would not have
+gotten the fix until they cleared site data manually.
+
+For any project with a service worker that caches the frontend bundle:
+
+1. The cache name (`CACHE = 'foo-vN'`) MUST bump on every frontend change that
+   alters compiled assets. Tie it to a build hash, a version constant, or a
+   manually-incremented N — anything that changes when the bundle does.
+2. The `activate` handler MUST delete every cache whose name doesn't match the
+   current `CACHE`. Without this, old caches accumulate and old tabs serve old
+   code:
+   ```js
+   self.addEventListener('activate', (e) => {
+     e.waitUntil((async () => {
+       const names = await caches.keys();
+       await Promise.all(
+         names.filter((n) => n !== CACHE).map((n) => caches.delete(n)),
+       );
+       await self.clients.claim();
+     })());
+   });
+   ```
+3. Verify the fix on a tab that was OPEN against the old code: hard-reload OR
+   re-register the worker OR clear site data — match how a real user's tab
+   would land on the new bundle.
+
+A frontend fix that doesn't ship to already-open tabs is a hypothesis, not a
+fix. Treat the service worker's cache lifecycle as part of the deployment
+contract.
+
+---
+
 ## RULE 17 — schema.sql Is the Complete Source of Truth for db:init  [db] [server]
 
 **Source: notifications table missing from schema.sql** — the notifications
@@ -409,6 +447,8 @@ For projects whose init flow is `psql ... -f schema.sql`:
 | Fix retry-loop math without auditing every caller | Wrong code path drives the storm | Rule 16 — grep all callers, gate inside the function |
 | Schema in migration only, not schema.sql | Fresh db:init missing tables; tests fail for "infra" | Rule 17 — schema.sql is the source of truth |
 | Dismiss "pre-existing test failure" without diagnosing | Hides real defects (e.g. missing tables) | Rule 17 — classify every failure, don't ignore |
+| Ship frontend fix without bumping service-worker cache | Old tabs keep serving the buggy bundle forever | Rule 18 — bump CACHE name + activate-handler delete |
+| Diagnose a multi-client network bug on one client only | Wrong client gets "fixed" while the real bug sits untouched | Rule 13 + Rule 16 — audit every client implementation; tag log lines by client |
 
 ---
 

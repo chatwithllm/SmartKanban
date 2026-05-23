@@ -60,7 +60,15 @@ layer. Lines marked `[all]` always apply.
 - [ ] `[client]` If this task modified a retry/reconnect loop, EVERY caller of
       the loop's entry point was grepped and verified to be gated on the loop's
       preconditions (auth, prerequisites). The gate also exists inside the
-      function being called (defense in depth).
+      function being called (defense in depth). For multi-client apps, EVERY
+      client implementation of the same protocol was audited — not just the
+      client the bug initially appeared in. (Rule 16 extension from I-9)
+
+- [ ] `[client]` If this task changed any compiled frontend asset on a project
+      with a service worker, the SW cache name was bumped AND the activate
+      handler deletes caches not matching the current name. Verified by
+      reloading a tab that was open against the OLD bundle and confirming the
+      fix landed. (Rule 18)
 
 - [ ] `[db]` If this task added or modified any table/column/index, the change
       landed in BOTH the dated migration file AND `server/schema.sql` (idempotent
