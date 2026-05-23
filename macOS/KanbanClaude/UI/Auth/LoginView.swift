@@ -8,6 +8,7 @@ struct LoginView: View {
     @State private var name = ""
     @State private var shortName = ""
     @State private var busy = false
+    @State private var googleEnabled: Bool = false
     @FocusState private var focused: Field?
 
     enum Mode { case signIn, register }
@@ -19,6 +20,10 @@ struct LoginView: View {
             VStack(spacing: 18) {
                 header
                 form
+                if googleEnabled {
+                    googleSignInButton
+                    orDivider
+                }
                 if let err = auth.lastError {
                     Text(err)
                         .font(.sans(12))
@@ -39,6 +44,14 @@ struct LoginView: View {
             )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .task {
+            do {
+                let cfg = try await APIClient.shared.send(.authConfig, as: AuthConfig.self)
+                googleEnabled = cfg.googleEnabled
+            } catch {
+                // leave false — button stays hidden on transient errors
+            }
+        }
     }
 
     private var backgroundBloom: some View {
@@ -116,6 +129,40 @@ struct LoginView: View {
         .buttonStyle(.plain)
     }
 
+    // MARK: — Sign-in surfaces. Tested manually via QA Step 9 (rebuild app, click button, verify kanbanclaude:// callback).
+
+    private var googleSignInButton: some View {
+        Button {
+            APIClient.shared.openGoogleSignIn()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "g.circle.fill")
+                    .foregroundStyle(Tokens.violet)
+                Text("Sign in with Google")
+                    .font(.sans(13, weight: .semibold))
+                    .foregroundStyle(Tokens.ink)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(Tokens.canvas)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(Tokens.hairline, lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var orDivider: some View {
+        HStack(spacing: 8) {
+            Rectangle().fill(Tokens.hairline).frame(height: 1)
+            Text("OR").font(.mono(10, weight: .semibold))
+                .foregroundStyle(Tokens.ink3).tracking(1.5)
+            Rectangle().fill(Tokens.hairline).frame(height: 1)
+        }
+    }
+
     private func submit() {
         guard !busy else { return }
         busy = true
@@ -138,6 +185,12 @@ struct LoginView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview {
+    LoginView()
+}
+#endif
 
 private struct LabeledInput: View {
     let title: String

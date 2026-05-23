@@ -41,6 +41,9 @@ layer. Lines marked `[all]` always apply.
       X because Y" lines are acceptable.
 - [ ] `[all]` If this task has an empty-state bootstrap path (first user, first record, first init),
       the test for it cleared the relevant table and exercised the real trigger, not seed + flag.
+- [ ] `[all]` If this task added or changed an auth path or any config-gated UI,
+      every other client that has the equivalent surface (web/native/mobile) was
+      updated to match — same fetch, same gate, same fallback when disabled.
 
 ## If a line fails
 

@@ -32,6 +32,7 @@ enum HTTPMethod: String, Sendable {
 
 enum Endpoint {
     // MARK: auth
+    case authConfig
     case me
     case login(email: String, password: String)
     case register(name: String, shortName: String, email: String, password: String)
@@ -123,7 +124,7 @@ enum Endpoint {
 
     var method: HTTPMethod {
         switch self {
-        case .me, .listUsers, .listCards, .archivedCards, .getCard, .knowledgeForCard,
+        case .authConfig, .me, .listUsers, .listCards, .archivedCards, .getCard, .knowledgeForCard,
              .listMirrorTokens, .listApiTokens, .review, .listTelegramIdentities,
              .listTemplates, .getTemplate, .listKnowledge, .getKnowledge,
              .listCardInsights, .getInsight, .listCardLinks, .cardChain,
@@ -150,6 +151,7 @@ enum Endpoint {
 
     var path: String {
         switch self {
+        case .authConfig: return "/api/auth/config"
         case .me: return "/api/auth/me"
         case .login: return "/api/auth/login"
         case .register: return "/api/auth/register"

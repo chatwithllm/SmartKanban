@@ -6,6 +6,7 @@ struct AccountTab: View {
     @State private var saving = false
     @State private var savedOk: Bool = false
     @State private var savedError: String?
+    @State private var googleEnabled: Bool = false
 
     var body: some View {
         ScrollView {
@@ -31,17 +32,19 @@ struct AccountTab: View {
                             Text(err).foregroundStyle(Tokens.danger).font(.sans(11))
                         }
                     }
-                    GroupBox("Sign in") {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Linked to the Google account associated with your email, if your admin enabled it.")
-                                .font(.sans(11))
-                                .foregroundStyle(Tokens.ink2)
-                            Button {
-                                APIClient.shared.openGoogleSignIn()
-                            } label: {
-                                Label("Sign in with Google", systemImage: "g.circle.fill")
+                    if googleEnabled {
+                        GroupBox("Sign in") {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Linked to the Google account associated with your email, if your admin enabled it.")
+                                    .font(.sans(11))
+                                    .foregroundStyle(Tokens.ink2)
+                                Button {
+                                    APIClient.shared.openGoogleSignIn()
+                                } label: {
+                                    Label("Sign in with Google", systemImage: "g.circle.fill")
+                                }
+                                .buttonStyle(.borderedProminent)
                             }
-                            .buttonStyle(.borderedProminent)
                         }
                     }
                     Button("Sign out", role: .destructive) {
@@ -55,6 +58,14 @@ struct AccountTab: View {
         }
         .onAppear {
             if let user = auth.currentUser { shortName = user.shortName }
+        }
+        .task {
+            do {
+                let cfg = try await APIClient.shared.send(.authConfig, as: AuthConfig.self)
+                googleEnabled = cfg.googleEnabled
+            } catch {
+                // leave false — Google button stays hidden on transient errors
+            }
         }
     }
 

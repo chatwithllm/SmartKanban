@@ -262,6 +262,30 @@ compile/typecheck does not catch this — the dead branch compiles fine.
 
 ---
 
+## RULE 13 — Client Parity for Auth + Config-Gated Features  [client] [all]
+
+**Source: QA of macOS Google sign-in** — the backend correctly returned
+`google_enabled: true` via /api/auth/config, the web LoginView correctly fetched
+that config and showed a Google button, but the macOS LoginView didn't fetch the
+config at all and had no Google button. The Google button was scoped only to a
+post-login Account tab — useless for users who couldn't sign in yet.
+
+If a feature is reachable on ONE client (web/native/mobile), it must be reachable
+on EVERY client that has a comparable entry point — particularly auth methods,
+which by definition are pre-login. Before declaring such a feature shipped:
+
+- List every client's entry-point view (login, register, settings, etc.).
+- For each: confirm the feature has a UI surface there OR an explicit "not on
+  this client v1" note in the spec.
+- Config-gated features must fetch the same config endpoint on every client and
+  hide UI consistently when disabled. Hardcoded gating (always-show, always-hide)
+  is a bug.
+
+A feature that only works in the web client because no one wired the macOS path
+is a half-ship. The done-gate must include a parity check.
+
+---
+
 ## ANTI-PATTERNS — Never Do These  [all]
 
 | Anti-pattern | Why it fails | Correct pattern |
@@ -279,6 +303,7 @@ compile/typecheck does not catch this — the dead branch compiles fine.
 | `tsc` exit 0 reported as "done" | Compile ≠ correct | Rule 0 — pass the full done-gate |
 | Hand the user a smoke-test checklist | Transfers verification to the user | Rule 0 — do every check yourself |
 | Seed users + flip a flag to test admin path | Skips the empty-state branch entirely | Rule 12 — clear table, hit the real registration path |
+| Wire an auth method only on one client | Other clients can't use it; partial ship | Rule 13 — parity across clients, gate on config |
 
 ---
 

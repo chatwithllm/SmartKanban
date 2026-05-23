@@ -38,3 +38,10 @@ Plan patches landed at commit `ece7d1c` before any task ran.
 - **User prompt that exposed it**: > "Manual QA Step 1 (spec §11): fresh DB, first user registers — is_admin should be true. It was false."
 - **Fix**: Wrap register in a transaction with `pg_advisory_xact_lock('first_user_bootstrap')`; INSERT users with `is_admin = (userCount === 0)`; if first user, write env_promote audit row with metadata `{source: 'first_user_bootstrap'}` in the same transaction.
 - **Rule locked in**: RULE 12 — empty-state bootstrap tests must run against the empty state.
+
+### I-3: macOS Google sign-in entry point absent from LoginView
+- **Symptom**: QA Step 9 — clicked through to the macOS app, LoginView only shows email/password. The Google button exists in AccountTab.swift but sits inside `if let user = auth.currentUser`, so it's invisible pre-login. Even when signed-in, it doesn't gate on /api/auth/config.
+- **Root cause**: Plan Task 30 scoped Google to AccountTab (post-login linking) instead of LoginView (pre-login auth method). Plan never added an AuthConfig codable, Endpoint case, or /api/auth/config fetch on the macOS client. Web LoginView did this correctly — macOS lacked feature parity.
+- **User prompt that exposed it**: > "QA Step 9: on macOS, click Sign in with Google. The button isn't there."
+- **Fix**: Added `AuthConfig` codable + `Endpoint.authConfig` case. LoginView fetches config on mount, shows Google button + OR divider when `google_enabled == true`. AccountTab linking button now also gates on the same config — hides when google_enabled is false.
+- **Rule locked in**: RULE 13 — login-affecting features must reach every client; gate on config, not on hardcoded assumptions.
