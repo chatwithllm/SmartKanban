@@ -23,10 +23,10 @@
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "done" },
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "in_progress" }
   ],
-  "last_commit": "d4b8e97",
-  "last_gate_passed": "Task 34",
-  "open_issues": 1,
-  "incidents": 1,
+  "last_commit": "9636f97",
+  "last_gate_passed": "I-2 fix",
+  "open_issues": 0,
+  "incidents": 2,
   "known_pre_existing_failures": {
     "suite": "notifications.test.ts",
     "count": 6,
@@ -264,6 +264,13 @@
       "commit": "d4b8e97",
       "gate": "passed",
       "timestamp": "2026-05-22T17:05:00Z"
+    },
+    {
+      "task": "I-2 fix",
+      "title": "First-user-auto-admin bootstrap",
+      "commit": "9636f97",
+      "gate": "passed",
+      "timestamp": "2026-05-22T18:00:00Z"
     },
     {
       "task": "Task 34",
