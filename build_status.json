@@ -4,12 +4,12 @@
   "started_at": "2026-05-22T15:09:00Z",
   "updated_at": "2026-05-23T09:20:00Z",
   "total_tasks": 35,
-  "tasks_done": 34,
+  "tasks_done": 35,
   "current_task": {
     "id": "Task 35",
-    "title": "End-to-end smoke QA — manual (requires browser + Google Cloud OAuth client config)",
+    "title": "End-to-end smoke QA — 12/12 web steps passed; macOS Google sign-in verified; 4 defects found+fixed during QA (I-2 first-user, I-3 macOS Google button, I-7 WS storm, I-8 schema gap)",
     "phase": "End-to-end QA",
-    "status": "pending_user"
+    "status": "done"
   },
   "phases": [
     { "name": "Schema migration",                 "task_range": "T1",     "status": "done" },
@@ -21,8 +21,9 @@
     { "name": "Web shared types + Google button + AwaitingApproval + ChangePassword", "task_range": "T20-23", "status": "done" },
     { "name": "Web admin UI shell + 3 tabs",      "task_range": "T24-27", "status": "done" },
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "done" },
-    { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "in_progress" }
+    { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "done" }
   ],
+  "feature_status": "SHIPPED — admin-role + Google OAuth + approval queue complete; QA passed 12/12 with 4 defects caught and fixed via learning loop",
   "last_commit": "0e73fa3",
   "last_gate_passed": "I-8 fix",
   "open_issues": 0,
