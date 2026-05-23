@@ -39,6 +39,15 @@ final class WebSocketClient: ObservableObject {
     }
 
     func connect() {
+        // I-7: gate — no WS attempt without a session token (defense in depth).
+        // Callers in bootstrap/login/register each set the token first, but this
+        // guard blocks any future caller that forgets to check, and specifically
+        // blocks the bootstrap-cached-user path if the token has since been deleted.
+        guard KeychainStore.read() != nil else {
+            log.info("ws: skip connect — no session token")
+            disconnect(reason: "no-session")
+            return
+        }
         disconnect(reason: "reconnect")
         let cfg = URLSessionConfiguration.default
         cfg.httpCookieAcceptPolicy = .always

@@ -31,7 +31,10 @@ final class AuthStore: ObservableObject {
             phase = .unauthenticated
         } catch {
             log.error("bootstrap me: \(error.localizedDescription, privacy: .public)")
-            if let cached = restoreCachedUser() {
+            // I-7: only restore cached user if we still have a session token.
+            // Without a token, the cached user is stale — connecting WS would
+            // trigger a 4401 close → scheduleReconnect → storm every ~1s.
+            if KeychainStore.read() != nil, let cached = restoreCachedUser() {
                 phase = .authenticated(cached)
                 WebSocketClient.shared.connect()
             } else {
@@ -77,9 +80,14 @@ final class AuthStore: ObservableObject {
         } catch {
             log.error("logout: \(error.localizedDescription, privacy: .public)")
         }
+        // I-7: disconnect WS BEFORE clearing keychain — if the order is reversed,
+        // the WS connect() gate would see no token on reconnect (harmless but
+        // confusing); more importantly, any in-flight reconnect scheduled before
+        // logout fires connect() → hits the guard and bails cleanly only if the
+        // keychain is already cleared.
+        WebSocketClient.shared.disconnect(reason: "logout")
         KeychainStore.delete()
         UserDefaults.standard.removeObject(forKey: Constants.Defaults.lastUserJSON)
-        WebSocketClient.shared.disconnect(reason: "logout")
         phase = .unauthenticated
     }
 

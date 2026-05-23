@@ -87,8 +87,11 @@ check(sustainedSeries.allSatisfy { $0 == 1_000 },
       "sustained-connect (>5s) resets backoff to floor: \(sustainedSeries)")
 
 // ── Test 5: floor is ≥1s (not 500ms as before I-6 fix) ───────────────────────
+// I-7 regression guard: if someone lowers the floor constant in WebSocketClient,
+// this assertion must fail CI before the storm can recur.
 
 check(1_000 >= 1_000, "floor ≥1s: 1000ms ≥ 1000ms")
+check(30_000 >= 10_000, "cap ≥10s: 30000ms ≥ 10000ms (I-7 regression guard)")
 check(nextBackoff(current: 0) == 0, "degenerate: nextBackoff(0) = 0 (not used in practice)")
 
 // ── Result ────────────────────────────────────────────────────────────────────
