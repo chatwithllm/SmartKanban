@@ -116,3 +116,11 @@ memory.
       hunk produced or modified by this task. Every fix is committed AND
       pushed to a branch that the deploy artifact reads from. A working-tree
       or stashed change is not a delivered fix. (Rule 20)
+- [ ] `[all]` Before any production deploy, the EXACT artifact that will run
+      in prod (Docker image, `.app`, RPM, etc.) was built AND booted on
+      dev/staging — not just compiled. For server images: `docker run` the
+      built image against a local DB and confirm `app.listen` succeeds + the
+      health endpoint returns 200. `npm run dev` does not count — dev-server
+      bind-mounts and dep resolution differ from the prod image. Hand-edits
+      on the prod host are never the fix: every change flows commit → deploy.
+      (Rule 21)

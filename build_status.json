@@ -24,8 +24,8 @@
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "done" }
   ],
   "feature_status": "SHIPPED — admin-role + Google OAuth + approval queue complete; QA passed 12/12 with 4 defects caught and fixed via learning loop",
-  "last_commit": "abd8599",
-  "last_gate_passed": "I-10 rate-limit pin (Rules 19 + 20 locked); deploy complete",
+  "last_commit": "c97111f",
+  "last_gate_passed": "v2.0.0 released; Rule 21 (prod is deploy-only, boot artifact on dev first) locked",
   "open_issues": 0,
   "incidents": 10,
   "defect_3_resolution": "WEB client (web/src/ws.ts) was the source — backoff reset to 500ms on every onopen. Rewrote with capped exponential backoff (1s floor, 30s cap, jitter ±50%) + stable-connection gating (onopen + first-frame + ≥10s) + single-socket guard + 1008 circuit-breaker. SW cache bumped kanban-v1 → kanban-v2 with activate-handler cleanup. Misattributed to macOS across I-6, I-7, and a stale-binary diagnosis — process lesson captured in I-9. Resolved at commit e16ec86.",
