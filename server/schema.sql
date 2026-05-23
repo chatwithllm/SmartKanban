@@ -334,3 +334,32 @@ CREATE TABLE IF NOT EXISTS admin_audit (
 );
 CREATE INDEX IF NOT EXISTS idx_admin_audit_created ON admin_audit(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_admin_audit_actor   ON admin_audit(actor_id);
+
+-- 2026-05-03 — notifications + push subscriptions
+-- Previously lived only in server/migrations/2026-05-03-notifications.sql.
+-- Added here so `npm run db:init` (which runs schema.sql) produces a complete
+-- schema on fresh databases (Rule 17 — schema.sql is the single source of truth).
+-- All statements are idempotent (IF NOT EXISTS).
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id          serial primary key,
+  user_id     uuid not null references users(id) on delete cascade,
+  card_id     uuid not null references cards(id) on delete cascade,
+  event_id    bigint not null references card_events(id) on delete cascade,
+  actor_name  text not null,
+  preview     text not null,
+  read        boolean not null default false,
+  created_at  timestamptz not null default now()
+);
+
+CREATE INDEX IF NOT EXISTS notifications_user_unread
+  ON notifications(user_id) WHERE read = false;
+
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id          serial primary key,
+  user_id     uuid not null references users(id) on delete cascade,
+  endpoint    text not null unique,
+  p256dh      text not null,
+  auth        text not null,
+  created_at  timestamptz not null default now()
+);
