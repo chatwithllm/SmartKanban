@@ -23,7 +23,7 @@
     { "name": "macOS URL scheme + Google sign-in + admin window + 3 views", "task_range": "T28-33", "status": "done" },
     { "name": "End-to-end QA",                    "task_range": "T34-35", "status": "in_progress" }
   ],
-  "last_commit": "pending-I-4-fix",
+  "last_commit": "efb9d20",
   "last_gate_passed": "I-4 fix",
   "open_issues": 0,
   "incidents": 4,
@@ -282,7 +282,7 @@
     {
       "task": "I-4 fix",
       "title": "AdminUserRow decode hardened against null/missing short_name; decode smoke test added",
-      "commit": "pending",
+      "commit": "efb9d20",
       "gate": "passed",
       "timestamp": "2026-05-23T08:40:00Z"
     },
