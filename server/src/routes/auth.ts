@@ -14,6 +14,7 @@ import {
 } from '../auth.js';
 import { consumeTicket } from '../auth_tickets.js';
 import { googleEnabled } from '../google.js';
+import { writeAudit } from '../admin_audit.js';
 
 const OPEN_SIGNUP = process.env.OPEN_SIGNUP !== 'false'; // default true (household trust)
 
@@ -31,37 +32,57 @@ export async function authRoutes(app: FastifyInstance) {
       if (shortTrim.length < 1 || shortTrim.length > 16) {
         return reply.code(400).send({ error: 'short_name must be 1-16 characters' });
       }
-      // If any users exist AND OPEN_SIGNUP is off, only the first user can be created without invite.
-      const { rows: existing } = await pool.query<{ c: string }>(`SELECT COUNT(*)::text c FROM users`);
-      const userCount = Number(existing[0]!.c);
-      if (userCount > 0 && !OPEN_SIGNUP) {
-        return reply.code(403).send({ error: 'signup disabled' });
-      }
 
-      const hash = await hashPassword(password);
+      // Wrap in a transaction with an advisory lock so two simultaneous first
+      // registrations cannot both see userCount=0 and both become admin (Rule 3).
+      const client = await pool.connect();
       try {
-        const { rows } = await pool.query<{ id: string }>(
-          `INSERT INTO users (name, short_name, email, auth_hash) VALUES ($1, $2, $3, $4) RETURNING id`,
-          [name.trim(), shortTrim, email.trim().toLowerCase(), hash],
+        await client.query('BEGIN');
+        await client.query(`SELECT pg_advisory_xact_lock(hashtext('first_user_bootstrap'))`);
+
+        // Re-check OPEN_SIGNUP gate inside the lock (count is now stable).
+        const { rows: existing } = await client.query<{ c: string }>(`SELECT COUNT(*)::text c FROM users`);
+        const userCount = Number(existing[0]!.c);
+        if (userCount > 0 && !OPEN_SIGNUP) {
+          await client.query('ROLLBACK');
+          return reply.code(403).send({ error: 'signup disabled' });
+        }
+
+        const hash = await hashPassword(password);
+        const { rows } = await client.query<{ id: string }>(
+          `INSERT INTO users (name, short_name, email, auth_hash, is_admin) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+          [name.trim(), shortTrim, email.trim().toLowerCase(), hash, userCount === 0],
         );
         const userId = rows[0]!.id;
 
-        // First registered user inherits any pre-existing (Phase 1) cards with no created_by.
+        // First registered user inherits any pre-existing (Phase 1) cards with no
+        // created_by and receives an env_promote audit row (spec §3 + §11 step 1).
         if (userCount === 0) {
-          await pool.query(`UPDATE cards SET created_by = $1 WHERE created_by IS NULL`, [userId]);
-          await pool.query(
+          await client.query(`UPDATE cards SET created_by = $1 WHERE created_by IS NULL`, [userId]);
+          await client.query(
             `INSERT INTO card_assignees (card_id, user_id) SELECT id, $1 FROM cards WHERE NOT archived ON CONFLICT DO NOTHING`,
             [userId],
           );
+          await writeAudit(client, {
+            actor_id: userId,
+            action: 'env_promote',
+            target_user_id: userId,
+            metadata: { source: 'first_user_bootstrap' },
+          });
         }
 
+        await client.query('COMMIT');
+        // createSession writes to a separate sessions table — safe outside the txn.
         const token = await createSession(userId);
         setSessionCookie(reply, token);
         return reply.code(201).send({ id: userId, name, short_name: shortTrim, email });
       } catch (e: unknown) {
+        try { await client.query('ROLLBACK'); } catch { /* already rolled back */ }
         const err = e as { code?: string };
         if (err.code === '23505') return reply.code(409).send({ error: 'email already registered' });
         throw e;
+      } finally {
+        client.release();
       }
     },
   );

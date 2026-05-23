@@ -27,3 +27,14 @@ The plan and spec for this build were reviewed twice before execution started. B
 - **Approve was described as DELETE in three sections and UPDATE in the endpoint spec.** → Rule 11 (one authoritative home per fact).
 
 Plan patches landed at commit `ece7d1c` before any task ran.
+
+---
+
+## Incidents (post-execution)
+
+### I-2: First-user-auto-admin bootstrap silently no-op'd
+- **Symptom**: Fresh DB, registered first user via /api/auth/register, `is_admin = false`, no audit row. Spec §11 step 1 expected `is_admin = true`.
+- **Root cause**: The register handler had an `if (userCount === 0)` block (legacy, from Phase 1 of the kanban project) that inherited cards but never set `is_admin = true`. Plan Task 3 added env-admin reconciliation in `/login` but never touched the register path. Every test that exercised admin endpoints seeded users directly + flipped `is_admin` manually, so the real registration path was never tested empty.
+- **User prompt that exposed it**: > "Manual QA Step 1 (spec §11): fresh DB, first user registers — is_admin should be true. It was false."
+- **Fix**: Wrap register in a transaction with `pg_advisory_xact_lock('first_user_bootstrap')`; INSERT users with `is_admin = (userCount === 0)`; if first user, write env_promote audit row with metadata `{source: 'first_user_bootstrap'}` in the same transaction.
+- **Rule locked in**: RULE 12 — empty-state bootstrap tests must run against the empty state.

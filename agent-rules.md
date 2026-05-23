@@ -243,6 +243,25 @@ is executed. The build agent should never have to guess which version is correct
 
 ---
 
+## RULE 12 — Empty-State Bootstrap Tests Must Run Against the Empty State  [server] [db] [all]
+
+**Source: Manual QA of admin-role build** — the "first user auto-admin" branch was silently broken
+because every test that touched admin endpoints seeded users directly into the DB and flipped
+`is_admin` by hand. The branch's only trigger — registering against a genuinely empty `users`
+table — was never exercised.
+
+If a feature has a code path that fires only when a table or state is empty (first-user setup,
+first-message bootstrap, first-run config init, install hooks), the test for it MUST:
+
+- Clear the relevant table at the top of the test (or run in a dedicated empty fixture)
+- Verify the empty precondition with an explicit assertion before the action
+- Use only the public path (HTTP route, command, real init flow) — not seed data + a hand-flipped flag
+
+A test that seeds the trigger state never proves the empty-state branch is even wired in. A
+compile/typecheck does not catch this — the dead branch compiles fine.
+
+---
+
 ## ANTI-PATTERNS — Never Do These  [all]
 
 | Anti-pattern | Why it fails | Correct pattern |
@@ -259,6 +278,7 @@ is executed. The build agent should never have to guess which version is correct
 | Edit named lines, ignore rest of the file | Pre-existing violations survive | Rule 10 — re-grep whole file before commit |
 | `tsc` exit 0 reported as "done" | Compile ≠ correct | Rule 0 — pass the full done-gate |
 | Hand the user a smoke-test checklist | Transfers verification to the user | Rule 0 — do every check yourself |
+| Seed users + flip a flag to test admin path | Skips the empty-state branch entirely | Rule 12 — clear table, hit the real registration path |
 
 ---
 
