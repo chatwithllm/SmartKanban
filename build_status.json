@@ -26,7 +26,7 @@
   "last_commit": "9636f97",
   "last_gate_passed": "I-2 fix",
   "open_issues": 0,
-  "incidents": 2,
+  "incidents": 3,
   "known_pre_existing_failures": {
     "suite": "notifications.test.ts",
     "count": 6,
@@ -271,6 +271,13 @@
       "commit": "9636f97",
       "gate": "passed",
       "timestamp": "2026-05-22T18:00:00Z"
+    },
+    {
+      "task": "I-3 fix",
+      "title": "macOS Google sign-in on LoginView",
+      "commit": "d69aa14",
+      "gate": "passed",
+      "timestamp": "2026-05-23T08:15:00Z"
     },
     {
       "task": "Task 34",
