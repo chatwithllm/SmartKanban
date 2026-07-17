@@ -42,3 +42,8 @@ macOS/*.xcodeproj/project.xcworkspace/xcuserdata/
 __pycache__/
 orchestrator.log
 orchestrator_status.json
+
+# graphify — machine-specific paths + regenerable extraction cache
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/cache/

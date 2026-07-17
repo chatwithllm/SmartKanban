@@ -1,0 +1,1867 @@
+{
+  "/Users/assistant/dev/active/SmartKanban/build_status.json": {
+    "mtime": 1779730141.7653224,
+    "ast_hash": "96550fe29462324f61cc7e524fdf88d6",
+    "semantic_hash": "96550fe29462324f61cc7e524fdf88d6"
+  },
+  "/Users/assistant/dev/active/SmartKanban/build_status.macos-build.json": {
+    "mtime": 1779730141.7653778,
+    "ast_hash": "206bbcd96dd2fe6aad7e97395acda1d7",
+    "semantic_hash": "206bbcd96dd2fe6aad7e97395acda1d7"
+  },
+  "/Users/assistant/dev/active/SmartKanban/detach_launcher.py": {
+    "mtime": 1779730141.7655988,
+    "ast_hash": "a58fbc774f7272e28b1fa04b0281d21c",
+    "semantic_hash": "a58fbc774f7272e28b1fa04b0281d21c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/App/AppDelegate.swift": {
+    "mtime": 1779730141.769296,
+    "ast_hash": "978316f1def0c4e09c58efea9feb17f6",
+    "semantic_hash": "978316f1def0c4e09c58efea9feb17f6"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/App/ColorTokens.swift": {
+    "mtime": 1779730141.7693536,
+    "ast_hash": "02a2668438ec5e20b15523297786913a",
+    "semantic_hash": "02a2668438ec5e20b15523297786913a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/App/Constants.swift": {
+    "mtime": 1779730141.769414,
+    "ast_hash": "e1ed09a60143895ee35d3cd7ed276bc7",
+    "semantic_hash": "e1ed09a60143895ee35d3cd7ed276bc7"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/App/Errors.swift": {
+    "mtime": 1779730141.769467,
+    "ast_hash": "e17035a96d2e03b81f8b014acc9aaf2c",
+    "semantic_hash": "e17035a96d2e03b81f8b014acc9aaf2c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/App/GlobalKeyMonitor.swift": {
+    "mtime": 1779730141.7695208,
+    "ast_hash": "222fd9f20a3c9e94b2b909b10b6a7ce6",
+    "semantic_hash": "222fd9f20a3c9e94b2b909b10b6a7ce6"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/App/NotificationCenterBridge.swift": {
+    "mtime": 1779730141.769575,
+    "ast_hash": "25644c81057248edac5341ad75f4a749",
+    "semantic_hash": "25644c81057248edac5341ad75f4a749"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/App/SettingsOpener.swift": {
+    "mtime": 1779730141.7696323,
+    "ast_hash": "b96272349ef95e60741d02320472c9c6",
+    "semantic_hash": "b96272349ef95e60741d02320472c9c6"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/App/StatusItemController.swift": {
+    "mtime": 1779730141.7696903,
+    "ast_hash": "b40b15a72e924ef3bb8fd6700a1db26f",
+    "semantic_hash": "b40b15a72e924ef3bb8fd6700a1db26f"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/App/ThemeManager.swift": {
+    "mtime": 1779730141.7697434,
+    "ast_hash": "1a3ed94af572fc20a036738001f2a263",
+    "semantic_hash": "1a3ed94af572fc20a036738001f2a263"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/App/Typography.swift": {
+    "mtime": 1779730141.7697964,
+    "ast_hash": "f46d8c09f7ea8b13d646244d74635a75",
+    "semantic_hash": "f46d8c09f7ea8b13d646244d74635a75"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/App/URLSchemeHandler.swift": {
+    "mtime": 1779730141.7698705,
+    "ast_hash": "935ce9eabcbe643355b6328acd75b361",
+    "semantic_hash": "935ce9eabcbe643355b6328acd75b361"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/App/WindowCoordinator.swift": {
+    "mtime": 1779730141.7699535,
+    "ast_hash": "c98ca152253f8e0405bd14855740d650",
+    "semantic_hash": "c98ca152253f8e0405bd14855740d650"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Assets.xcassets/AppIcon.appiconset/Contents.json": {
+    "mtime": 1779730141.7700832,
+    "ast_hash": "312293803cc066cebe794885fe1ddcfe",
+    "semantic_hash": "312293803cc066cebe794885fe1ddcfe"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Assets.xcassets/Contents.json": {
+    "mtime": 1779730141.7701309,
+    "ast_hash": "9deb2ada1cc834bbebf8bbad9c8978a1",
+    "semantic_hash": "9deb2ada1cc834bbebf8bbad9c8978a1"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/KanbanClaudeApp.swift": {
+    "mtime": 1779730141.7703052,
+    "ast_hash": "105a2e9786112415453e8af9c1c4a3e1",
+    "semantic_hash": "105a2e9786112415453e8af9c1c4a3e1"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Keychain/KeychainStore.swift": {
+    "mtime": 1779730141.7703893,
+    "ast_hash": "acce8a81164a7ec85ccd65eccdd30adc",
+    "semantic_hash": "acce8a81164a7ec85ccd65eccdd30adc"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/APIClient.swift": {
+    "mtime": 1779730141.7704751,
+    "ast_hash": "69f45f8abeb755ea5137c5850d0e2304",
+    "semantic_hash": "69f45f8abeb755ea5137c5850d0e2304"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/AttachmentDownloader.swift": {
+    "mtime": 1779730141.7705255,
+    "ast_hash": "21af9c23286cc18ec81da4226392d277",
+    "semantic_hash": "21af9c23286cc18ec81da4226392d277"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/AuthClient+Google.swift": {
+    "mtime": 1779730141.770574,
+    "ast_hash": "929ea7b1c9da513fb9c79ef86a976b4b",
+    "semantic_hash": "929ea7b1c9da513fb9c79ef86a976b4b"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/AdminUserRow.swift": {
+    "mtime": 1779730141.7706435,
+    "ast_hash": "26e96d6b3ead8656319049089b66b459",
+    "semantic_hash": "26e96d6b3ead8656319049089b66b459"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/AiSuggestion.swift": {
+    "mtime": 1779730141.770689,
+    "ast_hash": "17d42b66a5a2d18b23435d98ee142bc3",
+    "semantic_hash": "17d42b66a5a2d18b23435d98ee142bc3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/Attachment.swift": {
+    "mtime": 1779730141.7707305,
+    "ast_hash": "9ee16b0abb6e9113f73c61a8920a4092",
+    "semantic_hash": "9ee16b0abb6e9113f73c61a8920a4092"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/AuditPage.swift": {
+    "mtime": 1779730141.770776,
+    "ast_hash": "46ff4dd85bb860ec2cd02dee6202a524",
+    "semantic_hash": "46ff4dd85bb860ec2cd02dee6202a524"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/AuthConfig.swift": {
+    "mtime": 1779730141.7708213,
+    "ast_hash": "5b9e90a33875e334502fae75ceb063d7",
+    "semantic_hash": "5b9e90a33875e334502fae75ceb063d7"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/BroadcastEvent.swift": {
+    "mtime": 1779730141.7708733,
+    "ast_hash": "6ac9e52a1de84815773ea63cd7facced",
+    "semantic_hash": "6ac9e52a1de84815773ea63cd7facced"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/Card.swift": {
+    "mtime": 1779730141.7709172,
+    "ast_hash": "d0610ba78ea9f7c204daa7d07c233b17",
+    "semantic_hash": "d0610ba78ea9f7c204daa7d07c233b17"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/CardEvent.swift": {
+    "mtime": 1779730141.770962,
+    "ast_hash": "5687eb54db90fbec9a7da6b860237914",
+    "semantic_hash": "5687eb54db90fbec9a7da6b860237914"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/CardLink.swift": {
+    "mtime": 1779730141.7710085,
+    "ast_hash": "ca780bb9b2a6f7aebf44ab16d48a9f57",
+    "semantic_hash": "ca780bb9b2a6f7aebf44ab16d48a9f57"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/Insight.swift": {
+    "mtime": 1779730141.7710555,
+    "ast_hash": "104f2d1b6b1123b7202b9bfcc867d81c",
+    "semantic_hash": "104f2d1b6b1123b7202b9bfcc867d81c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/KnowledgeItem.swift": {
+    "mtime": 1779730141.7711036,
+    "ast_hash": "3ac767b7fecd95d98d67b5b17c8638b8",
+    "semantic_hash": "3ac767b7fecd95d98d67b5b17c8638b8"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/MirrorToken.swift": {
+    "mtime": 1779730141.771146,
+    "ast_hash": "fd50f5719d0967f5543c4dbbc0c61814",
+    "semantic_hash": "fd50f5719d0967f5543c4dbbc0c61814"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/Notification.swift": {
+    "mtime": 1779730141.7711928,
+    "ast_hash": "73e8db9bc5be843d9a0c59f9ec0e9662",
+    "semantic_hash": "73e8db9bc5be843d9a0c59f9ec0e9662"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/PendingUserRow.swift": {
+    "mtime": 1779730141.771237,
+    "ast_hash": "ac6d72fe6fcbb5c71460863b394a5ac0",
+    "semantic_hash": "ac6d72fe6fcbb5c71460863b394a5ac0"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/ReviewData.swift": {
+    "mtime": 1779730141.7712822,
+    "ast_hash": "9f3a48a477e94f0c93b3f6c80ebaa443",
+    "semantic_hash": "9f3a48a477e94f0c93b3f6c80ebaa443"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/TelegramIdentity.swift": {
+    "mtime": 1779730141.7713313,
+    "ast_hash": "2f08292caa19a6f867549e75bec7a3cd",
+    "semantic_hash": "2f08292caa19a6f867549e75bec7a3cd"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/Template.swift": {
+    "mtime": 1779730141.7713773,
+    "ast_hash": "7014cc63967ca60e87391bcf081f2e82",
+    "semantic_hash": "7014cc63967ca60e87391bcf081f2e82"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/TicketExchangeResponse.swift": {
+    "mtime": 1779730141.7714164,
+    "ast_hash": "b2ab828cba114eb556b947d73b38efe8",
+    "semantic_hash": "b2ab828cba114eb556b947d73b38efe8"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/User.swift": {
+    "mtime": 1779730141.7714565,
+    "ast_hash": "fe281c162db4e0ac911d7e3750894c3e",
+    "semantic_hash": "fe281c162db4e0ac911d7e3750894c3e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Codables/WeatherData.swift": {
+    "mtime": 1779730141.7714944,
+    "ast_hash": "13e05185f89502668b4dd675a01e4826",
+    "semantic_hash": "13e05185f89502668b4dd675a01e4826"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Endpoint.swift": {
+    "mtime": 1779730141.7715523,
+    "ast_hash": "84180d3b9c6e457169d2c862aa8d3d19",
+    "semantic_hash": "84180d3b9c6e457169d2c862aa8d3d19"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/QRGenerator.swift": {
+    "mtime": 1779730141.7715917,
+    "ast_hash": "dbce0b5d4cc624eb30b01543a298139e",
+    "semantic_hash": "dbce0b5d4cc624eb30b01543a298139e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/ServerTime.swift": {
+    "mtime": 1779730141.7716315,
+    "ast_hash": "938f020d3695442fb47241cd979fad54",
+    "semantic_hash": "938f020d3695442fb47241cd979fad54"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/Uploader.swift": {
+    "mtime": 1779730141.7716706,
+    "ast_hash": "20cd67e1c397d97baf9b3a409b874e38",
+    "semantic_hash": "20cd67e1c397d97baf9b3a409b874e38"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Networking/WebSocketClient.swift": {
+    "mtime": 1779730141.7717268,
+    "ast_hash": "49a7f61b943ea2bd4e2710b592df5b4c",
+    "semantic_hash": "49a7f61b943ea2bd4e2710b592df5b4c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Stores/AuthStore.swift": {
+    "mtime": 1779730141.7717986,
+    "ast_hash": "6531b70dd4db3dac9cb998629f52a37f",
+    "semantic_hash": "6531b70dd4db3dac9cb998629f52a37f"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Stores/BoardScopeStore.swift": {
+    "mtime": 1779730141.771837,
+    "ast_hash": "8cee8c1a97271469de944c9302fa2b76",
+    "semantic_hash": "8cee8c1a97271469de944c9302fa2b76"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Stores/CardEventsStore.swift": {
+    "mtime": 1779730141.7718809,
+    "ast_hash": "a6ae55e464c51e77d21791245d949edf",
+    "semantic_hash": "a6ae55e464c51e77d21791245d949edf"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Stores/CardStore.swift": {
+    "mtime": 1779730141.771937,
+    "ast_hash": "c480b4b52f654c3e0cee395d60c65606",
+    "semantic_hash": "c480b4b52f654c3e0cee395d60c65606"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Stores/DragStore.swift": {
+    "mtime": 1779730141.7719846,
+    "ast_hash": "d9f26e43624e2eede709178f3eb8e350",
+    "semantic_hash": "d9f26e43624e2eede709178f3eb8e350"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Stores/InsightStore.swift": {
+    "mtime": 1779730141.7720313,
+    "ast_hash": "b86fc96fce89a5cf6fbd5b70066440df",
+    "semantic_hash": "b86fc96fce89a5cf6fbd5b70066440df"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Stores/KnowledgeStore.swift": {
+    "mtime": 1779730141.7720723,
+    "ast_hash": "8e67cd685b2afbfd372799382257a66c",
+    "semantic_hash": "8e67cd685b2afbfd372799382257a66c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Stores/NotificationStore.swift": {
+    "mtime": 1779730141.7721102,
+    "ast_hash": "735d6cb27fcdd443cf21c1665ac02d21",
+    "semantic_hash": "735d6cb27fcdd443cf21c1665ac02d21"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Stores/ToastStore.swift": {
+    "mtime": 1779730141.772155,
+    "ast_hash": "02e4dea0083ae6c37f7d4dd21345e6bd",
+    "semantic_hash": "02e4dea0083ae6c37f7d4dd21345e6bd"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Stores/UnreadStore.swift": {
+    "mtime": 1779730141.7722106,
+    "ast_hash": "32610d09a90a07c076523fd711070d9c",
+    "semantic_hash": "32610d09a90a07c076523fd711070d9c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/Stores/UserListStore.swift": {
+    "mtime": 1779730141.7722611,
+    "ast_hash": "08b78212103cfffef93c3b0db19a6040",
+    "semantic_hash": "08b78212103cfffef93c3b0db19a6040"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Admin/AdminApprovalsView.swift": {
+    "mtime": 1779730141.7723706,
+    "ast_hash": "df342519b216640945815441cfb4c888",
+    "semantic_hash": "df342519b216640945815441cfb4c888"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Admin/AdminAuditView.swift": {
+    "mtime": 1779730141.7724233,
+    "ast_hash": "edb8612cbac59030880028a7cd3d897a",
+    "semantic_hash": "edb8612cbac59030880028a7cd3d897a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Admin/AdminUsersView.swift": {
+    "mtime": 1779730141.7724671,
+    "ast_hash": "94032e74c75e552ef2e7171bd3963230",
+    "semantic_hash": "94032e74c75e552ef2e7171bd3963230"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Admin/AdminWindow.swift": {
+    "mtime": 1779730141.7725132,
+    "ast_hash": "f5ac23d956a27eb1cbbaa8cd1fdc2914",
+    "semantic_hash": "f5ac23d956a27eb1cbbaa8cd1fdc2914"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Archive/ArchiveSheet.swift": {
+    "mtime": 1779730141.7726035,
+    "ast_hash": "9df680a27ebf8d6a9fce9f261a30542e",
+    "semantic_hash": "9df680a27ebf8d6a9fce9f261a30542e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Auth/LoginView.swift": {
+    "mtime": 1779730141.7726865,
+    "ast_hash": "0db6b6a2e050ef9c4eb5bb7a381f0e8c",
+    "semantic_hash": "0db6b6a2e050ef9c4eb5bb7a381f0e8c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Capture/CaptureView.swift": {
+    "mtime": 1779730141.7727578,
+    "ast_hash": "25c213fd91d7d4e30d2d4cc283292380",
+    "semantic_hash": "25c213fd91d7d4e30d2d4cc283292380"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Capture/CaptureWindowController.swift": {
+    "mtime": 1779730141.7728066,
+    "ast_hash": "a25ebe4c9f1e7b33a7fa55a1461a6898",
+    "semantic_hash": "a25ebe4c9f1e7b33a7fa55a1461a6898"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Card/AiInsightsPanelView.swift": {
+    "mtime": 1779730141.7728865,
+    "ast_hash": "193828d46539025e0f73ceb71aad598d",
+    "semantic_hash": "193828d46539025e0f73ceb71aad598d"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Card/CardTimelineView.swift": {
+    "mtime": 1779730141.7729461,
+    "ast_hash": "e5f5403c6c66e98cf2abd57ffa81c824",
+    "semantic_hash": "e5f5403c6c66e98cf2abd57ffa81c824"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Card/ChatInputView.swift": {
+    "mtime": 1779730141.7729902,
+    "ast_hash": "f52ef85b5ad5fac3771d1b2d816017bb",
+    "semantic_hash": "f52ef85b5ad5fac3771d1b2d816017bb"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Card/EditCardView.swift": {
+    "mtime": 1779730141.7730646,
+    "ast_hash": "8c299bb026df4e6fa9844714f2a4f2aa",
+    "semantic_hash": "8c299bb026df4e6fa9844714f2a4f2aa"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Card/EditCardWindowController.swift": {
+    "mtime": 1779730141.7731116,
+    "ast_hash": "5da4e7d897cd573b15428dead32003ec",
+    "semantic_hash": "5da4e7d897cd573b15428dead32003ec"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Card/QRPopover.swift": {
+    "mtime": 1779730141.7731512,
+    "ast_hash": "fb6f30d4f0ae021cf81ff640958566a3",
+    "semantic_hash": "fb6f30d4f0ae021cf81ff640958566a3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Components/AuthenticatedImage.swift": {
+    "mtime": 1779730141.773213,
+    "ast_hash": "935ab48ba466eeb2d620a28bb283d0b7",
+    "semantic_hash": "935ab48ba466eeb2d620a28bb283d0b7"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Components/CardSurface.swift": {
+    "mtime": 1779730141.773256,
+    "ast_hash": "e899915bcbc9dcf97a83617a8cfc8944",
+    "semantic_hash": "e899915bcbc9dcf97a83617a8cfc8944"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Components/DueDateChip.swift": {
+    "mtime": 1779730141.7732959,
+    "ast_hash": "96a1bfe142a5c608f1b2bbcf5e7e8f9d",
+    "semantic_hash": "96a1bfe142a5c608f1b2bbcf5e7e8f9d"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Components/InitialsAvatar.swift": {
+    "mtime": 1779730141.7733355,
+    "ast_hash": "8176f52615115ac5389ea2e56c4e3a4a",
+    "semantic_hash": "8176f52615115ac5389ea2e56c4e3a4a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Components/PillButton.swift": {
+    "mtime": 1779730141.7733724,
+    "ast_hash": "d151f24e385b8768b401bd5314c34afb",
+    "semantic_hash": "d151f24e385b8768b401bd5314c34afb"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Components/SourceBadge.swift": {
+    "mtime": 1779730141.773412,
+    "ast_hash": "98fb3beb7219b83f0edad65f49fb8365",
+    "semantic_hash": "98fb3beb7219b83f0edad65f49fb8365"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Components/TagChip.swift": {
+    "mtime": 1779730141.773456,
+    "ast_hash": "06906fe569d9a7abdb4516a0790599f6",
+    "semantic_hash": "06906fe569d9a7abdb4516a0790599f6"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Components/ToastOverlay.swift": {
+    "mtime": 1779730141.7734983,
+    "ast_hash": "8066bf9b854d874dc3ceba74706e1174",
+    "semantic_hash": "8066bf9b854d874dc3ceba74706e1174"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Knowledge/KnowledgeDetailSheet.swift": {
+    "mtime": 1779730141.7735674,
+    "ast_hash": "1f83ccb4e412e0ebbb3ad2841dcc7360",
+    "semantic_hash": "1f83ccb4e412e0ebbb3ad2841dcc7360"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Knowledge/KnowledgeDetailWindowController.swift": {
+    "mtime": 1779730141.7736042,
+    "ast_hash": "85f6937fa57d7dff24021111c7214a12",
+    "semantic_hash": "85f6937fa57d7dff24021111c7214a12"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Knowledge/KnowledgeEditSheet.swift": {
+    "mtime": 1779730141.7736487,
+    "ast_hash": "7bd2a478301c3a9ad8be351bd9b0d970",
+    "semantic_hash": "7bd2a478301c3a9ad8be351bd9b0d970"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Knowledge/KnowledgeListView.swift": {
+    "mtime": 1779730141.7736921,
+    "ast_hash": "335a7bcc2ddc8fd887988b16efaea696",
+    "semantic_hash": "335a7bcc2ddc8fd887988b16efaea696"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Knowledge/KnowledgeRowView.swift": {
+    "mtime": 1779730141.773734,
+    "ast_hash": "f780bb05a625041ea522b7e19659afd8",
+    "semantic_hash": "f780bb05a625041ea522b7e19659afd8"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Main/BoardColumnView.swift": {
+    "mtime": 1779730141.7738082,
+    "ast_hash": "d21430a936632ab225a1c2bf4a7cda19",
+    "semantic_hash": "d21430a936632ab225a1c2bf4a7cda19"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Main/BoardToolbar.swift": {
+    "mtime": 1779730141.7738872,
+    "ast_hash": "8c69a857db4230c897816b40e3853252",
+    "semantic_hash": "8c69a857db4230c897816b40e3853252"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Main/BoardView.swift": {
+    "mtime": 1779730141.7739635,
+    "ast_hash": "40a4953b86b1481fa11353c5fdc82576",
+    "semantic_hash": "40a4953b86b1481fa11353c5fdc82576"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Main/CardTileView.swift": {
+    "mtime": 1779730141.7740297,
+    "ast_hash": "7375d37c54a49f98d1e9be2c407d7331",
+    "semantic_hash": "7375d37c54a49f98d1e9be2c407d7331"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Main/MainView.swift": {
+    "mtime": 1779730141.7740867,
+    "ast_hash": "a89711ece820a9f73e356da18d2a6fbb",
+    "semantic_hash": "a89711ece820a9f73e356da18d2a6fbb"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Main/NotificationsPopover.swift": {
+    "mtime": 1779730141.7741578,
+    "ast_hash": "5208649fbc23deed0ec3b4de16eb934e",
+    "semantic_hash": "5208649fbc23deed0ec3b4de16eb934e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Main/TrashDropZoneOverlay.swift": {
+    "mtime": 1779730141.7742062,
+    "ast_hash": "098eefdac8ccf1907517acf02cd5a295",
+    "semantic_hash": "098eefdac8ccf1907517acf02cd5a295"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Preferences/AccountTab.swift": {
+    "mtime": 1779730141.774293,
+    "ast_hash": "9f308ed38cf41c2d1b00c10f0a2bf5d2",
+    "semantic_hash": "9f308ed38cf41c2d1b00c10f0a2bf5d2"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Preferences/GeneralTab.swift": {
+    "mtime": 1779730141.7743404,
+    "ast_hash": "bb0cac019cb458d94854cd96eb5723a3",
+    "semantic_hash": "bb0cac019cb458d94854cd96eb5723a3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Preferences/PreferencesView.swift": {
+    "mtime": 1779730141.774387,
+    "ast_hash": "c93ebdf22e960a405e7d52e2675ad99d",
+    "semantic_hash": "c93ebdf22e960a405e7d52e2675ad99d"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Preferences/TelegramTab.swift": {
+    "mtime": 1779730141.7744417,
+    "ast_hash": "7690dc7fe6c74acf18e1be0720be2565",
+    "semantic_hash": "7690dc7fe6c74acf18e1be0720be2565"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Preferences/TemplatesTab.swift": {
+    "mtime": 1779730141.7744882,
+    "ast_hash": "ba5811434c07456f7ccdc24a2606c9e3",
+    "semantic_hash": "ba5811434c07456f7ccdc24a2606c9e3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Preferences/TokensTab.swift": {
+    "mtime": 1779730141.7745397,
+    "ast_hash": "720c945c5fe62bdfa0d2d6c4d43ddb19",
+    "semantic_hash": "720c945c5fe62bdfa0d2d6c4d43ddb19"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/Review/WeeklyReviewSheet.swift": {
+    "mtime": 1779730141.7746346,
+    "ast_hash": "5e565bd220a5e771433e97f12cc23e6a",
+    "semantic_hash": "5e565bd220a5e771433e97f12cc23e6a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/KanbanClaude/UI/RootView.swift": {
+    "mtime": 1779730141.77468,
+    "ast_hash": "579204a39118b6ebdda142a9af490d4b",
+    "semantic_hash": "579204a39118b6ebdda142a9af490d4b"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/Scripts/api-preflight.sh": {
+    "mtime": 1779730141.7747688,
+    "ast_hash": "dd3293ee79ff7c6ed84f0f66e52f186e",
+    "semantic_hash": "dd3293ee79ff7c6ed84f0f66e52f186e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/Scripts/build-dmg.sh": {
+    "mtime": 1779730141.7748222,
+    "ast_hash": "b5a200c61169418b2a1892c788de3b03",
+    "semantic_hash": "b5a200c61169418b2a1892c788de3b03"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/Scripts/decode_samples/admin_users.json": {
+    "mtime": 1779730141.7749016,
+    "ast_hash": "d6b912c8cb90b913f5b0c4b1abe35bb8",
+    "semantic_hash": "d6b912c8cb90b913f5b0c4b1abe35bb8"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/Scripts/decode_smoke_test.swift": {
+    "mtime": 1779730141.7749581,
+    "ast_hash": "8ece60732061115577b549acdb3f38f8",
+    "semantic_hash": "8ece60732061115577b549acdb3f38f8"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/Scripts/lint-rule3.sh": {
+    "mtime": 1779730141.7750094,
+    "ast_hash": "b0eff4cae4daec055844bea5b7bf6ac1",
+    "semantic_hash": "b0eff4cae4daec055844bea5b7bf6ac1"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/Scripts/reinstall.sh": {
+    "mtime": 1779730141.7750611,
+    "ast_hash": "b86f3edd61dafc360bf06b3211bb4993",
+    "semantic_hash": "b86f3edd61dafc360bf06b3211bb4993"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/Scripts/tail-logs.sh": {
+    "mtime": 1779730141.775114,
+    "ast_hash": "be32587153b66bf907ff9ea60afd7c8f",
+    "semantic_hash": "be32587153b66bf907ff9ea60afd7c8f"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/Scripts/ws_backoff_smoke_test.swift": {
+    "mtime": 1779730141.7751744,
+    "ast_hash": "28e3072170291daf136c3fe9f26033db",
+    "semantic_hash": "28e3072170291daf136c3fe9f26033db"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/Scripts/ws_no_connect_when_unauth_test.swift": {
+    "mtime": 1779730141.7752314,
+    "ast_hash": "217087a925eea828ba13d1a00757be7a",
+    "semantic_hash": "217087a925eea828ba13d1a00757be7a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/orchestrator.py": {
+    "mtime": 1779730141.7753713,
+    "ast_hash": "a149a43507883ab0434cab3622f947af",
+    "semantic_hash": "a149a43507883ab0434cab3622f947af"
+  },
+  "/Users/assistant/dev/active/SmartKanban/scripts/backup.sh": {
+    "mtime": 1779730141.7755527,
+    "ast_hash": "a23066e0726f1010f82b5234878113c3",
+    "semantic_hash": "a23066e0726f1010f82b5234878113c3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/scripts/install.sh": {
+    "mtime": 1779730141.7756896,
+    "ast_hash": "63001a1db0220a9c5d10be888f360ccd",
+    "semantic_hash": "63001a1db0220a9c5d10be888f360ccd"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/migrations/2026-04-29-notetaker.sql": {
+    "mtime": 1779730141.7758622,
+    "ast_hash": "76fa5a255a5e4b36cd98c6a8eb073d13",
+    "semantic_hash": "76fa5a255a5e4b36cd98c6a8eb073d13"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/migrations/2026-05-02-card-events-chat.sql": {
+    "mtime": 1779730141.7759137,
+    "ast_hash": "726462b482f56126a1ecad3e7f089706",
+    "semantic_hash": "726462b482f56126a1ecad3e7f089706"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/migrations/2026-05-03-card-events-share-type.sql": {
+    "mtime": 1779730141.7759728,
+    "ast_hash": "3c0e2c60bba43a92ca83df39c37f1b6a",
+    "semantic_hash": "3c0e2c60bba43a92ca83df39c37f1b6a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/migrations/2026-05-03-notifications.sql": {
+    "mtime": 1779730141.7760284,
+    "ast_hash": "8a04a83ec3fe03ce2707a72bcecad251",
+    "semantic_hash": "8a04a83ec3fe03ce2707a72bcecad251"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/migrations/2026-05-22-admin-and-google-oauth.sql": {
+    "mtime": 1779730141.776086,
+    "ast_hash": "ecee4725b1df099fbfd473b10e5cb7ea",
+    "semantic_hash": "ecee4725b1df099fbfd473b10e5cb7ea"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/package.json": {
+    "mtime": 1779730141.8045533,
+    "ast_hash": "3e32c976afd230f7a3f7743ee11dc3f5",
+    "semantic_hash": "3e32c976afd230f7a3f7743ee11dc3f5"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/schema.sql": {
+    "mtime": 1779730141.7764158,
+    "ast_hash": "66a9a306998b32fee1b6296fc7bcfc02",
+    "semantic_hash": "66a9a306998b32fee1b6296fc7bcfc02"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/scripts/dump_admin_users.sh": {
+    "mtime": 1779730141.776493,
+    "ast_hash": "89435f355d4bdae72410ed9035bea3f3",
+    "semantic_hash": "89435f355d4bdae72410ed9035bea3f3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/admin_audit.test.ts": {
+    "mtime": 1779730141.7765906,
+    "ast_hash": "2ae1ea7e3c260a2a0b9f4df8b8acd4ee",
+    "semantic_hash": "2ae1ea7e3c260a2a0b9f4df8b8acd4ee"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/admin_pending.test.ts": {
+    "mtime": 1779730141.7766435,
+    "ast_hash": "7b180a666345aa87f0594aef514b036a",
+    "semantic_hash": "7b180a666345aa87f0594aef514b036a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/admin_users.test.ts": {
+    "mtime": 1779730141.7766995,
+    "ast_hash": "47542f33f19a75e0dbfb97ac5f97f156",
+    "semantic_hash": "47542f33f19a75e0dbfb97ac5f97f156"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/ai_insights_schema.test.ts": {
+    "mtime": 1779730141.7767437,
+    "ast_hash": "3d925bbc4cf7d8dbeecfda2402b4b118",
+    "semantic_hash": "3d925bbc4cf7d8dbeecfda2402b4b118"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/attachment_upload.test.ts": {
+    "mtime": 1779730141.7768433,
+    "ast_hash": "cac213748e2b7d4cb65e78fcc94d2245",
+    "semantic_hash": "cac213748e2b7d4cb65e78fcc94d2245"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/auth_admin_helpers.test.ts": {
+    "mtime": 1779730141.7768872,
+    "ast_hash": "342a80a05104cb76fa1a7cfe14b5648e",
+    "semantic_hash": "342a80a05104cb76fa1a7cfe14b5648e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/auth_pending_ticket_config.test.ts": {
+    "mtime": 1779730141.7769282,
+    "ast_hash": "f239780acb1264c6f32b8a07e22a2885",
+    "semantic_hash": "f239780acb1264c6f32b8a07e22a2885"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/auth_tickets.test.ts": {
+    "mtime": 1779730141.7769742,
+    "ast_hash": "bdf855a6291cb7025db6059724d86203",
+    "semantic_hash": "bdf855a6291cb7025db6059724d86203"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/brainstorm.test.ts": {
+    "mtime": 1779730141.7770243,
+    "ast_hash": "e9916f6740da427b4d7ff2e238a9446e",
+    "semantic_hash": "e9916f6740da427b4d7ff2e238a9446e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/brainstorm_queue.test.ts": {
+    "mtime": 1779730141.7770696,
+    "ast_hash": "767871fd35cf7fcd4b29946ee167ff2b",
+    "semantic_hash": "767871fd35cf7fcd4b29946ee167ff2b"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/card_activity_post.test.ts": {
+    "mtime": 1779730141.7771134,
+    "ast_hash": "895a2620f26d96ee122a2d6684409e47",
+    "semantic_hash": "895a2620f26d96ee122a2d6684409e47"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/card_links.test.ts": {
+    "mtime": 1779730141.7771518,
+    "ast_hash": "3f3eb49ef26d1ae8217e26442b5ec418",
+    "semantic_hash": "3f3eb49ef26d1ae8217e26442b5ec418"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/card_links_routes.test.ts": {
+    "mtime": 1779730141.7772017,
+    "ast_hash": "5f52cc4ccc28149987684b67804adffb",
+    "semantic_hash": "5f52cc4ccc28149987684b67804adffb"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/card_links_schema.test.ts": {
+    "mtime": 1779730141.7772496,
+    "ast_hash": "e87122dd7685f9f3dad1c3dbf1cb5df9",
+    "semantic_hash": "e87122dd7685f9f3dad1c3dbf1cb5df9"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/card_messages.test.ts": {
+    "mtime": 1779730141.7773013,
+    "ast_hash": "f951050850c4d78de01f28822c6ca52e",
+    "semantic_hash": "f951050850c4d78de01f28822c6ca52e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/card_project.test.ts": {
+    "mtime": 1779730141.7773438,
+    "ast_hash": "6b24912e032e4129a38c9387dfe66b3b",
+    "semantic_hash": "6b24912e032e4129a38c9387dfe66b3b"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/cards_fts_schema.test.ts": {
+    "mtime": 1779730141.777383,
+    "ast_hash": "1f5a93ef71357ded814d7a3cb5d8ee72",
+    "semantic_hash": "1f5a93ef71357ded814d7a3cb5d8ee72"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/cards_fts_search.test.ts": {
+    "mtime": 1779730141.777428,
+    "ast_hash": "b395c63e86a38d9504c0ef372ae84063",
+    "semantic_hash": "b395c63e86a38d9504c0ef372ae84063"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/dedupe.test.ts": {
+    "mtime": 1779730141.7775173,
+    "ast_hash": "9d9cc6064003544f305ad1ffb00586e7",
+    "semantic_hash": "9d9cc6064003544f305ad1ffb00586e7"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/destination.test.ts": {
+    "mtime": 1779730141.7775588,
+    "ast_hash": "9f0717d534dc1d44393a44ae6ab23fec",
+    "semantic_hash": "9f0717d534dc1d44393a44ae6ab23fec"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/first_user_bootstrap.test.ts": {
+    "mtime": 1779730141.7775989,
+    "ast_hash": "4f9966a423d6fea9a3fcd5f50678bed6",
+    "semantic_hash": "4f9966a423d6fea9a3fcd5f50678bed6"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/google_oauth.test.ts": {
+    "mtime": 1779730141.7776358,
+    "ast_hash": "291b61687ea093376df2be0a8c8658f3",
+    "semantic_hash": "291b61687ea093376df2be0a8c8658f3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/insights.test.ts": {
+    "mtime": 1779730141.7776759,
+    "ast_hash": "9d1dc8f36befd62f78423a6787762a9a",
+    "semantic_hash": "9d1dc8f36befd62f78423a6787762a9a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/insights_routes.test.ts": {
+    "mtime": 1779730141.7777321,
+    "ast_hash": "cc603eec36f95af51f039b585c499321",
+    "semantic_hash": "cc603eec36f95af51f039b585c499321"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/knowledge_fetch.test.ts": {
+    "mtime": 1779730141.7777815,
+    "ast_hash": "da59bc6b85d26fd7785ab4591e541792",
+    "semantic_hash": "da59bc6b85d26fd7785ab4591e541792"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/knowledge_fts_search.test.ts": {
+    "mtime": 1779730141.7778344,
+    "ast_hash": "0f27dec76e1a2cd5cfb77916706cfa48",
+    "semantic_hash": "0f27dec76e1a2cd5cfb77916706cfa48"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/knowledge_http.test.ts": {
+    "mtime": 1779730141.7778835,
+    "ast_hash": "cc17f9f079e705459be0c07ab0f42766",
+    "semantic_hash": "cc17f9f079e705459be0c07ab0f42766"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/knowledge_links.test.ts": {
+    "mtime": 1779730141.7779293,
+    "ast_hash": "754452987ee7e2c510bd38aed78a981e",
+    "semantic_hash": "754452987ee7e2c510bd38aed78a981e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/knowledge_routes.test.ts": {
+    "mtime": 1779730141.777972,
+    "ast_hash": "2b5741c290bbc5891093c2e2ad68c472",
+    "semantic_hash": "2b5741c290bbc5891093c2e2ad68c472"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/notifications.test.ts": {
+    "mtime": 1779730141.7780223,
+    "ast_hash": "6e0ccd8dfc9683ba536e70933d644e92",
+    "semantic_hash": "6e0ccd8dfc9683ba536e70933d644e92"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/qr_route.test.ts": {
+    "mtime": 1779730141.7780764,
+    "ast_hash": "822e8dcb75438fc5ad19d0876adbe2c9",
+    "semantic_hash": "822e8dcb75438fc5ad19d0876adbe2c9"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/tavily.test.ts": {
+    "mtime": 1779730141.7781198,
+    "ast_hash": "1d9cb3e2ec0ab64f89967e6659bea538",
+    "semantic_hash": "1d9cb3e2ec0ab64f89967e6659bea538"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/telegram_parse.test.ts": {
+    "mtime": 1779730141.7781699,
+    "ast_hash": "f6c797a61f9a1cb85298d65f8bed50d0",
+    "semantic_hash": "f6c797a61f9a1cb85298d65f8bed50d0"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/template_routes.test.ts": {
+    "mtime": 1779730141.7782185,
+    "ast_hash": "2fed3b5f955f2f2559a77f9525132414",
+    "semantic_hash": "2fed3b5f955f2f2559a77f9525132414"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/__tests__/templates.test.ts": {
+    "mtime": 1779730141.7782676,
+    "ast_hash": "36a539284b195012068e2f4eb72d2fcc",
+    "semantic_hash": "36a539284b195012068e2f4eb72d2fcc"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/admin_audit.ts": {
+    "mtime": 1779730141.7783093,
+    "ast_hash": "a00812103b5f35f96cd723369ac3348d",
+    "semantic_hash": "a00812103b5f35f96cd723369ac3348d"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/ai/brainstorm.ts": {
+    "mtime": 1779730141.7783966,
+    "ast_hash": "ae861dc399e6c8e1055707a06ddce016",
+    "semantic_hash": "ae861dc399e6c8e1055707a06ddce016"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/ai/brainstorm_queue.ts": {
+    "mtime": 1779730141.7784398,
+    "ast_hash": "48e466e3c1f89dfa273d52bb51886166",
+    "semantic_hash": "48e466e3c1f89dfa273d52bb51886166"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/ai/card_chat.ts": {
+    "mtime": 1779730141.7784932,
+    "ast_hash": "36287277514cd95a16492416f3d752c8",
+    "semantic_hash": "36287277514cd95a16492416f3d752c8"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/ai/dedupe.ts": {
+    "mtime": 1779730141.778543,
+    "ast_hash": "aa203a4476c67569c482b9067a6beeb3",
+    "semantic_hash": "aa203a4476c67569c482b9067a6beeb3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/ai/openai.ts": {
+    "mtime": 1779730141.7786026,
+    "ast_hash": "86eaec0d517d0f4894a4209c0ae9621e",
+    "semantic_hash": "86eaec0d517d0f4894a4209c0ae9621e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/ai/propose.ts": {
+    "mtime": 1779730141.7786558,
+    "ast_hash": "68262600bb537fb682dc37ef1f0d34b1",
+    "semantic_hash": "68262600bb537fb682dc37ef1f0d34b1"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/ai/tavily.ts": {
+    "mtime": 1779730141.7787082,
+    "ast_hash": "f95eac744302ca52aa29419ac0b0c885",
+    "semantic_hash": "f95eac744302ca52aa29419ac0b0c885"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/ai/vision.ts": {
+    "mtime": 1779730141.778758,
+    "ast_hash": "ba98178863eddf1e999fa078c78adcba",
+    "semantic_hash": "ba98178863eddf1e999fa078c78adcba"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/ai/weekly_summary.ts": {
+    "mtime": 1779730141.7788115,
+    "ast_hash": "0a37787565998be0fa50a90f69098405",
+    "semantic_hash": "0a37787565998be0fa50a90f69098405"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/ai/whisper.ts": {
+    "mtime": 1779730141.7788594,
+    "ast_hash": "3bcbfb28abff5022fe6f22bc61531498",
+    "semantic_hash": "3bcbfb28abff5022fe6f22bc61531498"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/auth.ts": {
+    "mtime": 1779730141.7789183,
+    "ast_hash": "94d0c2987a573f552db1d8de29caa420",
+    "semantic_hash": "94d0c2987a573f552db1d8de29caa420"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/auth_tickets.ts": {
+    "mtime": 1779730141.7789686,
+    "ast_hash": "02195fb0bdfd7492b151a54804b0a5dd",
+    "semantic_hash": "02195fb0bdfd7492b151a54804b0a5dd"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/card_links.ts": {
+    "mtime": 1779730141.7790217,
+    "ast_hash": "c42e29fd5a55aab9f3baca6258f327fc",
+    "semantic_hash": "c42e29fd5a55aab9f3baca6258f327fc"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/cards.ts": {
+    "mtime": 1779730141.7790887,
+    "ast_hash": "0ff00a22f2227bcec31a402b753d9a1e",
+    "semantic_hash": "0ff00a22f2227bcec31a402b753d9a1e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/db.ts": {
+    "mtime": 1779730141.7791443,
+    "ast_hash": "1240243b16d82cea0b77f73524386489",
+    "semantic_hash": "1240243b16d82cea0b77f73524386489"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/google.ts": {
+    "mtime": 1779730141.7791946,
+    "ast_hash": "9ad11bc89a7e3b290858174a14df267f",
+    "semantic_hash": "9ad11bc89a7e3b290858174a14df267f"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/index.ts": {
+    "mtime": 1779730141.7792542,
+    "ast_hash": "ac8f133cb15999c7a3599a2cd695d541",
+    "semantic_hash": "ac8f133cb15999c7a3599a2cd695d541"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/insights.ts": {
+    "mtime": 1779730141.7793086,
+    "ast_hash": "a551e761074576caaf4060dbb064ec81",
+    "semantic_hash": "a551e761074576caaf4060dbb064ec81"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/knowledge.ts": {
+    "mtime": 1779730141.7793763,
+    "ast_hash": "dc48ef76f8c9552c6ca233b192bc314d",
+    "semantic_hash": "dc48ef76f8c9552c6ca233b192bc314d"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/knowledge_fetch.ts": {
+    "mtime": 1779730141.7794316,
+    "ast_hash": "967e930160bda48f046e714618c91984",
+    "semantic_hash": "967e930160bda48f046e714618c91984"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/notifications.ts": {
+    "mtime": 1779730141.7794847,
+    "ast_hash": "2012579ff40403d32759b54afd18bc6f",
+    "semantic_hash": "2012579ff40403d32759b54afd18bc6f"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/push.ts": {
+    "mtime": 1779730141.779536,
+    "ast_hash": "14ca80713c443acadde0c9daa8928d2e",
+    "semantic_hash": "14ca80713c443acadde0c9daa8928d2e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/reaper.ts": {
+    "mtime": 1779730141.7795882,
+    "ast_hash": "1f29a0c7dea71a69f270a47bd03ec13a",
+    "semantic_hash": "1f29a0c7dea71a69f270a47bd03ec13a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/admin.ts": {
+    "mtime": 1779730141.7796826,
+    "ast_hash": "d5c3bff4de91dde417b2bf321c249d61",
+    "semantic_hash": "d5c3bff4de91dde417b2bf321c249d61"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/attachments.ts": {
+    "mtime": 1779730141.7797916,
+    "ast_hash": "41df06b384ee23b7113ad92db13dd841",
+    "semantic_hash": "41df06b384ee23b7113ad92db13dd841"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/attachments_upload.ts": {
+    "mtime": 1779730141.7798526,
+    "ast_hash": "9595d05a294176e078ea77c87d036af3",
+    "semantic_hash": "9595d05a294176e078ea77c87d036af3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/auth.ts": {
+    "mtime": 1779730141.7799163,
+    "ast_hash": "ad744d7b78e9ee636f68d0068484f823",
+    "semantic_hash": "ad744d7b78e9ee636f68d0068484f823"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/card_links.ts": {
+    "mtime": 1779730141.779975,
+    "ast_hash": "1d5ac32d4eeec32c30dae341aa0bbc3c",
+    "semantic_hash": "1d5ac32d4eeec32c30dae341aa0bbc3c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/cards.ts": {
+    "mtime": 1779730141.7800353,
+    "ast_hash": "01866d58e8ed468294599e884bac4b21",
+    "semantic_hash": "01866d58e8ed468294599e884bac4b21"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/chat.ts": {
+    "mtime": 1779730141.7800875,
+    "ast_hash": "91e05ea34dcef01eb20bb48553139aeb",
+    "semantic_hash": "91e05ea34dcef01eb20bb48553139aeb"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/google_oauth.ts": {
+    "mtime": 1779730141.7801428,
+    "ast_hash": "3a486cea5a482d2f4565e912d83dd473",
+    "semantic_hash": "3a486cea5a482d2f4565e912d83dd473"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/insights.ts": {
+    "mtime": 1779730141.7801886,
+    "ast_hash": "3aa69066c7d3f37fcc8bfc3829a3bf53",
+    "semantic_hash": "3aa69066c7d3f37fcc8bfc3829a3bf53"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/knowledge.ts": {
+    "mtime": 1779730141.780251,
+    "ast_hash": "75c89605011cee9963acec4294c2163c",
+    "semantic_hash": "75c89605011cee9963acec4294c2163c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/mirror.ts": {
+    "mtime": 1779730141.7803056,
+    "ast_hash": "cbdc880e851b4fae55d2dfb053f22d52",
+    "semantic_hash": "cbdc880e851b4fae55d2dfb053f22d52"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/notifications.ts": {
+    "mtime": 1779730141.7803583,
+    "ast_hash": "200874181a31c3867e877623539dd920",
+    "semantic_hash": "200874181a31c3867e877623539dd920"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/qr.ts": {
+    "mtime": 1779730141.7804148,
+    "ast_hash": "b2f9620ed7dce7a006fc6550034be7c5",
+    "semantic_hash": "b2f9620ed7dce7a006fc6550034be7c5"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/review.ts": {
+    "mtime": 1779730141.7804694,
+    "ast_hash": "d8b3d514a4305aeb6e546e1af34988bc",
+    "semantic_hash": "d8b3d514a4305aeb6e546e1af34988bc"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/telegram.ts": {
+    "mtime": 1779730141.7805228,
+    "ast_hash": "1611840f5f22845e4d30d7df334fbe8c",
+    "semantic_hash": "1611840f5f22845e4d30d7df334fbe8c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/routes/templates.ts": {
+    "mtime": 1779730141.7805731,
+    "ast_hash": "6b32f6e1a0b11f36346c39bf520f0ef7",
+    "semantic_hash": "6b32f6e1a0b11f36346c39bf520f0ef7"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/telegram/bot.ts": {
+    "mtime": 1779730141.780719,
+    "ast_hash": "03438812eb94222328961cd4a21c6ef0",
+    "semantic_hash": "03438812eb94222328961cd4a21c6ef0"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/telegram/destination.ts": {
+    "mtime": 1779730141.7807808,
+    "ast_hash": "b57f2d36960c06031f52a38c2926a7c1",
+    "semantic_hash": "b57f2d36960c06031f52a38c2926a7c1"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/telegram/proposals.ts": {
+    "mtime": 1779730141.7808304,
+    "ast_hash": "5fa4cce9387710373ce81bbe75bcce50",
+    "semantic_hash": "5fa4cce9387710373ce81bbe75bcce50"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/templates.ts": {
+    "mtime": 1779730141.7808948,
+    "ast_hash": "2f10fd01ff42e6419764cca48c509250",
+    "semantic_hash": "2f10fd01ff42e6419764cca48c509250"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/src/ws.ts": {
+    "mtime": 1779730141.7809553,
+    "ast_hash": "08235e3595344d7be2c08a3902596ce5",
+    "semantic_hash": "08235e3595344d7be2c08a3902596ce5"
+  },
+  "/Users/assistant/dev/active/SmartKanban/server/tsconfig.json": {
+    "mtime": 1779730141.781007,
+    "ast_hash": "9bd0c187217add4ecfaa4e3454ca6833",
+    "semantic_hash": "9bd0c187217add4ecfaa4e3454ca6833"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/package.json": {
+    "mtime": 1779730141.7827427,
+    "ast_hash": "26951ce039ca3468725f00e6d6490d1b",
+    "semantic_hash": "26951ce039ca3468725f00e6d6490d1b"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/postcss.config.js": {
+    "mtime": 1779730141.7827792,
+    "ast_hash": "c735540bb63936a123bc867d950c9f69",
+    "semantic_hash": "c735540bb63936a123bc867d950c9f69"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/public/sw.js": {
+    "mtime": 1779730141.7830164,
+    "ast_hash": "90ecf9df0be4e73f941eabc37f4aa740",
+    "semantic_hash": "90ecf9df0be4e73f941eabc37f4aa740"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/AdminView.tsx": {
+    "mtime": 1779730141.7830758,
+    "ast_hash": "002ecfc4a225136b3196e021e270fd55",
+    "semantic_hash": "002ecfc4a225136b3196e021e270fd55"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/App.tsx": {
+    "mtime": 1779730141.783138,
+    "ast_hash": "b309d3745b7ca31677bd21620004550a",
+    "semantic_hash": "b309d3745b7ca31677bd21620004550a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/KnowledgeView.tsx": {
+    "mtime": 1779730141.7832665,
+    "ast_hash": "386559392232a64080aa899d98837f7a",
+    "semantic_hash": "386559392232a64080aa899d98837f7a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/MirrorView.tsx": {
+    "mtime": 1779730141.7833102,
+    "ast_hash": "c549ba0ad4aba79e6c677bebb683cc70",
+    "semantic_hash": "c549ba0ad4aba79e6c677bebb683cc70"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/MobileCardView.tsx": {
+    "mtime": 1779730141.7833605,
+    "ast_hash": "6e11314aec80f4af28007d552f65fa53",
+    "semantic_hash": "6e11314aec80f4af28007d552f65fa53"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/MobileMore.tsx": {
+    "mtime": 1779730141.7834013,
+    "ast_hash": "e3e1d96b76110b05a1929223c4625e76",
+    "semantic_hash": "e3e1d96b76110b05a1929223c4625e76"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/MobileShell.tsx": {
+    "mtime": 1779730141.7834842,
+    "ast_hash": "6a3b2a79d453a9cfc4a64a88d771f505",
+    "semantic_hash": "6a3b2a79d453a9cfc4a64a88d771f505"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/api.ts": {
+    "mtime": 1779730141.783545,
+    "ast_hash": "86c75ccdc6446e4ec7fc0b6dfc145c8c",
+    "semantic_hash": "86c75ccdc6446e4ec7fc0b6dfc145c8c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/auth.tsx": {
+    "mtime": 1779730141.7835858,
+    "ast_hash": "f1a4196d8bfd58e5604ae5ad21749ca8",
+    "semantic_hash": "f1a4196d8bfd58e5604ae5ad21749ca8"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/ActivityTicker.tsx": {
+    "mtime": 1779730141.783652,
+    "ast_hash": "eace152d886959920b898eda705fec93",
+    "semantic_hash": "eace152d886959920b898eda705fec93"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/AiInsightsPanel.tsx": {
+    "mtime": 1779730141.7837038,
+    "ast_hash": "80db25181d334c3e5ebc65de4e3b5505",
+    "semantic_hash": "80db25181d334c3e5ebc65de4e3b5505"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/ArchiveDialog.tsx": {
+    "mtime": 1779730141.7837539,
+    "ast_hash": "086df65fef798c599c5b43ec40100039",
+    "semantic_hash": "086df65fef798c599c5b43ec40100039"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/AwaitingApproval.tsx": {
+    "mtime": 1779730141.7837958,
+    "ast_hash": "7f7d903c76386f7405d66682cefc568a",
+    "semantic_hash": "7f7d903c76386f7405d66682cefc568a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/Board.tsx": {
+    "mtime": 1779730141.7838492,
+    "ast_hash": "e3e87afa3aeeda1ec606597a874ffc1b",
+    "semantic_hash": "e3e87afa3aeeda1ec606597a874ffc1b"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/BoardHeader.tsx": {
+    "mtime": 1779730141.783909,
+    "ast_hash": "0162d3ca745d17bab8e8933e525961b2",
+    "semantic_hash": "0162d3ca745d17bab8e8933e525961b2"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/CaptureBar.tsx": {
+    "mtime": 1779730141.7839642,
+    "ast_hash": "a3bd09823e5361581c65cec03ca1098c",
+    "semantic_hash": "a3bd09823e5361581c65cec03ca1098c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/CardChainModal.tsx": {
+    "mtime": 1779730141.784017,
+    "ast_hash": "d78b3ba72549908a6535fecd0b2edf12",
+    "semantic_hash": "d78b3ba72549908a6535fecd0b2edf12"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/CardTimeline.tsx": {
+    "mtime": 1779730141.7840762,
+    "ast_hash": "610e06c6861014b516ad1be6154bb2cc",
+    "semantic_hash": "610e06c6861014b516ad1be6154bb2cc"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/CardView.tsx": {
+    "mtime": 1779730141.7841332,
+    "ast_hash": "cb56b4e3ce42833da71179a69c06c5c9",
+    "semantic_hash": "cb56b4e3ce42833da71179a69c06c5c9"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/ChangePassword.tsx": {
+    "mtime": 1779730141.784178,
+    "ast_hash": "b7ce44d4d0536571784f75356b38abbb",
+    "semantic_hash": "b7ce44d4d0536571784f75356b38abbb"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/ChatInput.tsx": {
+    "mtime": 1779730141.7842207,
+    "ast_hash": "eececfc106b7f2a47a66189dc97f318c",
+    "semantic_hash": "eececfc106b7f2a47a66189dc97f318c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/Column.tsx": {
+    "mtime": 1779730141.7842827,
+    "ast_hash": "86d8fcf213a0b817ab8e13ea6037930d",
+    "semantic_hash": "86d8fcf213a0b817ab8e13ea6037930d"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/EditDialog.tsx": {
+    "mtime": 1779730141.7843533,
+    "ast_hash": "5ab8f560ea320b2cdbc6e19c1288938f",
+    "semantic_hash": "5ab8f560ea320b2cdbc6e19c1288938f"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/GoogleSignInButton.tsx": {
+    "mtime": 1779730141.784411,
+    "ast_hash": "96d8e19d18cfa730eea3d70727b1648a",
+    "semantic_hash": "96d8e19d18cfa730eea3d70727b1648a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/KnowledgeDetail.tsx": {
+    "mtime": 1779730141.7844675,
+    "ast_hash": "7e0eb323d3a194bdc97202872b4b28ec",
+    "semantic_hash": "7e0eb323d3a194bdc97202872b4b28ec"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/KnowledgeEditDialog.tsx": {
+    "mtime": 1779730141.784524,
+    "ast_hash": "81333f5c25a436767674683ca593c8c2",
+    "semantic_hash": "81333f5c25a436767674683ca593c8c2"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/KnowledgeRow.tsx": {
+    "mtime": 1779730141.7845707,
+    "ast_hash": "73266b7496ad21a0d2992e315d64e9c1",
+    "semantic_hash": "73266b7496ad21a0d2992e315d64e9c1"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/LinkPickerDialog.tsx": {
+    "mtime": 1779730141.7846255,
+    "ast_hash": "52281bf717fa41ee23fb851d7fbea6b2",
+    "semantic_hash": "52281bf717fa41ee23fb851d7fbea6b2"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/LoginView.tsx": {
+    "mtime": 1779730141.784681,
+    "ast_hash": "e003367a5f8a63c67a3d60cca9af6974",
+    "semantic_hash": "e003367a5f8a63c67a3d60cca9af6974"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/MobileCardActions.tsx": {
+    "mtime": 1779730141.784723,
+    "ast_hash": "5251545f2d998d540f8bd1d1e7ab605d",
+    "semantic_hash": "5251545f2d998d540f8bd1d1e7ab605d"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/NotificationBell.tsx": {
+    "mtime": 1779730141.7847772,
+    "ast_hash": "a55ea0ba4ac3c105bb5707a5bbba6f7c",
+    "semantic_hash": "a55ea0ba4ac3c105bb5707a5bbba6f7c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/RelatedCardsSection.tsx": {
+    "mtime": 1779730141.7848222,
+    "ast_hash": "ef8f52ce3208ed369fd3b5d751cd98d5",
+    "semantic_hash": "ef8f52ce3208ed369fd3b5d751cd98d5"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/SearchBar.tsx": {
+    "mtime": 1779730141.784873,
+    "ast_hash": "e149b27770e5d80cd64b42649d752d02",
+    "semantic_hash": "e149b27770e5d80cd64b42649d752d02"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/SettingsDialog.tsx": {
+    "mtime": 1779730141.7849367,
+    "ast_hash": "12f8c4402ae2ab43388c772c9d14aed5",
+    "semantic_hash": "12f8c4402ae2ab43388c772c9d14aed5"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/TemplatesTab.tsx": {
+    "mtime": 1779730141.7850504,
+    "ast_hash": "f47b7cfd355d7bf6c5e30e3c87ec499c",
+    "semantic_hash": "f47b7cfd355d7bf6c5e30e3c87ec499c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/Toast.tsx": {
+    "mtime": 1779730141.7850924,
+    "ast_hash": "997be6b123dca4e8643e0b999fc06ed8",
+    "semantic_hash": "997be6b123dca4e8643e0b999fc06ed8"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/TrashDropZone.tsx": {
+    "mtime": 1779730141.7851384,
+    "ast_hash": "d1f3505c07e9e8c5a1986fabef7584a4",
+    "semantic_hash": "d1f3505c07e9e8c5a1986fabef7584a4"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/WeatherWidget.tsx": {
+    "mtime": 1779730141.7851856,
+    "ast_hash": "016f5b601d41b95fe7716db51aad4cb5",
+    "semantic_hash": "016f5b601d41b95fe7716db51aad4cb5"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/WeeklyReview.tsx": {
+    "mtime": 1779730141.7852364,
+    "ast_hash": "7e0b0232dc61a24c2d9d3de068e18293",
+    "semantic_hash": "7e0b0232dc61a24c2d9d3de068e18293"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/admin/ApprovalsTab.tsx": {
+    "mtime": 1779730141.7853072,
+    "ast_hash": "c6b7e232de416da42da9860966592345",
+    "semantic_hash": "c6b7e232de416da42da9860966592345"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/admin/AuditTab.tsx": {
+    "mtime": 1779730141.7853515,
+    "ast_hash": "4d3f228f9646016ce7daa9db15a274a8",
+    "semantic_hash": "4d3f228f9646016ce7daa9db15a274a8"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/components/admin/UsersTab.tsx": {
+    "mtime": 1779730141.7853951,
+    "ast_hash": "c68afbca0a7c4c436d0845ac563caaee",
+    "semantic_hash": "c68afbca0a7c4c436d0845ac563caaee"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/useCardChain.ts": {
+    "mtime": 1779730141.785467,
+    "ast_hash": "fe9471c8b1910cbc8bfd29c760bc4086",
+    "semantic_hash": "fe9471c8b1910cbc8bfd29c760bc4086"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/useCardLinks.ts": {
+    "mtime": 1779730141.7855089,
+    "ast_hash": "3794e566b2a8ce01098814bbfa6d44ec",
+    "semantic_hash": "3794e566b2a8ce01098814bbfa6d44ec"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/useInsights.ts": {
+    "mtime": 1779730141.785552,
+    "ast_hash": "4f9cbffda0afeafb3425ef471c0725e0",
+    "semantic_hash": "4f9cbffda0afeafb3425ef471c0725e0"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/useInstallPrompt.ts": {
+    "mtime": 1779730141.7855923,
+    "ast_hash": "9cdc11bd1d04be7efef22e8ccbaffa58",
+    "semantic_hash": "9cdc11bd1d04be7efef22e8ccbaffa58"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/useIsMobile.ts": {
+    "mtime": 1779730141.7856343,
+    "ast_hash": "b5505ee2056d74c3c5cb5736d7c93e83",
+    "semantic_hash": "b5505ee2056d74c3c5cb5736d7c93e83"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/useKeyboardShortcuts.ts": {
+    "mtime": 1779730141.7856836,
+    "ast_hash": "f9b00da6d36b0ce5a1a309964f88f43c",
+    "semantic_hash": "f9b00da6d36b0ce5a1a309964f88f43c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/useKnowledge.ts": {
+    "mtime": 1779730141.7857294,
+    "ast_hash": "3cb509d3528731b75ce248abb224937b",
+    "semantic_hash": "3cb509d3528731b75ce248abb224937b"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/useLongPress.ts": {
+    "mtime": 1779730141.7857697,
+    "ast_hash": "ce6ca857e15080adf3ae1245cf7eb6c3",
+    "semantic_hash": "ce6ca857e15080adf3ae1245cf7eb6c3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/useNotifications.ts": {
+    "mtime": 1779730141.7858114,
+    "ast_hash": "74d11294c003846ef1610abcac347e8e",
+    "semantic_hash": "74d11294c003846ef1610abcac347e8e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/usePushNotifications.ts": {
+    "mtime": 1779730141.7858565,
+    "ast_hash": "627e6e4d3d859e2873f9b37f80cfd71d",
+    "semantic_hash": "627e6e4d3d859e2873f9b37f80cfd71d"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/useTemplates.ts": {
+    "mtime": 1779730141.7859025,
+    "ast_hash": "fc857ff7660d079a20785b3810537f7d",
+    "semantic_hash": "fc857ff7660d079a20785b3810537f7d"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/useTheme.ts": {
+    "mtime": 1779730141.7859473,
+    "ast_hash": "dfb94ffbf60a6651b8d55c5eeadc5a12",
+    "semantic_hash": "dfb94ffbf60a6651b8d55c5eeadc5a12"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/useToast.ts": {
+    "mtime": 1779730141.7859876,
+    "ast_hash": "7c872c278758591dcbeccb148802281d",
+    "semantic_hash": "7c872c278758591dcbeccb148802281d"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/hooks/useWeather.ts": {
+    "mtime": 1779730141.786032,
+    "ast_hash": "2dffc7f55c2698f4e494893d7c88bc63",
+    "semantic_hash": "2dffc7f55c2698f4e494893d7c88bc63"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/main.tsx": {
+    "mtime": 1779730141.7861178,
+    "ast_hash": "6b36badbe6dbee8769bc0d6de905dc3d",
+    "semantic_hash": "6b36badbe6dbee8769bc0d6de905dc3d"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/types.ts": {
+    "mtime": 1779730141.7862322,
+    "ast_hash": "24eac1a90c9bed50cbe538e7aae2d80d",
+    "semantic_hash": "24eac1a90c9bed50cbe538e7aae2d80d"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/src/ws.ts": {
+    "mtime": 1779730141.7862797,
+    "ast_hash": "02bafa039b0a6336208c863331cbdf66",
+    "semantic_hash": "02bafa039b0a6336208c863331cbdf66"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/tailwind.config.js": {
+    "mtime": 1779730141.7863357,
+    "ast_hash": "140f1deb58c74a3e1e33aec45a2d4df9",
+    "semantic_hash": "140f1deb58c74a3e1e33aec45a2d4df9"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/tsconfig.json": {
+    "mtime": 1779730141.7863834,
+    "ast_hash": "72b45eadc99361864911501a97a835a3",
+    "semantic_hash": "72b45eadc99361864911501a97a835a3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/vite.config.ts": {
+    "mtime": 1779730141.7864316,
+    "ast_hash": "9281829ed5a60b1a4f670648459e422c",
+    "semantic_hash": "9281829ed5a60b1a4f670648459e422c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AGENT_LEARNINGS.macos-build.md": {
+    "mtime": 1779730141.7610714,
+    "ast_hash": "3aff90d7a039c38722d11d5d03abdfc2",
+    "semantic_hash": "3aff90d7a039c38722d11d5d03abdfc2"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AGENT_LEARNINGS.md": {
+    "mtime": 1779730141.7611523,
+    "ast_hash": "8b795bfc22cabfa1f175b4dbf2e2de78",
+    "semantic_hash": "8b795bfc22cabfa1f175b4dbf2e2de78"
+  },
+  "/Users/assistant/dev/active/SmartKanban/ANDROID_APP_PLAN.md": {
+    "mtime": 1779730141.7613447,
+    "ast_hash": "9b4c2f556bf4d0d6e18252a02cb9c0a1",
+    "semantic_hash": "9b4c2f556bf4d0d6e18252a02cb9c0a1"
+  },
+  "/Users/assistant/dev/active/SmartKanban/ANDROID_PLAN_S1_ANALYST.md": {
+    "mtime": 1779730141.7614799,
+    "ast_hash": "a90ddf3f1cccb59656211ffe051a6db8",
+    "semantic_hash": "a90ddf3f1cccb59656211ffe051a6db8"
+  },
+  "/Users/assistant/dev/active/SmartKanban/ANDROID_PLAN_S2_PM.md": {
+    "mtime": 1779730141.7618215,
+    "ast_hash": "ed675a62f728ff79714869d2121b019f",
+    "semantic_hash": "ed675a62f728ff79714869d2121b019f"
+  },
+  "/Users/assistant/dev/active/SmartKanban/ANDROID_PLAN_S3_DESIGNER.md": {
+    "mtime": 1779730141.7619956,
+    "ast_hash": "df28880b4b7d52896ebbef4232b18fc4",
+    "semantic_hash": "df28880b4b7d52896ebbef4232b18fc4"
+  },
+  "/Users/assistant/dev/active/SmartKanban/ANDROID_PLAN_S4_ARCHITECT.md": {
+    "mtime": 1779730141.762258,
+    "ast_hash": "9a00c03043a69f48ab0ca21750bf610b",
+    "semantic_hash": "9a00c03043a69f48ab0ca21750bf610b"
+  },
+  "/Users/assistant/dev/active/SmartKanban/ANDROID_PLAN_S5_ENGINEER.md": {
+    "mtime": 1779730141.7624257,
+    "ast_hash": "9faa112da42ed4b84560dbee3c039f08",
+    "semantic_hash": "9faa112da42ed4b84560dbee3c039f08"
+  },
+  "/Users/assistant/dev/active/SmartKanban/ANDROID_PLAN_S6_QA.md": {
+    "mtime": 1779730141.762566,
+    "ast_hash": "071b53f8e7c5197fde6ea2c03e2b2774",
+    "semantic_hash": "071b53f8e7c5197fde6ea2c03e2b2774"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_A.md": {
+    "mtime": 1779730141.762648,
+    "ast_hash": "06ad6cd78819419a85ec60b16598e0fa",
+    "semantic_hash": "06ad6cd78819419a85ec60b16598e0fa"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_A2.md": {
+    "mtime": 1779730141.7627347,
+    "ast_hash": "624c12f5aefaae28026248434370378a",
+    "semantic_hash": "624c12f5aefaae28026248434370378a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_A3.md": {
+    "mtime": 1779730141.7628074,
+    "ast_hash": "95d51ee4cc1478f9b356d8a5a3feba2f",
+    "semantic_hash": "95d51ee4cc1478f9b356d8a5a3feba2f"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_A4.md": {
+    "mtime": 1779730141.7628791,
+    "ast_hash": "47deb76d4a816e10af5a299936bffdc7",
+    "semantic_hash": "47deb76d4a816e10af5a299936bffdc7"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_A5.md": {
+    "mtime": 1779730141.76295,
+    "ast_hash": "bbc0f0049885ad4bbbe94f30a9f54731",
+    "semantic_hash": "bbc0f0049885ad4bbbe94f30a9f54731"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_A6.md": {
+    "mtime": 1779730141.763025,
+    "ast_hash": "778dffdae85a83aa776ed31fe356d76d",
+    "semantic_hash": "778dffdae85a83aa776ed31fe356d76d"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_A7.md": {
+    "mtime": 1779730141.7630954,
+    "ast_hash": "3308262fe07d39612c91f8c530fc09a8",
+    "semantic_hash": "3308262fe07d39612c91f8c530fc09a8"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_B.md": {
+    "mtime": 1779730141.763163,
+    "ast_hash": "94ef3ebc53b9332d882f3b4df9a058e2",
+    "semantic_hash": "94ef3ebc53b9332d882f3b4df9a058e2"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_B2.md": {
+    "mtime": 1779730141.7632432,
+    "ast_hash": "0c3d6be9a8ecc4ce9ee82b075fc10d44",
+    "semantic_hash": "0c3d6be9a8ecc4ce9ee82b075fc10d44"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_B3.md": {
+    "mtime": 1779730141.763314,
+    "ast_hash": "25d6fbcb22ba67e6594e168f87899c59",
+    "semantic_hash": "25d6fbcb22ba67e6594e168f87899c59"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_B4.md": {
+    "mtime": 1779730141.7634032,
+    "ast_hash": "8f18c7d3b6d4334f6afc7c7815097c37",
+    "semantic_hash": "8f18c7d3b6d4334f6afc7c7815097c37"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_B5.md": {
+    "mtime": 1779730141.7634459,
+    "ast_hash": "d4784e6a1b1261f2eaa6d5c83586ecb1",
+    "semantic_hash": "d4784e6a1b1261f2eaa6d5c83586ecb1"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_B6.md": {
+    "mtime": 1779730141.7635071,
+    "ast_hash": "3e2529d19ee432ea4866b3381953d3e3",
+    "semantic_hash": "3e2529d19ee432ea4866b3381953d3e3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/AUDIT_B7.md": {
+    "mtime": 1779730141.7635708,
+    "ast_hash": "862e9b647c29e7ef68cbae50c5fdebdc",
+    "semantic_hash": "862e9b647c29e7ef68cbae50c5fdebdc"
+  },
+  "/Users/assistant/dev/active/SmartKanban/CLAUDE.md": {
+    "mtime": 1784247864.2237506,
+    "ast_hash": "3583e137e11a4ed68bde9e7dae5e8ba2",
+    "semantic_hash": "3583e137e11a4ed68bde9e7dae5e8ba2"
+  },
+  "/Users/assistant/dev/active/SmartKanban/FEATURES.md": {
+    "mtime": 1779730141.7637155,
+    "ast_hash": "a94e035649047c79bad7d30623746f90",
+    "semantic_hash": "a94e035649047c79bad7d30623746f90"
+  },
+  "/Users/assistant/dev/active/SmartKanban/FEATURE_PARITY_REGISTRY.md": {
+    "mtime": 1779730141.7638857,
+    "ast_hash": "4abc1fbedab44c776f7b2c08da5636ce",
+    "semantic_hash": "4abc1fbedab44c776f7b2c08da5636ce"
+  },
+  "/Users/assistant/dev/active/SmartKanban/FINAL_FIXES.md": {
+    "mtime": 1779730141.7639756,
+    "ast_hash": "fba1695e184f4b5e6eaa63c0df880066",
+    "semantic_hash": "fba1695e184f4b5e6eaa63c0df880066"
+  },
+  "/Users/assistant/dev/active/SmartKanban/FINAL_FIXES_V2.md": {
+    "mtime": 1779730141.7640595,
+    "ast_hash": "dce6581039d51a69889dccb5d9479d83",
+    "semantic_hash": "dce6581039d51a69889dccb5d9479d83"
+  },
+  "/Users/assistant/dev/active/SmartKanban/FINAL_FIXES_V3.md": {
+    "mtime": 1779730141.764136,
+    "ast_hash": "478b0136650bff3e03b8f5fa84863ae6",
+    "semantic_hash": "478b0136650bff3e03b8f5fa84863ae6"
+  },
+  "/Users/assistant/dev/active/SmartKanban/FINAL_FIXES_V4.md": {
+    "mtime": 1779730141.7642052,
+    "ast_hash": "4617dc6c14aed736a18e2fe34371cee9",
+    "semantic_hash": "4617dc6c14aed736a18e2fe34371cee9"
+  },
+  "/Users/assistant/dev/active/SmartKanban/FINAL_FIXES_V5.md": {
+    "mtime": 1779730141.7642703,
+    "ast_hash": "9d14f472921e0928ec72f9d7b9b61677",
+    "semantic_hash": "9d14f472921e0928ec72f9d7b9b61677"
+  },
+  "/Users/assistant/dev/active/SmartKanban/FINAL_FIXES_V6.md": {
+    "mtime": 1779730141.7643268,
+    "ast_hash": "8ef3fd963b7f6467cdd74bb9d4778d3a",
+    "semantic_hash": "8ef3fd963b7f6467cdd74bb9d4778d3a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/MACOS_APP_PLAN.md": {
+    "mtime": 1779730141.7646158,
+    "ast_hash": "670947f8f9a4c9d1852dd50a06f960cf",
+    "semantic_hash": "670947f8f9a4c9d1852dd50a06f960cf"
+  },
+  "/Users/assistant/dev/active/SmartKanban/README.md": {
+    "mtime": 1779730141.7648172,
+    "ast_hash": "4cf32c27f62aa9fbb0452f0f3cd0fb03",
+    "semantic_hash": "4cf32c27f62aa9fbb0452f0f3cd0fb03"
+  },
+  "/Users/assistant/dev/active/SmartKanban/SHIP_READY.md": {
+    "mtime": 1779730141.764887,
+    "ast_hash": "1fca37f3f0b4450bd06575b5a3fa26c6",
+    "semantic_hash": "1fca37f3f0b4450bd06575b5a3fa26c6"
+  },
+  "/Users/assistant/dev/active/SmartKanban/VETO_RESOLUTION_PATCH.md": {
+    "mtime": 1779730141.764994,
+    "ast_hash": "bc8c57c3c0e2f89086de98c91f1c06c3",
+    "semantic_hash": "bc8c57c3c0e2f89086de98c91f1c06c3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/agent-rules.macos-build.md": {
+    "mtime": 1779730141.7651138,
+    "ast_hash": "7c139cb431f772287836a87f200c2fa4",
+    "semantic_hash": "7c139cb431f772287836a87f200c2fa4"
+  },
+  "/Users/assistant/dev/active/SmartKanban/agent-rules.md": {
+    "mtime": 1779730141.765211,
+    "ast_hash": "39e342b0142ab0af8e771f110c64a07f",
+    "semantic_hash": "39e342b0142ab0af8e771f110c64a07f"
+  },
+  "/Users/assistant/dev/active/SmartKanban/agent-rules.native-deferred.md": {
+    "mtime": 1779730141.7652643,
+    "ast_hash": "94e7e40a3363409601d5bd0a82f4405f",
+    "semantic_hash": "94e7e40a3363409601d5bd0a82f4405f"
+  },
+  "/Users/assistant/dev/active/SmartKanban/dashboard.html": {
+    "mtime": 1779730141.7654479,
+    "ast_hash": "a688759d3a6632a3f9d3de26551292fb",
+    "semantic_hash": "a688759d3a6632a3f9d3de26551292fb"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docker-compose.yml": {
+    "mtime": 1779730141.7656395,
+    "ast_hash": "a9c67d3e63f7a193da215669942e79b0",
+    "semantic_hash": "a9c67d3e63f7a193da215669942e79b0"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/DEPLOYMENT.md": {
+    "mtime": 1779730141.7657387,
+    "ast_hash": "735d702bff886d8c42658e16c3131f40",
+    "semantic_hash": "735d702bff886d8c42658e16c3131f40"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/plans/2026-04-25-card-templates.md": {
+    "mtime": 1779730141.7659154,
+    "ast_hash": "a1c03da7138a8fa79b22b701675763c5",
+    "semantic_hash": "a1c03da7138a8fa79b22b701675763c5"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/plans/2026-04-25-knowledge-section.md": {
+    "mtime": 1779730141.7663362,
+    "ast_hash": "ff2ece9a95bd05af2edf9e51f24160e4",
+    "semantic_hash": "ff2ece9a95bd05af2edf9e51f24160e4"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/plans/2026-04-26-mobile-shell.md": {
+    "mtime": 1779730141.766428,
+    "ast_hash": "52536d0f1530a009fa13b0cd9128160c",
+    "semantic_hash": "52536d0f1530a009fa13b0cd9128160c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/plans/2026-04-26-paste-screenshot.md": {
+    "mtime": 1779730141.766517,
+    "ast_hash": "0a1c51354f94d57a786e206f5cfc1fd3",
+    "semantic_hash": "0a1c51354f94d57a786e206f5cfc1fd3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/plans/2026-04-26-qr-mobile-card.md": {
+    "mtime": 1779730141.7666047,
+    "ast_hash": "c9825bb7eba0a53f97a8f93a2ea59726",
+    "semantic_hash": "c9825bb7eba0a53f97a8f93a2ea59726"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/plans/2026-04-26-starbucks-design-system.md": {
+    "mtime": 1779730141.766721,
+    "ast_hash": "ffce1928d99ce80a4b7040c63af4dfb3",
+    "semantic_hash": "ffce1928d99ce80a4b7040c63af4dfb3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/plans/2026-05-02-chat.md": {
+    "mtime": 1779730141.7668276,
+    "ast_hash": "884c2ffd7b01ec4ee9bb25ead409169f",
+    "semantic_hash": "884c2ffd7b01ec4ee9bb25ead409169f"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/plans/2026-05-03-notifications-ui-redesign.md": {
+    "mtime": 1779730141.766982,
+    "ast_hash": "e997d998e5c57cd91d2b71047498d982",
+    "semantic_hash": "e997d998e5c57cd91d2b71047498d982"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/plans/2026-05-03-trash-weather.md": {
+    "mtime": 1779730141.7670674,
+    "ast_hash": "babe059ad47c824aad94065db2818b1c",
+    "semantic_hash": "babe059ad47c824aad94065db2818b1c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/plans/2026-05-11-telegram-structured-capture.md": {
+    "mtime": 1779730141.7671921,
+    "ast_hash": "dd5e23f10d3cca845d0dc7c549d2fad6",
+    "semantic_hash": "dd5e23f10d3cca845d0dc7c549d2fad6"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/plans/2026-05-12-ai-brainstorm-research.md": {
+    "mtime": 1779730141.7673361,
+    "ast_hash": "5547b052b40bafb92160170132cf59f4",
+    "semantic_hash": "5547b052b40bafb92160170132cf59f4"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/plans/2026-05-12-card-chain.md": {
+    "mtime": 1779730141.767472,
+    "ast_hash": "953a7b54c578b79cfa86ca9a54374875",
+    "semantic_hash": "953a7b54c578b79cfa86ca9a54374875"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/plans/2026-05-22-admin-role-google-oauth.md": {
+    "mtime": 1779730141.767658,
+    "ast_hash": "c07060525dd62cea8c570c5b0c5df728",
+    "semantic_hash": "c07060525dd62cea8c570c5b0c5df728"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/specs/2026-04-25-card-templates-design.md": {
+    "mtime": 1779730141.7677789,
+    "ast_hash": "abe06be9f6e18a3a6e92374a4e285eb7",
+    "semantic_hash": "abe06be9f6e18a3a6e92374a4e285eb7"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/specs/2026-04-25-knowledge-section-design.md": {
+    "mtime": 1779730141.7678616,
+    "ast_hash": "3f5cccdb55048dbca02df0cdbc427f94",
+    "semantic_hash": "3f5cccdb55048dbca02df0cdbc427f94"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/specs/2026-04-26-mobile-shell-design.md": {
+    "mtime": 1779730141.767938,
+    "ast_hash": "264aa1b352cda27bcd740df83057ac74",
+    "semantic_hash": "264aa1b352cda27bcd740df83057ac74"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/specs/2026-04-26-paste-screenshot-design.md": {
+    "mtime": 1779730141.7680078,
+    "ast_hash": "6c6e225cb33eef2df42a98db32ad97c2",
+    "semantic_hash": "6c6e225cb33eef2df42a98db32ad97c2"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/specs/2026-04-26-qr-mobile-card-design.md": {
+    "mtime": 1779730141.7680807,
+    "ast_hash": "4b40c09a57677f2191d3402d03141ffc",
+    "semantic_hash": "4b40c09a57677f2191d3402d03141ffc"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/specs/2026-04-26-starbucks-design-system-design.md": {
+    "mtime": 1779730141.7681556,
+    "ast_hash": "9c324baf575a39a62d8092de07ce33b7",
+    "semantic_hash": "9c324baf575a39a62d8092de07ce33b7"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/specs/2026-05-02-chat-design.md": {
+    "mtime": 1779730141.7682366,
+    "ast_hash": "fff3bf98d23f04679060b42bb110b429",
+    "semantic_hash": "fff3bf98d23f04679060b42bb110b429"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/specs/2026-05-03-push-notifications-design.md": {
+    "mtime": 1779730141.7683115,
+    "ast_hash": "d4a09bc1f3954c1596e0c418d2a4591b",
+    "semantic_hash": "d4a09bc1f3954c1596e0c418d2a4591b"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/specs/2026-05-03-trash-weather-design.md": {
+    "mtime": 1779730141.7683747,
+    "ast_hash": "4964355b357b943a92dab6f7afe34321",
+    "semantic_hash": "4964355b357b943a92dab6f7afe34321"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/specs/2026-05-11-telegram-structured-capture-design.md": {
+    "mtime": 1779730141.7684534,
+    "ast_hash": "66760f58cd37ed2306edd185af61aec6",
+    "semantic_hash": "66760f58cd37ed2306edd185af61aec6"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/specs/2026-05-12-ai-brainstorm-research-design.md": {
+    "mtime": 1779730141.7685256,
+    "ast_hash": "bf5759ce740554a43bd31b7b0dc61cac",
+    "semantic_hash": "bf5759ce740554a43bd31b7b0dc61cac"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/specs/2026-05-12-card-chain-design.md": {
+    "mtime": 1779730141.7685885,
+    "ast_hash": "80c4e3f9bf5c54fe7f6b6719c562e55b",
+    "semantic_hash": "80c4e3f9bf5c54fe7f6b6719c562e55b"
+  },
+  "/Users/assistant/dev/active/SmartKanban/docs/superpowers/specs/2026-05-22-admin-role-google-oauth-design.md": {
+    "mtime": 1779730141.7686818,
+    "ast_hash": "0d925346b55f15248b5e6feaa448756a",
+    "semantic_hash": "0d925346b55f15248b5e6feaa448756a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/done-gate.md": {
+    "mtime": 1779730141.7689245,
+    "ast_hash": "1d0026923a6b4dfbc23176a02b934f7a",
+    "semantic_hash": "1d0026923a6b4dfbc23176a02b934f7a"
+  },
+  "/Users/assistant/dev/active/SmartKanban/macOS/project.yml": {
+    "mtime": 1779730141.775286,
+    "ast_hash": "9f75446951808aea6bb6a0b9949f2d5c",
+    "semantic_hash": "9f75446951808aea6bb6a0b9949f2d5c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/orchestrator_dashboard.html": {
+    "mtime": 1779730141.7754657,
+    "ast_hash": "a4cc58c45e6465139e7ad28e88c87688",
+    "semantic_hash": "a4cc58c45e6465139e7ad28e88c87688"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/00_audit.txt": {
+    "mtime": 1779730141.7810972,
+    "ast_hash": "586037314324c7ff85b45d5e0fd46e4f",
+    "semantic_hash": "586037314324c7ff85b45d5e0fd46e4f"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/01_plan.txt": {
+    "mtime": 1779730141.781159,
+    "ast_hash": "f630227301ae72b9ac5d5c947b6097ed",
+    "semantic_hash": "f630227301ae72b9ac5d5c947b6097ed"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/02_vetoes.txt": {
+    "mtime": 1779730141.7812073,
+    "ast_hash": "b91b3317a30cab96ad0b8340a4941d04",
+    "semantic_hash": "b91b3317a30cab96ad0b8340a4941d04"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/03_build.txt": {
+    "mtime": 1779730141.7812629,
+    "ast_hash": "aaa19d325005cb42f7dc599b597641e1",
+    "semantic_hash": "aaa19d325005cb42f7dc599b597641e1"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/04_qa_agent_a.txt": {
+    "mtime": 1779730141.7813144,
+    "ast_hash": "c6bb299980aa37d83e909771028c8c61",
+    "semantic_hash": "c6bb299980aa37d83e909771028c8c61"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/04_qa_agent_b.txt": {
+    "mtime": 1779730141.781364,
+    "ast_hash": "de49e0c741235224294283c94915fbaa",
+    "semantic_hash": "de49e0c741235224294283c94915fbaa"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/04_qa_agent_c.txt": {
+    "mtime": 1779730141.7814107,
+    "ast_hash": "50757a8557b7b5294147246f738dc7c7",
+    "semantic_hash": "50757a8557b7b5294147246f738dc7c7"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/04_qa_fix.txt": {
+    "mtime": 1779730141.781454,
+    "ast_hash": "a235f07b700239b5253ae3d9e727ff4e",
+    "semantic_hash": "a235f07b700239b5253ae3d9e727ff4e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_a_init.txt": {
+    "mtime": 1779730141.781492,
+    "ast_hash": "40c7436c8985596dabc420432de9642c",
+    "semantic_hash": "40c7436c8985596dabc420432de9642c"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_a_r1.txt": {
+    "mtime": 1779730141.7815316,
+    "ast_hash": "6bc54a2012df1fc3d8d644e2ae4e6eda",
+    "semantic_hash": "6bc54a2012df1fc3d8d644e2ae4e6eda"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_a_r2.txt": {
+    "mtime": 1779730141.781569,
+    "ast_hash": "bd76515f485d5ffe8f3a00cb6a23b5c5",
+    "semantic_hash": "bd76515f485d5ffe8f3a00cb6a23b5c5"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_a_r3.txt": {
+    "mtime": 1779730141.7816045,
+    "ast_hash": "e7321bb7e689b94e6758a183234785bc",
+    "semantic_hash": "e7321bb7e689b94e6758a183234785bc"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_a_r4.txt": {
+    "mtime": 1779730141.781642,
+    "ast_hash": "bdeb21126c366853b3243e1c246fcbd3",
+    "semantic_hash": "bdeb21126c366853b3243e1c246fcbd3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_a_r5.txt": {
+    "mtime": 1779730141.781681,
+    "ast_hash": "ee38085a34743b5f451bf6484d660d62",
+    "semantic_hash": "ee38085a34743b5f451bf6484d660d62"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_a_r6.txt": {
+    "mtime": 1779730141.7817216,
+    "ast_hash": "b094e434247e4d7d32497cb1e2a7ab25",
+    "semantic_hash": "b094e434247e4d7d32497cb1e2a7ab25"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_b_init.txt": {
+    "mtime": 1779730141.7817626,
+    "ast_hash": "4f6a0def62b93dfe3ef124dd2f594975",
+    "semantic_hash": "4f6a0def62b93dfe3ef124dd2f594975"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_b_r1.txt": {
+    "mtime": 1779730141.7818027,
+    "ast_hash": "0130400ffd96d06dfae5394317f21857",
+    "semantic_hash": "0130400ffd96d06dfae5394317f21857"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_b_r2.txt": {
+    "mtime": 1779730141.7818398,
+    "ast_hash": "3b15dd560d2cfd38a1c3f561c18884fa",
+    "semantic_hash": "3b15dd560d2cfd38a1c3f561c18884fa"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_b_r3.txt": {
+    "mtime": 1779730141.7818768,
+    "ast_hash": "d17ef93a18eead4289fe16c780b46925",
+    "semantic_hash": "d17ef93a18eead4289fe16c780b46925"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_b_r4.txt": {
+    "mtime": 1779730141.7819142,
+    "ast_hash": "46e1adf0c2f17f7fda41141cf640fe7e",
+    "semantic_hash": "46e1adf0c2f17f7fda41141cf640fe7e"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_b_r5.txt": {
+    "mtime": 1779730141.7819524,
+    "ast_hash": "8cc4926ac069b2712f29ef622a5e751b",
+    "semantic_hash": "8cc4926ac069b2712f29ef622a5e751b"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_b_r6.txt": {
+    "mtime": 1779730141.781988,
+    "ast_hash": "e3cbd1550876792563e63905973678b9",
+    "semantic_hash": "e3cbd1550876792563e63905973678b9"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_c_init.txt": {
+    "mtime": 1779730141.782021,
+    "ast_hash": "6f02861c42f773fc91bed2545a6727cb",
+    "semantic_hash": "6f02861c42f773fc91bed2545a6727cb"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_c_r1.txt": {
+    "mtime": 1779730141.7820601,
+    "ast_hash": "905bedcee5529f7e88b9e9ca6fb8a9bd",
+    "semantic_hash": "905bedcee5529f7e88b9e9ca6fb8a9bd"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_c_r2.txt": {
+    "mtime": 1779730141.7820969,
+    "ast_hash": "25993dbb0fe9c87e6744636b8a703945",
+    "semantic_hash": "25993dbb0fe9c87e6744636b8a703945"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_c_r3.txt": {
+    "mtime": 1779730141.7821329,
+    "ast_hash": "a2fde76a4fda9f4d8cd96427913e8937",
+    "semantic_hash": "a2fde76a4fda9f4d8cd96427913e8937"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_c_r4.txt": {
+    "mtime": 1779730141.7821686,
+    "ast_hash": "13c6176f72057269187070863cd6bc89",
+    "semantic_hash": "13c6176f72057269187070863cd6bc89"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_c_r5.txt": {
+    "mtime": 1779730141.7822087,
+    "ast_hash": "a61f178e3bdecde035369f3e1eb5e4be",
+    "semantic_hash": "a61f178e3bdecde035369f3e1eb5e4be"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_c_r6.txt": {
+    "mtime": 1779730141.7822423,
+    "ast_hash": "1af643cf236c01906a5578e779410d89",
+    "semantic_hash": "1af643cf236c01906a5578e779410d89"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_fix_r1.txt": {
+    "mtime": 1779730141.7822804,
+    "ast_hash": "caa4889300fd7a1262bbc4dfea5345e4",
+    "semantic_hash": "caa4889300fd7a1262bbc4dfea5345e4"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_fix_r2.txt": {
+    "mtime": 1779730141.782315,
+    "ast_hash": "ba129c23bac3e8e50ac400d3ee089c49",
+    "semantic_hash": "ba129c23bac3e8e50ac400d3ee089c49"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_fix_r3.txt": {
+    "mtime": 1779730141.7823493,
+    "ast_hash": "a66b2edec3ed0f2b28f07b847cdf73c3",
+    "semantic_hash": "a66b2edec3ed0f2b28f07b847cdf73c3"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_fix_r4.txt": {
+    "mtime": 1779730141.782388,
+    "ast_hash": "65207b74314ea399b55256f974b68d57",
+    "semantic_hash": "65207b74314ea399b55256f974b68d57"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_fix_r5.txt": {
+    "mtime": 1779730141.782427,
+    "ast_hash": "b7107decb25dd16c63f991c4736d15d7",
+    "semantic_hash": "b7107decb25dd16c63f991c4736d15d7"
+  },
+  "/Users/assistant/dev/active/SmartKanban/stage_prompts/qa_fix_r6.txt": {
+    "mtime": 1779730141.7824597,
+    "ast_hash": "e2f6932ab1f20d5fef43a6f104c301d6",
+    "semantic_hash": "e2f6932ab1f20d5fef43a6f104c301d6"
+  },
+  "/Users/assistant/dev/active/SmartKanban/web/index.html": {
+    "mtime": 1779730141.7825198,
+    "ast_hash": "aa272cb580b3523238569e5ad25e9628",
+    "semantic_hash": "aa272cb580b3523238569e5ad25e9628"
+  }
+}
