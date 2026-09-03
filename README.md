@@ -557,6 +557,34 @@ Endpoints accepting `Authorization: Bearer <api-token>`:
 - `PATCH /api/cards/:id` (cookie or Bearer)
 - `POST /api/cards/:id/activity` (Bearer api-token only)
 
+**Create a card via token** — only `title` is required. `status` defaults to
+`backlog` (one of `backlog` / `today` / `in_progress` / `done`); omit
+`assignees` to self-assign to the token's owner. Returns `201` + the full card
+and fires a `card.created` live-sync broadcast.
+
+```bash
+# 1. mint a token (cookie auth — do this once from Settings → API tokens,
+#    or with a logged-in session cookie):
+curl -X POST https://your-kanban-host/api/tokens \
+  -H "Content-Type: application/json" \
+  --cookie "kanban_session=<session-cookie>" \
+  -d '{"label":"my-script"}'
+#    → {"token":"<api-token>","label":"my-script","scope":"api"}
+
+# 2. create a card with that token:
+curl -X POST https://your-kanban-host/api/cards \
+  -H "Authorization: Bearer <api-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "title": "Buy eggs",
+        "status": "today",
+        "tags": ["groceries"],
+        "due_date": "2026-07-20"
+      }'
+```
+
+`assignees` are **user UUIDs**, not names/emails.
+
 `POST /api/cards/:id/activity` body:
 
 ```json

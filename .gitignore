@@ -47,3 +47,8 @@ orchestrator_status.json
 graphify-out/.graphify_python
 graphify-out/.graphify_root
 graphify-out/cache/
+
+# --- housekeeping (claude) ---
+**/.DS_Store
+.planning/
+notes
